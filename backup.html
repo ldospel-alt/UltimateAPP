@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>Záloha dat – Gym Deník</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#111318" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a class="back-btn" href="index.html">←</a>
+    <h1>⚙️ Záloha dat</h1>
+  </div>
+
+  <div class="container">
+
+    <div class="card">
+      <h2>Exportovat zálohu</h2>
+      <p style="color:var(--text-dim); font-size:14px;">
+        Stáhne soubor se všemi tvými daty (tréninky i deníček). Soubor si ulož, kam chceš
+        – třeba do svého PC nebo do vlastní git složky.
+      </p>
+      <button class="btn block" id="exportBtn">📤 Stáhnout zálohu (.json)</button>
+    </div>
+
+    <div class="card">
+      <h2>Obnovit ze zálohy</h2>
+      <p style="color:var(--text-dim); font-size:14px;">
+        Vyber dřív stažený soubor zálohy. <b>Pozor:</b> tímto se přepíší všechna
+        současná data v appce daty ze souboru.
+      </p>
+      <div class="field">
+        <input type="file" id="importFile" accept="application/json,.json" />
+      </div>
+      <button class="btn secondary block" id="importBtn">📥 Obnovit ze souboru</button>
+      <p id="importStatus" style="margin-top:10px; font-size:14px;"></p>
+    </div>
+
+    <div class="card">
+      <h2>Co je v záloze</h2>
+      <div class="stat-row">
+        <div class="stat-box"><div class="value" id="backupWorkouts">0</div><div class="label">tréninků</div></div>
+        <div class="stat-box"><div class="value" id="backupDiary">0</div><div class="label">zápisků</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/backup.js"></script>
+  <script>registerServiceWorker();</script>
+</body>
+</html>
