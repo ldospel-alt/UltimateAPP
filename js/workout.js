@@ -19,7 +19,7 @@ function createExerciseBlock() {
   wrap.className = "exercise-block";
   wrap.innerHTML = `
     <div class="ex-header">
-      <input type="text" class="ex-name" placeholder="Název cviku (např. Bench press)" />
+      <input type="text" class="ex-name" placeholder="Název cviku (např. Bench press)" list="exerciseNamesList" autocomplete="off" />
       <button type="button" class="btn ghost small remove-exercise">✕</button>
     </div>
     <div class="sets-container"></div>
@@ -182,6 +182,17 @@ function populateExerciseSelect() {
   if (names.includes(previous)) select.value = previous;
 }
 
+function populateExerciseDatalist() {
+  const datalist = document.getElementById("exerciseNamesList");
+  const names = getAllExerciseNames();
+  datalist.innerHTML = "";
+  names.forEach((name) => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    datalist.appendChild(opt);
+  });
+}
+
 function renderProgress() {
   const select = document.getElementById("progressExercise");
   const exerciseName = select.value;
@@ -258,6 +269,7 @@ function renderAll() {
   renderStats();
   renderSessionsList();
   populateExerciseSelect();
+  populateExerciseDatalist();
   renderProgress();
 }
 
