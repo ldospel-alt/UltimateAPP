@@ -1,0 +1,9 @@
+# Lokální IDE cache - nikdy se necommituje
+.vs/
+.vscode/
+*.suo
+*.user
+node_modules/
+
+# Dočasné testovací soubory
+_test*.js
