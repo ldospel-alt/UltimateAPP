@@ -20,9 +20,23 @@ const Storage = {
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./service-worker.js").catch((e) => {
-        console.warn("Service worker se nepodařilo zaregistrovat", e);
-      });
+      navigator.serviceWorker
+        .register("./service-worker.js")
+        .then((registration) => {
+          // Při každém otevření appky aktivně zkontrolovat, jestli není nová verze
+          registration.update();
+
+          // Jakmile nový service worker převezme kontrolu, appka se sama jednou obnoví
+          let reloaded = false;
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            if (reloaded) return;
+            reloaded = true;
+            window.location.reload();
+          });
+        })
+        .catch((e) => {
+          console.warn("Service worker se nepodařilo zaregistrovat", e);
+        });
     });
   }
 }
