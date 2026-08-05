@@ -33,11 +33,13 @@ function resultColor(result) {
 
 function saveDuel() {
   const dateInput = document.getElementById("duelDate");
+  const opponentInput = document.getElementById("opponentName");
   const myScoreInput = document.getElementById("myScore");
   const oppScoreInput = document.getElementById("oppScore");
   const commentInput = document.getElementById("duelComment");
 
   const date = dateInput.value || todayInputValue();
+  const opponentName = opponentInput.value.trim();
   const myScore = parseInt(myScoreInput.value, 10);
   const oppScore = parseInt(oppScoreInput.value, 10);
 
@@ -50,6 +52,7 @@ function saveDuel() {
   duels.push({
     id: Storage.uid(),
     date,
+    opponentName,
     myScore,
     oppScore,
     comment: commentInput.value.trim(),
@@ -57,6 +60,7 @@ function saveDuel() {
   saveDuels(duels);
 
   dateInput.value = todayInputValue();
+  opponentInput.value = "";
   myScoreInput.value = "";
   oppScoreInput.value = "";
   commentInput.value = "";
@@ -79,11 +83,16 @@ function renderDuelStats() {
   const losses = duels.filter((d) => duelResult(d) === "loss").length;
   const total = duels.length;
   const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+  const scoreDiff = duels.reduce((sum, d) => sum + (d.myScore - d.oppScore), 0);
 
   document.getElementById("statDuels").textContent = total;
   document.getElementById("statWins").textContent = wins;
   document.getElementById("statLosses").textContent = losses;
   document.getElementById("statWinRate").textContent = `${winRate} %`;
+
+  const diffEl = document.getElementById("statScoreDiff");
+  diffEl.textContent = scoreDiff > 0 ? `+${scoreDiff}` : `${scoreDiff}`;
+  diffEl.style.color = scoreDiff > 0 ? "var(--green)" : scoreDiff < 0 ? "var(--red)" : "var(--accent-2)";
 }
 
 // ---- Historie ----
@@ -100,8 +109,9 @@ function renderDuelsList() {
     const result = duelResult(duel);
     const item = document.createElement("div");
     item.className = "session-item";
+    const opponentLabel = duel.opponentName ? ` vs. ${duel.opponentName}` : "";
     item.innerHTML = `
-      <div class="session-date">${formatDate(duel.date)} — ${duel.myScore}:${duel.oppScore}
+      <div class="session-date">${formatDate(duel.date)}${opponentLabel} — ${duel.myScore}:${duel.oppScore}
         <span style="color:${resultColor(result)}; font-weight:700;"> (${resultLabel(result)})</span>
       </div>
       ${duel.comment ? `<div class="session-ex"></div>` : ""}
