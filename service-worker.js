@@ -1,4 +1,4 @@
-const CACHE_NAME = "gym-denik-cache-v1";
+const CACHE_NAME = "gym-denik-cache-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -32,18 +32,14 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  // Network-first: vždy zkusit stáhnout čerstvou verzi, cache jen jako offline záloha
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return (
-        cached ||
-        fetch(event.request)
-          .then((response) => {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-            return response;
-          })
-          .catch(() => cached)
-      );
-    })
+    fetch(event.request)
+      .then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
