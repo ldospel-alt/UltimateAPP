@@ -1,0 +1,11 @@
+{
+  "app": "gym-denik",
+  "version": 1,
+  "exportedAt": "2026-08-05T00:00:00.000Z",
+  "workouts": [
+    { "id": "test1", "date": "2026-08-01", "exercises": [{ "name": "Deadlift", "sets": [{ "reps": 5, "weight": 120 }] }] }
+  ],
+  "diary": [
+    { "id": "testd1", "date": "2026-08-01T10:00:00.000Z", "text": "Testovaci zapis z obnovy", "rating": "+" }
+  ]
+}
