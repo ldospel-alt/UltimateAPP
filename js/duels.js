@@ -2,6 +2,7 @@
 
 const DUEL_KEY = "gym_duels";
 let duelChartInstance = null;
+let currentOpponentFilter = null;
 
 function getDuels() {
   return Storage.read(DUEL_KEY, []);
@@ -98,12 +99,25 @@ function renderDuelStats() {
 // ---- Historie ----
 
 function renderDuelsList() {
-  const duels = getDuels().slice().sort((a, b) => (a.date < b.date ? 1 : -1));
+  const allDuels = getDuels();
+  const duels = allDuels
+    .filter((d) => !currentOpponentFilter || d.opponentName === currentOpponentFilter)
+    .slice()
+    .sort((a, b) => (a.date < b.date ? 1 : -1));
+
   const container = document.getElementById("duelsList");
   const emptyHint = document.getElementById("duelsEmptyHint");
-  container.innerHTML = "";
+  const titleEl = document.getElementById("historyTitle");
+  const clearBtn = document.getElementById("clearOpponentFilterBtn");
 
+  titleEl.textContent = currentOpponentFilter ? `Historie proti: ${currentOpponentFilter}` : "Historie duelů";
+  clearBtn.style.display = currentOpponentFilter ? "inline-block" : "none";
+
+  container.innerHTML = "";
   emptyHint.style.display = duels.length === 0 ? "block" : "none";
+  emptyHint.textContent = currentOpponentFilter
+    ? "S tímto soupeřem zatím žádné duely."
+    : "Zatím žádné duely. Přidej první nahoře ⬆️";
 
   duels.forEach((duel) => {
     const result = duelResult(duel);
@@ -123,6 +137,67 @@ function renderDuelsList() {
       item.querySelector(".session-ex").textContent = duel.comment;
     }
     item.querySelector(".del-duel").addEventListener("click", () => deleteDuel(duel.id));
+    container.appendChild(item);
+  });
+}
+
+// ---- Soupeři ----
+
+function getAllOpponentNames() {
+  const duels = getDuels();
+  const names = new Set();
+  duels.forEach((d) => {
+    if (d.opponentName) names.add(d.opponentName);
+  });
+  return Array.from(names).sort((a, b) => a.localeCompare(b, "cs"));
+}
+
+function populateOpponentDatalist() {
+  const datalist = document.getElementById("opponentNamesList");
+  datalist.innerHTML = "";
+  getAllOpponentNames().forEach((name) => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    datalist.appendChild(opt);
+  });
+}
+
+function renderOpponentsList() {
+  const names = getAllOpponentNames();
+  const container = document.getElementById("opponentsList");
+  const emptyHint = document.getElementById("opponentsEmptyHint");
+  container.innerHTML = "";
+
+  emptyHint.style.display = names.length === 0 ? "block" : "none";
+
+  const duels = getDuels();
+
+  names.forEach((name) => {
+    const vsDuels = duels.filter((d) => d.opponentName === name);
+    const wins = vsDuels.filter((d) => duelResult(d) === "win").length;
+    const losses = vsDuels.filter((d) => duelResult(d) === "loss").length;
+    const draws = vsDuels.length - wins - losses;
+    const diff = vsDuels.reduce((sum, d) => sum + (d.myScore - d.oppScore), 0);
+    const diffText = diff > 0 ? `+${diff}` : `${diff}`;
+
+    const item = document.createElement("button");
+    item.className = "session-item";
+    item.style.width = "100%";
+    item.style.textAlign = "left";
+    item.style.border = "none";
+    item.style.cursor = "pointer";
+    if (name === currentOpponentFilter) {
+      item.style.outline = "2px solid var(--accent)";
+    }
+    item.innerHTML = `
+      <div class="session-date">${name}</div>
+      <div class="session-ex">${vsDuels.length} duelů • ${wins}V-${losses}P-${draws}R • skóre ${diffText}</div>
+    `;
+    item.addEventListener("click", () => {
+      currentOpponentFilter = currentOpponentFilter === name ? null : name;
+      renderOpponentsList();
+      renderDuelsList();
+    });
     container.appendChild(item);
   });
 }
@@ -182,6 +257,8 @@ function renderDuelChart() {
 
 function renderAllDuels() {
   renderDuelStats();
+  populateOpponentDatalist();
+  renderOpponentsList();
   renderDuelsList();
   renderDuelChart();
 }
@@ -189,5 +266,10 @@ function renderAllDuels() {
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("duelDate").value = todayInputValue();
   document.getElementById("saveDuelBtn").addEventListener("click", saveDuel);
+  document.getElementById("clearOpponentFilterBtn").addEventListener("click", () => {
+    currentOpponentFilter = null;
+    renderOpponentsList();
+    renderDuelsList();
+  });
   renderAllDuels();
 });

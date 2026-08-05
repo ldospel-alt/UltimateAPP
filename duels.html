@@ -34,7 +34,8 @@
       </div>
       <div class="field">
         <label>Jméno soupeře</label>
-        <input type="text" id="opponentName" placeholder="Např. Petr" />
+        <input type="text" id="opponentName" placeholder="Např. Petr" list="opponentNamesList" autocomplete="off" />
+        <datalist id="opponentNamesList"></datalist>
       </div>
       <div class="stat-row">
         <div class="field" style="flex:1;">
@@ -62,7 +63,16 @@
     </div>
 
     <div class="card">
-      <h2>Historie duelů</h2>
+      <h2>Soupeři</h2>
+      <div id="opponentsList"></div>
+      <p class="empty-hint" id="opponentsEmptyHint" style="display:none;">Zatím žádní soupeři – přidej první duel nahoře.</p>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+        <h2 id="historyTitle" style="margin:0;">Historie duelů</h2>
+        <button class="btn ghost small" id="clearOpponentFilterBtn" style="display:none;">Zobrazit vše ✕</button>
+      </div>
       <div id="duelsList"></div>
       <p class="empty-hint" id="duelsEmptyHint" style="display:none;">Zatím žádné duely. Přidej první nahoře ⬆️</p>
     </div>
