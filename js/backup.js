@@ -2,6 +2,7 @@
 
 const WORKOUT_KEY_BACKUP = "gym_workouts";
 const DIARY_KEY_BACKUP = "gym_diary";
+const DUEL_KEY_BACKUP = "gym_duels";
 const GITHUB_OWNER = "ldospel-alt";
 const GITHUB_REPO = "UltimateAPP";
 const GITHUB_FOLDER = "obnova";
@@ -13,6 +14,7 @@ function buildBackupObject() {
     exportedAt: new Date().toISOString(),
     workouts: Storage.read(WORKOUT_KEY_BACKUP, []),
     diary: Storage.read(DIARY_KEY_BACKUP, []),
+    duels: Storage.read(DUEL_KEY_BACKUP, []),
   };
 }
 
@@ -54,13 +56,15 @@ function restoreFromParsedData(data, statusFn) {
 
   const workouts = Array.isArray(data.workouts) ? data.workouts : [];
   const diary = Array.isArray(data.diary) ? data.diary : [];
+  const duels = Array.isArray(data.duels) ? data.duels : [];
 
-  if (!confirm(`Obnovit ${workouts.length} tréninků a ${diary.length} zápisků? Přepíší se současná data v appce.`)) {
+  if (!confirm(`Obnovit ${workouts.length} tréninků, ${diary.length} zápisků a ${duels.length} duelů? Přepíší se současná data v appce.`)) {
     return false;
   }
 
   Storage.write(WORKOUT_KEY_BACKUP, workouts);
   Storage.write(DIARY_KEY_BACKUP, diary);
+  Storage.write(DUEL_KEY_BACKUP, duels);
 
   statusFn("Hotovo! Data byla obnovena.", false);
   renderBackupCounts();
@@ -149,6 +153,7 @@ async function restoreFromGithubFile(item) {
 function renderBackupCounts() {
   document.getElementById("backupWorkouts").textContent = Storage.read(WORKOUT_KEY_BACKUP, []).length;
   document.getElementById("backupDiary").textContent = Storage.read(DIARY_KEY_BACKUP, []).length;
+  document.getElementById("backupDuels").textContent = Storage.read(DUEL_KEY_BACKUP, []).length;
 }
 
 document.addEventListener("DOMContentLoaded", () => {

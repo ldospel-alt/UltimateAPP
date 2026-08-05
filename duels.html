@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>Duely – Gym Deník</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#111318" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a class="back-btn" href="index.html">←</a>
+    <h1>⚔️ Duely</h1>
+  </div>
+
+  <div class="container">
+
+    <div class="stat-row" style="margin-bottom:14px;">
+      <div class="stat-box"><div class="value" id="statDuels">0</div><div class="label">duelů</div></div>
+      <div class="stat-box"><div class="value" id="statWins">0</div><div class="label">výher</div></div>
+      <div class="stat-box"><div class="value" id="statLosses">0</div><div class="label">proher</div></div>
+      <div class="stat-box"><div class="value" id="statWinRate">0 %</div><div class="label">úspěšnost</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Nový duel</h2>
+      <div class="field">
+        <label>Datum</label>
+        <input type="date" id="duelDate" />
+      </div>
+      <div class="stat-row">
+        <div class="field" style="flex:1;">
+          <label>Moje body (0–5)</label>
+          <input type="number" id="myScore" min="0" max="5" placeholder="0" />
+        </div>
+        <div class="field" style="flex:1;">
+          <label>Body soupeře (0–5)</label>
+          <input type="number" id="oppScore" min="0" max="5" placeholder="0" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Komentář (volitelné)</label>
+        <textarea id="duelComment" placeholder="Poznámka k duelu..."></textarea>
+      </div>
+      <button class="btn block" id="saveDuelBtn">Uložit duel</button>
+    </div>
+
+    <div class="card">
+      <h2>Statistiky v čase</h2>
+      <div class="chart-wrap">
+        <canvas id="duelChart" height="220"></canvas>
+      </div>
+      <p class="empty-hint" id="duelChartEmptyHint" style="display:none;">Zatím žádné duely k zobrazení.</p>
+    </div>
+
+    <div class="card">
+      <h2>Historie duelů</h2>
+      <div id="duelsList"></div>
+      <p class="empty-hint" id="duelsEmptyHint" style="display:none;">Zatím žádné duely. Přidej první nahoře ⬆️</p>
+    </div>
+
+  </div>
+
+  <script src="js/chart.umd.min.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/duels.js"></script>
+  <script>registerServiceWorker();</script>
+</body>
+</html>

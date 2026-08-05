@@ -75,8 +75,8 @@ a { color: inherit; text-decoration: none; }
 
 .tile-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
   padding: 24px 16px;
   max-width: 560px;
   margin: 0 auto;
@@ -95,8 +95,8 @@ a { color: inherit; text-decoration: none; }
   transition: transform 0.1s ease;
 }
 .tile:active { transform: scale(0.96); }
-.tile .emoji { font-size: 42px; }
-.tile .label { font-size: 15px; font-weight: 600; }
+.tile .emoji { font-size: 34px; display: flex; align-items: center; justify-content: center; }
+.tile .label { font-size: 13px; font-weight: 600; text-align: center; }
 
 /* Karty */
 .card {
