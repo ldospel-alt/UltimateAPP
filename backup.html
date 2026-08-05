@@ -41,6 +41,18 @@
     </div>
 
     <div class="card">
+      <h2>Obnovit z GitHub (složka <code>obnova</code>)</h2>
+      <p style="color:var(--text-dim); font-size:14px;">
+        Nahraj .json zálohu do složky <code>obnova</code> ve svém GitHub repu –
+        appka ji odtud najde a nabídne k obnovení. Repo je veřejné, po obnovení
+        soubor zase smaž.
+      </p>
+      <button class="btn secondary block" id="loadGithubBtn">🔄 Načíst seznam záloh z GitHub</button>
+      <div id="githubBackupList" style="margin-top:10px;"></div>
+      <p id="githubStatus" style="margin-top:10px; font-size:14px;"></p>
+    </div>
+
+    <div class="card">
       <h2>Co je v záloze</h2>
       <div class="stat-row">
         <div class="stat-box"><div class="value" id="backupWorkouts">0</div><div class="label">tréninků</div></div>
