@@ -1,6 +1,8 @@
 // Logika pro stránku Duely: záznam soubojů (já vs. soupeř), statistiky a graf průběhu
 
 const DUEL_KEY = "gym_duels";
+const LEAGUE_PLAYER = "Lisan al Kebab";
+const LEAGUE_CSV_URL = "https://docs.google.com/spreadsheets/d/1QD5NBWdrUu2Q9LsAINGSaiSThkKZ8VMreDJK7Afvl24/export?format=csv&gid=77153702";
 let duelChartInstance = null;
 let currentOpponentFilter = null;
 
@@ -74,6 +76,124 @@ function deleteDuel(id) {
   const duels = getDuels().filter((d) => d.id !== id);
   saveDuels(duels);
   renderAllDuels();
+}
+
+// ---- Import z veřejné Google tabulky ----
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let value = "";
+  let quoted = false;
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+
+    if (char === '"') {
+      if (quoted && text[i + 1] === '"') {
+        value += '"';
+        i += 1;
+      } else {
+        quoted = !quoted;
+      }
+    } else if (char === "," && !quoted) {
+      row.push(value);
+      value = "";
+    } else if ((char === "\n" || char === "\r") && !quoted) {
+      if (char === "\r" && text[i + 1] === "\n") i += 1;
+      row.push(value);
+      if (row.some((cell) => cell !== "")) rows.push(row);
+      row = [];
+      value = "";
+    } else {
+      value += char;
+    }
+  }
+
+  row.push(value);
+  if (row.some((cell) => cell !== "")) rows.push(row);
+  return rows;
+}
+
+function leagueDateToIso(value) {
+  const match = value.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+  if (!match) return null;
+  return `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}`;
+}
+
+function leagueRowToDuel(row) {
+  const duelNumber = row[0]?.trim();
+  const player1 = row[1]?.trim();
+  const player2 = row[2]?.trim();
+  const score1 = Number.parseInt(row[3], 10);
+  const score2 = Number.parseInt(row[4], 10);
+  const date = leagueDateToIso(row[9]?.trim() || "");
+
+  if (
+    !duelNumber ||
+    !date ||
+    !Number.isInteger(score1) ||
+    !Number.isInteger(score2) ||
+    (player1 !== LEAGUE_PLAYER && player2 !== LEAGUE_PLAYER)
+  ) {
+    return null;
+  }
+
+  const playerIsFirst = player1 === LEAGUE_PLAYER;
+  return {
+    id: Storage.uid(),
+    sourceId: `summer-league-${duelNumber}`,
+    date,
+    opponentName: playerIsFirst ? player2 : player1,
+    myScore: playerIsFirst ? score1 : score2,
+    oppScore: playerIsFirst ? score2 : score1,
+    comment: row[11]?.trim() || "",
+  };
+}
+
+function showLeagueImportStatus(message, isError) {
+  const status = document.getElementById("importLeagueStatus");
+  status.textContent = message;
+  status.style.color = isError ? "var(--red)" : "var(--green)";
+}
+
+async function importLeagueDuels() {
+  const button = document.getElementById("importLeagueBtn");
+  button.disabled = true;
+  showLeagueImportStatus("Načítám Google tabulku...", false);
+
+  try {
+    const response = await fetch(LEAGUE_CSV_URL, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Google tabulka vrátila chybu ${response.status}.`);
+    }
+
+    const rows = parseCsv(await response.text()).slice(1);
+    const imported = rows.map(leagueRowToDuel).filter(Boolean);
+    const duels = getDuels();
+    const existingSourceIds = new Set(duels.map((duel) => duel.sourceId).filter(Boolean));
+    const newDuels = imported.filter((duel) => !existingSourceIds.has(duel.sourceId));
+
+    if (newDuels.length === 0) {
+      showLeagueImportStatus(`Všech ${imported.length} zápasů už v appce je.`, false);
+      return;
+    }
+
+    if (!confirm(`Přidat ${newDuels.length} zápasů hráče ${LEAGUE_PLAYER}?`)) {
+      showLeagueImportStatus("Import byl zrušen.", false);
+      return;
+    }
+
+    saveDuels([...duels, ...newDuels]);
+    currentOpponentFilter = null;
+    renderAllDuels();
+    showLeagueImportStatus(`Hotovo: přidáno ${newDuels.length} zápasů.`, false);
+  } catch (error) {
+    console.error("Import duelů selhal", error);
+    showLeagueImportStatus("Tabulku se nepodařilo načíst. Zkontroluj připojení a zkus to znovu.", true);
+  } finally {
+    button.disabled = false;
+  }
 }
 
 // ---- Statistiky ----
@@ -266,6 +386,7 @@ function renderAllDuels() {
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("duelDate").value = todayInputValue();
   document.getElementById("saveDuelBtn").addEventListener("click", saveDuel);
+  document.getElementById("importLeagueBtn").addEventListener("click", importLeagueDuels);
   document.getElementById("clearOpponentFilterBtn").addEventListener("click", () => {
     currentOpponentFilter = null;
     renderOpponentsList();
