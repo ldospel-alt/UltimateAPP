@@ -24,6 +24,7 @@
       <div class="stat-box"><div class="value" id="statLosses">0</div><div class="label">proher</div></div>
       <div class="stat-box"><div class="value" id="statWinRate">0 %</div><div class="label">úspěšnost</div></div>
       <div class="stat-box"><div class="value" id="statScoreDiff">0</div><div class="label">celkové +/−</div></div>
+      <div class="stat-box"><div class="value" id="statElo">–</div><div class="label">aktuální ELO</div></div>
     </div>
 
     <div class="card">
@@ -51,6 +52,10 @@
         <label>Komentář (volitelné)</label>
         <textarea id="duelComment" placeholder="Poznámka k duelu..."></textarea>
       </div>
+      <div class="field">
+        <label>Zisk ELO (volitelné, může být i záporný)</label>
+        <input type="number" id="eloDelta" inputmode="decimal" step="0.01" placeholder="Např. 12,50 nebo -8,25" />
+      </div>
       <button class="btn block" id="saveDuelBtn">Uložit duel</button>
     </div>
 
@@ -70,6 +75,14 @@
         <canvas id="duelChart" height="220"></canvas>
       </div>
       <p class="empty-hint" id="duelChartEmptyHint" style="display:none;">Zatím žádné duely k zobrazení.</p>
+    </div>
+
+    <div class="card">
+      <h2>Vývoj ELO</h2>
+      <div class="chart-wrap">
+        <canvas id="eloChart" height="220"></canvas>
+      </div>
+      <p class="empty-hint" id="eloChartEmptyHint" style="display:none;">ELO se zobrazí po importu ligových duelů nebo po ručním zadání změny ELO.</p>
     </div>
 
     <div class="card">

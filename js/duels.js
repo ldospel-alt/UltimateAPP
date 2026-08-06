@@ -1,9 +1,12 @@
 // Logika pro stránku Duely: záznam soubojů (já vs. soupeř), statistiky a graf průběhu
 
 const DUEL_KEY = "gym_duels";
+const DUEL_ELO_START_KEY = "gym_duel_elo_start";
 const LEAGUE_PLAYER = "Lisan al Kebab";
 const LEAGUE_CSV_URL = "https://docs.google.com/spreadsheets/d/1QD5NBWdrUu2Q9LsAINGSaiSThkKZ8VMreDJK7Afvl24/export?format=csv&gid=77153702";
+const LEAGUE_RANKING_CSV_URL = "https://docs.google.com/spreadsheets/d/1QD5NBWdrUu2Q9LsAINGSaiSThkKZ8VMreDJK7Afvl24/export?format=csv&gid=0";
 let duelChartInstance = null;
+let eloChartInstance = null;
 let currentOpponentFilter = null;
 
 function getDuels() {
@@ -12,6 +15,29 @@ function getDuels() {
 
 function saveDuels(list) {
   Storage.write(DUEL_KEY, list);
+}
+
+function getEloStart() {
+  const value = Storage.read(DUEL_ELO_START_KEY, null);
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function parseEloNumber(value) {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  const normalized = String(value || "")
+    .replace(/\s|\u00a0/g, "")
+    .replace(",", ".");
+  if (!normalized) return null;
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function formatElo(value, includeSign = false) {
+  const sign = includeSign && value > 0 ? "+" : "";
+  return `${sign}${value.toLocaleString("cs-CZ", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 function duelResult(duel) {
@@ -40,11 +66,13 @@ function saveDuel() {
   const myScoreInput = document.getElementById("myScore");
   const oppScoreInput = document.getElementById("oppScore");
   const commentInput = document.getElementById("duelComment");
+  const eloDeltaInput = document.getElementById("eloDelta");
 
   const date = dateInput.value || todayInputValue();
   const opponentName = opponentInput.value.trim();
   const myScore = parseInt(myScoreInput.value, 10);
   const oppScore = parseInt(oppScoreInput.value, 10);
+  const eloDelta = parseEloNumber(eloDeltaInput.value);
 
   if (isNaN(myScore) || isNaN(oppScore)) {
     alert("Vyplň prosím obě skóre.");
@@ -59,6 +87,7 @@ function saveDuel() {
     myScore,
     oppScore,
     comment: commentInput.value.trim(),
+    eloDelta,
   });
   saveDuels(duels);
 
@@ -67,6 +96,7 @@ function saveDuel() {
   myScoreInput.value = "";
   oppScoreInput.value = "";
   commentInput.value = "";
+  eloDeltaInput.value = "";
 
   renderAllDuels();
 }
@@ -128,6 +158,7 @@ function leagueRowToDuel(row) {
   const score1 = Number.parseInt(row[3], 10);
   const score2 = Number.parseInt(row[4], 10);
   const date = leagueDateToIso(row[9]?.trim() || "");
+  const player1EloDelta = parseEloNumber(row[24]);
 
   if (
     !duelNumber ||
@@ -148,7 +179,17 @@ function leagueRowToDuel(row) {
     myScore: playerIsFirst ? score1 : score2,
     oppScore: playerIsFirst ? score2 : score1,
     comment: row[11]?.trim() || "",
+    eloDelta: player1EloDelta === null
+      ? null
+      : playerIsFirst
+        ? player1EloDelta
+        : -player1EloDelta,
   };
+}
+
+function getRankingElo(rows) {
+  const playerRow = rows.find((row) => row[0]?.trim() === LEAGUE_PLAYER);
+  return playerRow ? parseEloNumber(playerRow[2]) : null;
 }
 
 function showLeagueImportStatus(message, isError) {
@@ -163,31 +204,54 @@ async function importLeagueDuels() {
   showLeagueImportStatus("Načítám Google tabulku...", false);
 
   try {
-    const response = await fetch(LEAGUE_CSV_URL, { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error(`Google tabulka vrátila chybu ${response.status}.`);
+    const [duelsResponse, rankingResponse] = await Promise.all([
+      fetch(LEAGUE_CSV_URL, { cache: "no-store" }),
+      fetch(LEAGUE_RANKING_CSV_URL, { cache: "no-store" }),
+    ]);
+    if (!duelsResponse.ok || !rankingResponse.ok) {
+      throw new Error("Google tabulka vrátila chybu.");
     }
 
-    const rows = parseCsv(await response.text()).slice(1);
+    const rows = parseCsv(await duelsResponse.text()).slice(1);
+    const rankingRows = parseCsv(await rankingResponse.text()).slice(1);
     const imported = rows.map(leagueRowToDuel).filter(Boolean);
     const duels = getDuels();
-    const existingSourceIds = new Set(duels.map((duel) => duel.sourceId).filter(Boolean));
-    const newDuels = imported.filter((duel) => !existingSourceIds.has(duel.sourceId));
+    const importedBySourceId = new Map(imported.map((duel) => [duel.sourceId, duel]));
+    let updatedCount = 0;
+    const updatedDuels = duels.map((duel) => {
+      const importedDuel = importedBySourceId.get(duel.sourceId);
+      if (!importedDuel) return duel;
+      importedBySourceId.delete(duel.sourceId);
+      if (duel.eloDelta !== importedDuel.eloDelta) updatedCount += 1;
+      return { ...duel, eloDelta: importedDuel.eloDelta };
+    });
+    const newDuels = Array.from(importedBySourceId.values());
+    const rankingElo = getRankingElo(rankingRows);
 
-    if (newDuels.length === 0) {
-      showLeagueImportStatus(`Všech ${imported.length} zápasů už v appce je.`, false);
-      return;
+    if (rankingElo === null) {
+      throw new Error(`V žebříčku nebyl nalezen hráč ${LEAGUE_PLAYER}.`);
     }
 
-    if (!confirm(`Přidat ${newDuels.length} zápasů hráče ${LEAGUE_PLAYER}?`)) {
+    if (
+      newDuels.length > 0 &&
+      !confirm(`Přidat ${newDuels.length} zápasů hráče ${LEAGUE_PLAYER}?`)
+    ) {
       showLeagueImportStatus("Import byl zrušen.", false);
       return;
     }
 
-    saveDuels([...duels, ...newDuels]);
+    const allDuels = [...updatedDuels, ...newDuels];
+    const importedEloTotal = allDuels
+      .filter((duel) => duel.sourceId?.startsWith("summer-league-"))
+      .reduce((sum, duel) => sum + (duel.eloDelta || 0), 0);
+    Storage.write(DUEL_ELO_START_KEY, rankingElo - importedEloTotal);
+    saveDuels(allDuels);
     currentOpponentFilter = null;
     renderAllDuels();
-    showLeagueImportStatus(`Hotovo: přidáno ${newDuels.length} zápasů.`, false);
+    showLeagueImportStatus(
+      `Hotovo: ELO ${formatElo(rankingElo)}, přidáno ${newDuels.length} a aktualizováno ${updatedCount} zápasů.`,
+      false
+    );
   } catch (error) {
     console.error("Import duelů selhal", error);
     showLeagueImportStatus("Tabulku se nepodařilo načíst. Zkontroluj připojení a zkus to znovu.", true);
@@ -205,6 +269,10 @@ function renderDuelStats() {
   const total = duels.length;
   const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
   const scoreDiff = duels.reduce((sum, d) => sum + (d.myScore - d.oppScore), 0);
+  const eloStart = getEloStart();
+  const currentElo = eloStart === null
+    ? null
+    : eloStart + duels.reduce((sum, duel) => sum + (duel.eloDelta || 0), 0);
 
   document.getElementById("statDuels").textContent = total;
   document.getElementById("statWins").textContent = wins;
@@ -214,6 +282,7 @@ function renderDuelStats() {
   const diffEl = document.getElementById("statScoreDiff");
   diffEl.textContent = scoreDiff > 0 ? `+${scoreDiff}` : `${scoreDiff}`;
   diffEl.style.color = scoreDiff > 0 ? "var(--green)" : scoreDiff < 0 ? "var(--red)" : "var(--accent-2)";
+  document.getElementById("statElo").textContent = currentElo === null ? "–" : formatElo(currentElo);
 }
 
 // ---- Historie ----
@@ -249,12 +318,20 @@ function renderDuelsList() {
         <span style="color:${resultColor(result)}; font-weight:700;"> (${resultLabel(result)})</span>
       </div>
       ${duel.comment ? `<div class="session-ex"></div>` : ""}
+      ${typeof duel.eloDelta === "number" ? `<div class="duel-elo"></div>` : ""}
       <div class="session-actions">
         <button class="btn ghost small del-duel">Smazat</button>
       </div>
     `;
     if (duel.comment) {
       item.querySelector(".session-ex").textContent = duel.comment;
+    }
+    if (typeof duel.eloDelta === "number") {
+      const eloEl = item.querySelector(".duel-elo");
+      eloEl.textContent = `ELO ${formatElo(duel.eloDelta, true)}`;
+      eloEl.style.color = duel.eloDelta >= 0 ? "var(--green)" : "var(--red)";
+      eloEl.style.fontSize = "13px";
+      eloEl.style.marginTop = "4px";
     }
     item.querySelector(".del-duel").addEventListener("click", () => deleteDuel(duel.id));
     container.appendChild(item);
@@ -373,6 +450,63 @@ function renderDuelChart() {
   });
 }
 
+function renderEloChart() {
+  const eloStart = getEloStart();
+  const duels = getDuels()
+    .filter((duel) => typeof duel.eloDelta === "number")
+    .slice()
+    .sort((a, b) => (a.date > b.date ? 1 : -1));
+  const canvas = document.getElementById("eloChart");
+  const emptyHint = document.getElementById("eloChartEmptyHint");
+
+  if (eloStart === null || duels.length === 0) {
+    emptyHint.style.display = "block";
+    canvas.style.display = "none";
+    if (eloChartInstance) {
+      eloChartInstance.destroy();
+      eloChartInstance = null;
+    }
+    return;
+  }
+
+  emptyHint.style.display = "none";
+  canvas.style.display = "block";
+
+  let currentElo = eloStart;
+  const labels = ["Start"];
+  const values = [Number(currentElo.toFixed(2))];
+  duels.forEach((duel) => {
+    currentElo += duel.eloDelta;
+    labels.push(`${formatDate(duel.date)} · ${duel.opponentName || "soupeř"}`);
+    values.push(Number(currentElo.toFixed(2)));
+  });
+
+  if (eloChartInstance) eloChartInstance.destroy();
+  eloChartInstance = new Chart(canvas.getContext("2d"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "ELO",
+        data: values,
+        borderColor: "#b13cff",
+        backgroundColor: "rgba(177,60,255,0.18)",
+        pointBackgroundColor: "#b13cff",
+        fill: true,
+        tension: 0.25,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: "#f2f2f5" } } },
+      scales: {
+        x: { ticks: { color: "#9a9ea8" }, grid: { color: "#2a2e38" } },
+        y: { ticks: { color: "#9a9ea8" }, grid: { color: "#2a2e38" } },
+      },
+    },
+  });
+}
+
 // ---- Init ----
 
 function renderAllDuels() {
@@ -381,6 +515,7 @@ function renderAllDuels() {
   renderOpponentsList();
   renderDuelsList();
   renderDuelChart();
+  renderEloChart();
 }
 
 document.addEventListener("DOMContentLoaded", () => {

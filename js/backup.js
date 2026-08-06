@@ -3,6 +3,7 @@
 const WORKOUT_KEY_BACKUP = "gym_workouts";
 const DIARY_KEY_BACKUP = "gym_diary";
 const DUEL_KEY_BACKUP = "gym_duels";
+const DUEL_ELO_START_KEY_BACKUP = "gym_duel_elo_start";
 const GITHUB_OWNER = "ldospel-alt";
 const GITHUB_REPO = "UltimateAPP";
 const GITHUB_FOLDER = "obnova";
@@ -15,6 +16,7 @@ function buildBackupObject() {
     workouts: Storage.read(WORKOUT_KEY_BACKUP, []),
     diary: Storage.read(DIARY_KEY_BACKUP, []),
     duels: Storage.read(DUEL_KEY_BACKUP, []),
+    duelEloStart: Storage.read(DUEL_ELO_START_KEY_BACKUP, null),
   };
 }
 
@@ -57,6 +59,7 @@ function restoreFromParsedData(data, statusFn) {
   const workouts = Array.isArray(data.workouts) ? data.workouts : [];
   const diary = Array.isArray(data.diary) ? data.diary : [];
   const duels = Array.isArray(data.duels) ? data.duels : [];
+  const duelEloStart = typeof data.duelEloStart === "number" ? data.duelEloStart : null;
 
   if (!confirm(`Obnovit ${workouts.length} tréninků, ${diary.length} zápisků a ${duels.length} duelů? Přepíší se současná data v appce.`)) {
     return false;
@@ -65,6 +68,11 @@ function restoreFromParsedData(data, statusFn) {
   Storage.write(WORKOUT_KEY_BACKUP, workouts);
   Storage.write(DIARY_KEY_BACKUP, diary);
   Storage.write(DUEL_KEY_BACKUP, duels);
+  if (duelEloStart === null) {
+    localStorage.removeItem(DUEL_ELO_START_KEY_BACKUP);
+  } else {
+    Storage.write(DUEL_ELO_START_KEY_BACKUP, duelEloStart);
+  }
 
   statusFn("Hotovo! Data byla obnovena.", false);
   renderBackupCounts();
