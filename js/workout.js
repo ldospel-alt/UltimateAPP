@@ -123,13 +123,50 @@ function renderSessionsList() {
       })
       .join(" • ");
     item.innerHTML = `
-      <div class="session-date">${formatDate(session.date)}</div>
-      <div class="session-ex">${exSummary}</div>
+      <button class="session-toggle" type="button" aria-expanded="false">
+        <span>
+          <span class="session-date">${formatDate(session.date)}</span>
+          <span class="session-ex">${exSummary}</span>
+        </span>
+        <span class="session-chevron">⌄</span>
+      </button>
+      <div class="session-details" hidden></div>
       <div class="session-actions">
         <button class="btn ghost small del-session">Smazat</button>
       </div>
     `;
-    item.querySelector(".del-session").addEventListener("click", () => deleteSession(session.id));
+
+    const details = item.querySelector(".session-details");
+    session.exercises.forEach((exercise) => {
+      const exerciseEl = document.createElement("div");
+      exerciseEl.className = "session-detail-exercise";
+
+      const title = document.createElement("strong");
+      title.textContent = exercise.name;
+      exerciseEl.appendChild(title);
+
+      const sets = document.createElement("div");
+      sets.className = "session-detail-sets";
+      exercise.sets.forEach((set, index) => {
+        const row = document.createElement("div");
+        row.textContent = `${index + 1}. série: ${set.reps} opakování × ${set.weight} kg`;
+        sets.appendChild(row);
+      });
+      exerciseEl.appendChild(sets);
+      details.appendChild(exerciseEl);
+    });
+
+    const toggle = item.querySelector(".session-toggle");
+    toggle.addEventListener("click", () => {
+      const willOpen = details.hidden;
+      details.hidden = !willOpen;
+      toggle.setAttribute("aria-expanded", String(willOpen));
+      item.classList.toggle("expanded", willOpen);
+    });
+    item.querySelector(".del-session").addEventListener("click", (event) => {
+      event.stopPropagation();
+      deleteSession(session.id);
+    });
     container.appendChild(item);
   });
 }

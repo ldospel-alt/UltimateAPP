@@ -9,10 +9,19 @@ const GITHUB_REPO = "UltimateAPP";
 const GITHUB_FOLDER = "obnova";
 
 function buildBackupObject() {
+  const storage = {};
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (!key || !key.startsWith("gym_")) continue;
+    storage[key] = Storage.read(key, null);
+  }
+
   return {
     app: "gym-denik",
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
+    storage,
+    // Ponecháno kvůli čitelnosti a kompatibilitě se staršími verzemi appky.
     workouts: Storage.read(WORKOUT_KEY_BACKUP, []),
     diary: Storage.read(DIARY_KEY_BACKUP, []),
     duels: Storage.read(DUEL_KEY_BACKUP, []),
@@ -56,22 +65,42 @@ function restoreFromParsedData(data, statusFn) {
     return false;
   }
 
-  const workouts = Array.isArray(data.workouts) ? data.workouts : [];
-  const diary = Array.isArray(data.diary) ? data.diary : [];
-  const duels = Array.isArray(data.duels) ? data.duels : [];
+  const hasStorageSnapshot =
+    data.storage && typeof data.storage === "object" && !Array.isArray(data.storage);
+  const workouts = Array.isArray(data.storage?.[WORKOUT_KEY_BACKUP])
+    ? data.storage[WORKOUT_KEY_BACKUP]
+    : Array.isArray(data.workouts) ? data.workouts : [];
+  const diary = Array.isArray(data.storage?.[DIARY_KEY_BACKUP])
+    ? data.storage[DIARY_KEY_BACKUP]
+    : Array.isArray(data.diary) ? data.diary : [];
+  const duels = Array.isArray(data.storage?.[DUEL_KEY_BACKUP])
+    ? data.storage[DUEL_KEY_BACKUP]
+    : Array.isArray(data.duels) ? data.duels : [];
   const duelEloStart = typeof data.duelEloStart === "number" ? data.duelEloStart : null;
 
   if (!confirm(`Obnovit ${workouts.length} tréninků, ${diary.length} zápisků a ${duels.length} duelů? Přepíší se současná data v appce.`)) {
     return false;
   }
 
-  Storage.write(WORKOUT_KEY_BACKUP, workouts);
-  Storage.write(DIARY_KEY_BACKUP, diary);
-  Storage.write(DUEL_KEY_BACKUP, duels);
-  if (duelEloStart === null) {
-    localStorage.removeItem(DUEL_ELO_START_KEY_BACKUP);
+  if (hasStorageSnapshot) {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (key?.startsWith("gym_")) keysToRemove.push(key);
+    }
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+    Object.entries(data.storage).forEach(([key, value]) => {
+      if (key.startsWith("gym_")) Storage.write(key, value);
+    });
   } else {
-    Storage.write(DUEL_ELO_START_KEY_BACKUP, duelEloStart);
+    Storage.write(WORKOUT_KEY_BACKUP, workouts);
+    Storage.write(DIARY_KEY_BACKUP, diary);
+    Storage.write(DUEL_KEY_BACKUP, duels);
+    if (duelEloStart === null) {
+      localStorage.removeItem(DUEL_ELO_START_KEY_BACKUP);
+    } else {
+      Storage.write(DUEL_ELO_START_KEY_BACKUP, duelEloStart);
+    }
   }
 
   statusFn("Hotovo! Data byla obnovena.", false);
