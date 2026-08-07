@@ -3,11 +3,13 @@
 const DUEL_KEY = "gym_duels";
 const DUEL_ELO_START_KEY = "gym_duel_elo_start";
 const LEAGUE_PLAYER = "Lisan al Kebab";
+const DUEL_WEAPONS = ["Blade", "Double-blade", "Staff"];
 const LEAGUE_CSV_URL = "https://docs.google.com/spreadsheets/d/1QD5NBWdrUu2Q9LsAINGSaiSThkKZ8VMreDJK7Afvl24/export?format=csv&gid=77153702";
 const LEAGUE_RANKING_CSV_URL = "https://docs.google.com/spreadsheets/d/1QD5NBWdrUu2Q9LsAINGSaiSThkKZ8VMreDJK7Afvl24/export?format=csv&gid=0";
 let duelChartInstance = null;
 let eloChartInstance = null;
 let currentOpponentFilter = null;
+let editingDuelId = null;
 
 function getDuels() {
   return Storage.read(DUEL_KEY, []);
@@ -15,6 +17,22 @@ function getDuels() {
 
 function saveDuels(list) {
   Storage.write(DUEL_KEY, list);
+}
+
+function normalizeWeapon(value) {
+  return DUEL_WEAPONS.includes(value) ? value : "Blade";
+}
+
+function migrateDuelWeapons() {
+  const duels = getDuels();
+  let changed = false;
+  const migrated = duels.map((duel) => {
+    const myWeapon = normalizeWeapon(duel.myWeapon);
+    const oppWeapon = normalizeWeapon(duel.oppWeapon);
+    if (duel.myWeapon !== myWeapon || duel.oppWeapon !== oppWeapon) changed = true;
+    return { ...duel, myWeapon, oppWeapon };
+  });
+  if (changed) saveDuels(migrated);
 }
 
 function getEloStart() {
@@ -67,12 +85,16 @@ function saveDuel() {
   const oppScoreInput = document.getElementById("oppScore");
   const commentInput = document.getElementById("duelComment");
   const eloDeltaInput = document.getElementById("eloDelta");
+  const myWeaponInput = document.getElementById("myWeapon");
+  const oppWeaponInput = document.getElementById("oppWeapon");
 
   const date = dateInput.value || todayInputValue();
   const opponentName = opponentInput.value.trim();
   const myScore = parseInt(myScoreInput.value, 10);
   const oppScore = parseInt(oppScoreInput.value, 10);
   const eloDelta = parseEloNumber(eloDeltaInput.value);
+  const myWeapon = normalizeWeapon(myWeaponInput.value);
+  const oppWeapon = normalizeWeapon(oppWeaponInput.value);
 
   if (isNaN(myScore) || isNaN(oppScore)) {
     alert("Vyplň prosím obě skóre.");
@@ -80,25 +102,63 @@ function saveDuel() {
   }
 
   const duels = getDuels();
-  duels.push({
-    id: Storage.uid(),
+  const duelData = {
     date,
     opponentName,
     myScore,
     oppScore,
+    myWeapon,
+    oppWeapon,
     comment: commentInput.value.trim(),
     eloDelta,
-  });
-  saveDuels(duels);
+  };
 
-  dateInput.value = todayInputValue();
-  opponentInput.value = "";
-  myScoreInput.value = "";
-  oppScoreInput.value = "";
-  commentInput.value = "";
-  eloDeltaInput.value = "";
+  if (editingDuelId) {
+    saveDuels(duels.map((duel) =>
+      duel.id === editingDuelId ? { ...duel, ...duelData } : duel
+    ));
+  } else {
+    duels.push({ id: Storage.uid(), ...duelData });
+    saveDuels(duels);
+  }
 
+  resetDuelForm();
   renderAllDuels();
+}
+
+function resetDuelForm() {
+  editingDuelId = null;
+  document.getElementById("duelFormTitle").textContent = "Nový duel";
+  document.getElementById("saveDuelBtn").textContent = "Uložit duel";
+  document.getElementById("cancelEditDuelBtn").style.display = "none";
+  document.getElementById("duelDate").value = todayInputValue();
+  document.getElementById("opponentName").value = "";
+  document.getElementById("myScore").value = "";
+  document.getElementById("oppScore").value = "";
+  document.getElementById("myWeapon").value = "Blade";
+  document.getElementById("oppWeapon").value = "Blade";
+  document.getElementById("duelComment").value = "";
+  document.getElementById("eloDelta").value = "";
+}
+
+function editDuel(id) {
+  const duel = getDuels().find((item) => item.id === id);
+  if (!duel) return;
+
+  editingDuelId = id;
+  document.getElementById("duelFormTitle").textContent = "Upravit duel";
+  document.getElementById("saveDuelBtn").textContent = "Uložit změny";
+  document.getElementById("cancelEditDuelBtn").style.display = "block";
+  document.getElementById("duelDate").value = duel.date || todayInputValue();
+  document.getElementById("opponentName").value = duel.opponentName || "";
+  document.getElementById("myScore").value = duel.myScore;
+  document.getElementById("oppScore").value = duel.oppScore;
+  document.getElementById("myWeapon").value = normalizeWeapon(duel.myWeapon);
+  document.getElementById("oppWeapon").value = normalizeWeapon(duel.oppWeapon);
+  document.getElementById("duelComment").value = duel.comment || "";
+  document.getElementById("eloDelta").value =
+    typeof duel.eloDelta === "number" ? duel.eloDelta : "";
+  document.getElementById("duelFormTitle").scrollIntoView({ behavior: "smooth" });
 }
 
 function deleteDuel(id) {
@@ -178,6 +238,8 @@ function leagueRowToDuel(row) {
     opponentName: playerIsFirst ? player2 : player1,
     myScore: playerIsFirst ? score1 : score2,
     oppScore: playerIsFirst ? score2 : score1,
+    myWeapon: "Blade",
+    oppWeapon: "Blade",
     comment: row[11]?.trim() || "",
     eloDelta: player1EloDelta === null
       ? null
@@ -317,12 +379,18 @@ function renderDuelsList() {
       <div class="session-date">${formatDate(duel.date)}${opponentLabel} — ${duel.myScore}:${duel.oppScore}
         <span style="color:${resultColor(result)}; font-weight:700;"> (${resultLabel(result)})</span>
       </div>
+      <div class="duel-weapons"></div>
       ${duel.comment ? `<div class="session-ex"></div>` : ""}
       ${typeof duel.eloDelta === "number" ? `<div class="duel-elo"></div>` : ""}
       <div class="session-actions">
+        <button class="btn ghost small edit-duel">Upravit</button>
         <button class="btn ghost small del-duel">Smazat</button>
       </div>
     `;
+    item.querySelector(".duel-weapons").textContent =
+      `Zbraně: ${normalizeWeapon(duel.myWeapon)} vs. ${normalizeWeapon(duel.oppWeapon)}`;
+    item.querySelector(".duel-weapons").style.color = "var(--text-dim)";
+    item.querySelector(".duel-weapons").style.fontSize = "13px";
     if (duel.comment) {
       item.querySelector(".session-ex").textContent = duel.comment;
     }
@@ -333,6 +401,7 @@ function renderDuelsList() {
       eloEl.style.fontSize = "13px";
       eloEl.style.marginTop = "4px";
     }
+    item.querySelector(".edit-duel").addEventListener("click", () => editDuel(duel.id));
     item.querySelector(".del-duel").addEventListener("click", () => deleteDuel(duel.id));
     container.appendChild(item);
   });
@@ -519,8 +588,10 @@ function renderAllDuels() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("duelDate").value = todayInputValue();
+  migrateDuelWeapons();
+  resetDuelForm();
   document.getElementById("saveDuelBtn").addEventListener("click", saveDuel);
+  document.getElementById("cancelEditDuelBtn").addEventListener("click", resetDuelForm);
   document.getElementById("importLeagueBtn").addEventListener("click", importLeagueDuels);
   document.getElementById("clearOpponentFilterBtn").addEventListener("click", () => {
     currentOpponentFilter = null;

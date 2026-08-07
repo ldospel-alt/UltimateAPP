@@ -28,7 +28,7 @@
     </div>
 
     <div class="card">
-      <h2>Nový duel</h2>
+      <h2 id="duelFormTitle">Nový duel</h2>
       <div class="field">
         <label>Datum</label>
         <input type="date" id="duelDate" />
@@ -48,6 +48,24 @@
           <input type="number" id="oppScore" min="0" max="5" placeholder="0" />
         </div>
       </div>
+      <div class="stat-row">
+        <div class="field" style="flex:1;">
+          <label>Moje zbraň</label>
+          <select id="myWeapon">
+            <option value="Blade">Blade</option>
+            <option value="Double-blade">Double-blade</option>
+            <option value="Staff">Staff</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1;">
+          <label>Zbraň soupeře</label>
+          <select id="oppWeapon">
+            <option value="Blade">Blade</option>
+            <option value="Double-blade">Double-blade</option>
+            <option value="Staff">Staff</option>
+          </select>
+        </div>
+      </div>
       <div class="field">
         <label>Komentář (volitelné)</label>
         <textarea id="duelComment" placeholder="Poznámka k duelu..."></textarea>
@@ -57,6 +75,7 @@
         <input type="number" id="eloDelta" inputmode="decimal" step="0.01" placeholder="Např. 12,50 nebo -8,25" />
       </div>
       <button class="btn block" id="saveDuelBtn">Uložit duel</button>
+      <button class="btn ghost block" id="cancelEditDuelBtn" style="display:none; margin-top:8px;">Zrušit úpravu</button>
     </div>
 
     <div class="card">
