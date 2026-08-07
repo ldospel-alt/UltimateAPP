@@ -21,9 +21,13 @@
     <div class="card">
       <h2>Nový zápisek</h2>
       <div class="field">
+        <label>Datum</label>
+        <input type="date" id="diaryDate" />
+      </div>
+      <div class="field">
         <textarea id="diaryText" placeholder="Jak proběhl den...?"></textarea>
       </div>
-      <p style="color:var(--text-dim); font-size:13px; margin:0 0 4px 0;">Jak hodnotíš dnešní den?</p>
+      <p style="color:var(--text-dim); font-size:13px; margin:0 0 4px 0;">Jak hodnotíš tento den?</p>
       <div class="rating-row">
         <button class="rate-btn rate-minus" data-rating="-">−</button>
         <button class="rate-btn rate-zero" data-rating="0">0</button>

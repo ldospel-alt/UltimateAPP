@@ -16,9 +16,22 @@ function ratingClass(rating) {
   return "zero";
 }
 
+function entryDateValue(entry) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(entry.date || "")) return entry.date;
+
+  const legacyDate = new Date(entry.date);
+  if (isNaN(legacyDate)) return "";
+  const year = legacyDate.getFullYear();
+  const month = String(legacyDate.getMonth() + 1).padStart(2, "0");
+  const day = String(legacyDate.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function addEntry(rating) {
   const textarea = document.getElementById("diaryText");
+  const dateInput = document.getElementById("diaryDate");
   const text = textarea.value.trim();
+  const date = dateInput.value || todayInputValue();
 
   if (!text) {
     alert("Napiš prosím nějaký text zápisku.");
@@ -28,12 +41,14 @@ function addEntry(rating) {
   const entries = getEntries();
   entries.push({
     id: Storage.uid(),
-    date: new Date().toISOString(),
+    date,
+    createdAt: new Date().toISOString(),
     text,
     rating,
   });
   saveEntries(entries);
   textarea.value = "";
+  dateInput.value = todayInputValue();
   renderEntries();
 }
 
@@ -45,7 +60,11 @@ function deleteEntry(id) {
 }
 
 function renderEntries() {
-  const entries = getEntries().slice().sort((a, b) => (a.date < b.date ? 1 : -1));
+  const entries = getEntries().slice().sort((a, b) => {
+    const dateCompare = entryDateValue(b).localeCompare(entryDateValue(a));
+    if (dateCompare !== 0) return dateCompare;
+    return (b.createdAt || b.date || "").localeCompare(a.createdAt || a.date || "");
+  });
   const container = document.getElementById("diaryList");
   const emptyHint = document.getElementById("diaryEmptyHint");
   container.innerHTML = "";
@@ -57,13 +76,12 @@ function renderEntries() {
     el.className = "diary-entry";
     const cls = ratingClass(entry.rating);
     const symbol = entry.rating === "+" ? "+" : entry.rating === "-" ? "−" : "0";
-    const d = new Date(entry.date);
-    const dateStr = d.toLocaleString("cs-CZ", {
+    const dateValue = entryDateValue(entry);
+    const d = new Date(`${dateValue}T12:00:00`);
+    const dateStr = d.toLocaleDateString("cs-CZ", {
       day: "numeric",
       month: "numeric",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
 
     el.innerHTML = `
@@ -81,6 +99,7 @@ function renderEntries() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("diaryDate").value = todayInputValue();
   document.querySelectorAll(".rate-btn").forEach((btn) => {
     btn.addEventListener("click", () => addEntry(btn.dataset.rating));
   });
