@@ -114,9 +114,15 @@ function normalizeDuelDate(value) {
   return `${String(yearNumber).padStart(4, "0")}-${String(monthNumber).padStart(2, "0")}-${String(dayNumber).padStart(2, "0")}`;
 }
 
+function formatDuelDateInput(value) {
+  const date = normalizeDuelDate(value);
+  if (!date) return value;
+  const [year, month, day] = date.split("-");
+  return `${Number(day)}. ${Number(month)}. ${year}`;
+}
+
 function saveDuel() {
   const dateInput = document.getElementById("duelDate");
-  const manualDateInput = document.getElementById("duelDateManual");
   const opponentInput = document.getElementById("opponentName");
   const myScoreInput = document.getElementById("myScore");
   const oppScoreInput = document.getElementById("oppScore");
@@ -125,8 +131,8 @@ function saveDuel() {
   const myWeaponInput = document.getElementById("myWeapon");
   const oppWeaponInput = document.getElementById("oppWeapon");
 
-  const manualDate = manualDateInput.value.trim();
-  const date = manualDate ? normalizeDuelDate(manualDate) : dateInput.value || todayInputValue();
+  const enteredDate = dateInput.value.trim();
+  const date = enteredDate ? normalizeDuelDate(enteredDate) : todayInputValue();
   const opponentName = opponentInput.value.trim();
   const myScore = parseInt(myScoreInput.value, 10);
   const oppScore = parseInt(oppScoreInput.value, 10);
@@ -136,7 +142,7 @@ function saveDuel() {
 
   if (!date) {
     alert("Zadej platné datum, například 10. 8. 2026, 10082026 nebo 2026-08-10.");
-    manualDateInput.focus();
+    dateInput.focus();
     return;
   }
 
@@ -175,8 +181,9 @@ function resetDuelForm() {
   document.getElementById("duelFormTitle").textContent = "Nový duel";
   document.getElementById("saveDuelBtn").textContent = "Uložit duel";
   document.getElementById("cancelEditDuelBtn").style.display = "none";
-  document.getElementById("duelDate").value = todayInputValue();
-  document.getElementById("duelDateManual").value = "";
+  const today = todayInputValue();
+  document.getElementById("duelDate").value = formatDuelDateInput(today);
+  document.getElementById("duelDatePicker").value = today;
   document.getElementById("opponentName").value = "";
   document.getElementById("myScore").value = "";
   document.getElementById("oppScore").value = "";
@@ -194,8 +201,9 @@ function editDuel(id) {
   document.getElementById("duelFormTitle").textContent = "Upravit duel";
   document.getElementById("saveDuelBtn").textContent = "Uložit změny";
   document.getElementById("cancelEditDuelBtn").style.display = "block";
-  document.getElementById("duelDate").value = duel.date || todayInputValue();
-  document.getElementById("duelDateManual").value = "";
+  const date = duel.date || todayInputValue();
+  document.getElementById("duelDate").value = formatDuelDateInput(date);
+  document.getElementById("duelDatePicker").value = date;
   document.getElementById("opponentName").value = duel.opponentName || "";
   document.getElementById("myScore").value = duel.myScore;
   document.getElementById("oppScore").value = duel.oppScore;
@@ -637,13 +645,13 @@ document.addEventListener("DOMContentLoaded", () => {
   migrateDuelWeapons();
   resetDuelForm();
   const dateInput = document.getElementById("duelDate");
-  const manualDateInput = document.getElementById("duelDateManual");
-  dateInput.addEventListener("change", () => {
-    manualDateInput.value = "";
+  const datePicker = document.getElementById("duelDatePicker");
+  datePicker.addEventListener("change", () => {
+    if (datePicker.value) dateInput.value = formatDuelDateInput(datePicker.value);
   });
-  manualDateInput.addEventListener("input", () => {
-    const date = normalizeDuelDate(manualDateInput.value);
-    if (date) dateInput.value = date;
+  dateInput.addEventListener("input", () => {
+    const date = normalizeDuelDate(dateInput.value);
+    if (date) datePicker.value = date;
   });
   document.getElementById("saveDuelBtn").addEventListener("click", saveDuel);
   document.getElementById("cancelEditDuelBtn").addEventListener("click", resetDuelForm);

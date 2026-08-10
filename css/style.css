@@ -147,7 +147,29 @@ input, select, textarea, button {
   background: #12141a;
   color: var(--text);
 }
-.field .manual-date-input { margin-top: 8px; }
+.date-entry {
+  position: relative;
+}
+.field .date-entry > #duelDate {
+  padding-right: 50px;
+}
+.date-calendar-icon {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.field .date-picker-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 48px;
+  height: 100%;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
 .field textarea { resize: vertical; min-height: 90px; }
 
 .btn {
