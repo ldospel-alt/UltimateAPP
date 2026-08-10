@@ -206,6 +206,26 @@ input, select, textarea, button {
   margin-bottom: 8px;
 }
 .exercise-block .ex-header input { flex: 1; }
+.exercise-type-row {
+  margin-bottom: 8px;
+}
+.exercise-type-row select {
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1px solid #333849;
+  background: #12141a;
+  color: var(--text);
+}
+.quick-exercise-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.quick-exercise-row .btn {
+  flex: 1 1 auto;
+}
 
 .set-row {
   display: flex;

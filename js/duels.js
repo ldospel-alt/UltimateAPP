@@ -600,7 +600,7 @@ function renderEloChart() {
   const values = [Number(currentElo.toFixed(2))];
   duels.forEach((duel) => {
     currentElo += duel.eloDelta;
-    labels.push(`${formatDate(duel.date)} · ${duel.opponentName || "soupeř"}`);
+    labels.push(formatDate(duel.date));
     values.push(Number(currentElo.toFixed(2)));
   });
 

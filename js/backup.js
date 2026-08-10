@@ -1,6 +1,7 @@
 // Export/import všech dat appky do jednoho JSON souboru (ruční záloha, žádné externí služby)
 
 const WORKOUT_KEY_BACKUP = "gym_workouts";
+const CALISTHENICS_KEY_BACKUP = "gym_calisthenics";
 const DIARY_KEY_BACKUP = "gym_diary";
 const DUEL_KEY_BACKUP = "gym_duels";
 const DUEL_ELO_START_KEY_BACKUP = "gym_duel_elo_start";
@@ -18,11 +19,12 @@ function buildBackupObject() {
 
   return {
     app: "gym-denik",
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     storage,
     // Ponecháno kvůli čitelnosti a kompatibilitě se staršími verzemi appky.
     workouts: Storage.read(WORKOUT_KEY_BACKUP, []),
+    calisthenics: Storage.read(CALISTHENICS_KEY_BACKUP, []),
     diary: Storage.read(DIARY_KEY_BACKUP, []),
     duels: Storage.read(DUEL_KEY_BACKUP, []),
     duelEloStart: Storage.read(DUEL_ELO_START_KEY_BACKUP, null),
@@ -76,9 +78,12 @@ function restoreFromParsedData(data, statusFn) {
   const duels = Array.isArray(data.storage?.[DUEL_KEY_BACKUP])
     ? data.storage[DUEL_KEY_BACKUP]
     : Array.isArray(data.duels) ? data.duels : [];
+  const calisthenics = Array.isArray(data.storage?.[CALISTHENICS_KEY_BACKUP])
+    ? data.storage[CALISTHENICS_KEY_BACKUP]
+    : Array.isArray(data.calisthenics) ? data.calisthenics : [];
   const duelEloStart = typeof data.duelEloStart === "number" ? data.duelEloStart : null;
 
-  if (!confirm(`Obnovit ${workouts.length} tréninků, ${diary.length} zápisků a ${duels.length} duelů? Přepíší se současná data v appce.`)) {
+  if (!confirm(`Obnovit ${workouts.length} tréninků, ${calisthenics.length} záznamů calisteniky, ${diary.length} zápisků a ${duels.length} duelů? Přepíší se současná data v appce.`)) {
     return false;
   }
 
@@ -94,6 +99,7 @@ function restoreFromParsedData(data, statusFn) {
     });
   } else {
     Storage.write(WORKOUT_KEY_BACKUP, workouts);
+    Storage.write(CALISTHENICS_KEY_BACKUP, calisthenics);
     Storage.write(DIARY_KEY_BACKUP, diary);
     Storage.write(DUEL_KEY_BACKUP, duels);
     if (duelEloStart === null) {
@@ -189,6 +195,7 @@ async function restoreFromGithubFile(item) {
 
 function renderBackupCounts() {
   document.getElementById("backupWorkouts").textContent = Storage.read(WORKOUT_KEY_BACKUP, []).length;
+  document.getElementById("backupCalisthenics").textContent = Storage.read(CALISTHENICS_KEY_BACKUP, []).length;
   document.getElementById("backupDiary").textContent = Storage.read(DIARY_KEY_BACKUP, []).length;
   document.getElementById("backupDuels").textContent = Storage.read(DUEL_KEY_BACKUP, []).length;
 }

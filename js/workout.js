@@ -1,4 +1,4 @@
-// Logika pro stránku Cvičení: přidávání tréninků, historie, progres grafy, maximální váhy
+// Logika pro stránku Gym: přidávání tréninků, historie, progres grafy, maximální váhy
 
 const WORKOUT_KEY = "gym_workouts";
 

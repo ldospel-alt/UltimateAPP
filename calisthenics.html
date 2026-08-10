@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <title>Gym – Gym Deník</title>
+  <title>Calistenika – Gym Deník</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -13,11 +13,10 @@
 <body>
   <div class="topbar">
     <a class="back-btn" href="index.html">←</a>
-    <h1>🏋️ Gym</h1>
+    <h1>🤸 Calistenika</h1>
   </div>
 
   <div class="container">
-
     <div class="stat-row" id="statsRow">
       <div class="stat-box"><div class="value" id="statSessions">0</div><div class="label">tréninků</div></div>
       <div class="stat-box"><div class="value" id="statWeek">0</div><div class="label">tento týden</div></div>
@@ -25,16 +24,21 @@
     </div>
 
     <div class="card">
-      <h2 id="workoutFormTitle">Nový trénink</h2>
+      <h2 id="calisthenicsFormTitle">Nový trénink</h2>
       <div class="field">
-        <label>Datum</label>
+        <label for="sessionDate">Datum</label>
         <input type="date" id="sessionDate" />
       </div>
 
       <div id="exerciseList"></div>
       <datalist id="exerciseNamesList"></datalist>
 
-      <button class="btn secondary block" id="addExerciseBtn" style="margin-bottom:10px;">+ Přidat cvik</button>
+      <div class="quick-exercise-row">
+        <button class="btn secondary small quick-exercise" data-name="Běh" type="button">+ Běh</button>
+        <button class="btn secondary small quick-exercise" data-name="Kliky" type="button">+ Kliky</button>
+        <button class="btn secondary small quick-exercise" data-name="Plavání" type="button">+ Plavání</button>
+      </div>
+      <button class="btn secondary block" id="addExerciseBtn" style="margin-bottom:10px;">+ Přidat vlastní cvik</button>
       <button class="btn block" id="saveSessionBtn">Uložit trénink</button>
       <button class="btn ghost block" id="cancelEditSessionBtn" style="display:none; margin-top:8px;">Zrušit úpravu</button>
     </div>
@@ -42,12 +46,12 @@
     <div class="card">
       <h2>Progres</h2>
       <div class="field">
-        <label>Vyber cvik</label>
+        <label for="progressExercise">Vyber cvik</label>
         <select id="progressExercise"></select>
       </div>
       <div class="stat-row" style="margin-bottom:10px;">
-        <div class="stat-box"><div class="value" id="maxWeightValue">–</div><div class="label">maximální váha (kg)</div></div>
-        <div class="stat-box"><div class="value" id="maxWeightDate">–</div><div class="label">datum PR</div></div>
+        <div class="stat-box"><div class="value" id="bestValue">–</div><div class="label" id="bestValueLabel">nejlepší výkon</div></div>
+        <div class="stat-box"><div class="value" id="bestDate">–</div><div class="label">datum výkonu</div></div>
       </div>
       <div class="chart-wrap">
         <canvas id="progressChart" height="220"></canvas>
@@ -60,12 +64,11 @@
       <div id="sessionsList"></div>
       <p class="empty-hint" id="sessionsEmptyHint" style="display:none;">Zatím žádné tréninky. Přidej první nahoře ⬆️</p>
     </div>
-
   </div>
 
   <script src="js/chart.umd.min.js"></script>
   <script src="js/storage.js"></script>
-  <script src="js/workout.js"></script>
+  <script src="js/calisthenics.js"></script>
   <script>registerServiceWorker();</script>
 </body>
 </html>
