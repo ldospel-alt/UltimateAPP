@@ -3,6 +3,7 @@
 const WORKOUT_KEY = "gym_workouts";
 
 let chartInstance = null;
+let editingSessionId = null;
 
 function getWorkouts() {
   return Storage.read(WORKOUT_KEY, []);
@@ -14,7 +15,7 @@ function saveWorkouts(list) {
 
 // ---- Formulář na nový trénink ----
 
-function createExerciseBlock() {
+function createExerciseBlock(exercise = null) {
   const wrap = document.createElement("div");
   wrap.className = "exercise-block";
   wrap.innerHTML = `
@@ -31,11 +32,14 @@ function createExerciseBlock() {
     wrap.querySelector(".sets-container").appendChild(createSetRow());
   });
 
-  wrap.querySelector(".sets-container").appendChild(createSetRow());
+  const setsContainer = wrap.querySelector(".sets-container");
+  const sets = exercise?.sets?.length ? exercise.sets : [null];
+  sets.forEach((set) => setsContainer.appendChild(createSetRow(set)));
+  if (exercise) wrap.querySelector(".ex-name").value = exercise.name || "";
   return wrap;
 }
 
-function createSetRow() {
+function createSetRow(set = null) {
   const row = document.createElement("div");
   row.className = "set-row";
   row.innerHTML = `
@@ -47,6 +51,10 @@ function createSetRow() {
     const container = row.parentElement;
     if (container.children.length > 1) row.remove();
   });
+  if (set) {
+    row.querySelector(".set-reps").value = set.reps ?? "";
+    row.querySelector(".set-weight").value = set.weight ?? "";
+  }
   return row;
 }
 
@@ -73,10 +81,14 @@ function collectSessionFromForm() {
     if (sets.length > 0) exercises.push({ name, sets });
   });
 
-  return { id: Storage.uid(), date, exercises };
+  return { date, exercises };
 }
 
 function resetForm() {
+  editingSessionId = null;
+  document.getElementById("workoutFormTitle").textContent = "Nový trénink";
+  document.getElementById("saveSessionBtn").textContent = "Uložit trénink";
+  document.getElementById("cancelEditSessionBtn").style.display = "none";
   document.getElementById("sessionDate").value = todayInputValue();
   const list = document.getElementById("exerciseList");
   list.innerHTML = "";
@@ -90,8 +102,14 @@ function saveSession() {
     return;
   }
   const workouts = getWorkouts();
-  workouts.push(session);
-  saveWorkouts(workouts);
+  if (editingSessionId) {
+    saveWorkouts(workouts.map((workout) =>
+      workout.id === editingSessionId ? { ...workout, ...session } : workout
+    ));
+  } else {
+    workouts.push({ id: Storage.uid(), ...session });
+    saveWorkouts(workouts);
+  }
   resetForm();
   renderAll();
 }
@@ -102,7 +120,26 @@ function deleteSession(id) {
   if (!confirm("Opravdu smazat tento trénink?")) return;
   const workouts = getWorkouts().filter((w) => w.id !== id);
   saveWorkouts(workouts);
+  if (editingSessionId === id) resetForm();
   renderAll();
+}
+
+function editSession(id) {
+  const session = getWorkouts().find((workout) => workout.id === id);
+  if (!session) return;
+
+  editingSessionId = id;
+  document.getElementById("workoutFormTitle").textContent = "Upravit trénink";
+  document.getElementById("saveSessionBtn").textContent = "Uložit změny";
+  document.getElementById("cancelEditSessionBtn").style.display = "block";
+  document.getElementById("sessionDate").value = session.date || todayInputValue();
+
+  const list = document.getElementById("exerciseList");
+  list.innerHTML = "";
+  session.exercises.forEach((exercise) => list.appendChild(createExerciseBlock(exercise)));
+  if (session.exercises.length === 0) list.appendChild(createExerciseBlock());
+
+  document.getElementById("workoutFormTitle").scrollIntoView({ behavior: "smooth" });
 }
 
 function renderSessionsList() {
@@ -132,6 +169,7 @@ function renderSessionsList() {
       </button>
       <div class="session-details" hidden></div>
       <div class="session-actions">
+        <button class="btn ghost small edit-session">Upravit</button>
         <button class="btn ghost small del-session">Smazat</button>
       </div>
     `;
@@ -163,6 +201,7 @@ function renderSessionsList() {
       toggle.setAttribute("aria-expanded", String(willOpen));
       item.classList.toggle("expanded", willOpen);
     });
+    item.querySelector(".edit-session").addEventListener("click", () => editSession(session.id));
     item.querySelector(".del-session").addEventListener("click", (event) => {
       event.stopPropagation();
       deleteSession(session.id);
@@ -316,6 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("exerciseList").appendChild(createExerciseBlock());
   });
   document.getElementById("saveSessionBtn").addEventListener("click", saveSession);
+  document.getElementById("cancelEditSessionBtn").addEventListener("click", resetForm);
   document.getElementById("progressExercise").addEventListener("change", renderProgress);
   renderAll();
 });
