@@ -30,8 +30,17 @@
     <div class="card">
       <h2 id="duelFormTitle">Nový duel</h2>
       <div class="field">
-        <label>Datum</label>
+        <label for="duelDate">Datum</label>
         <input type="date" id="duelDate" />
+        <input
+          type="text"
+          id="duelDateManual"
+          class="manual-date-input"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="Napiš/vlož datum (např. 10. 8. 2026 nebo 10082026)"
+          aria-label="Datum zadané ručně"
+        />
       </div>
       <div class="field">
         <label>Jméno soupeře</label>

@@ -78,8 +78,45 @@ function resultColor(result) {
 
 // ---- Nový duel ----
 
+function normalizeDuelDate(value) {
+  const input = value.trim();
+  let year;
+  let month;
+  let day;
+  let match = input.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+
+  if (match) {
+    [, year, month, day] = match;
+  } else {
+    match = input.match(/^(\d{1,2})\s*[./]\s*(\d{1,2})\s*[./]\s*(\d{4})$/);
+    if (match) {
+      [, day, month, year] = match;
+    } else {
+      match = input.match(/^(\d{2})(\d{2})(\d{4})$/);
+      if (!match) return null;
+      [, day, month, year] = match;
+    }
+  }
+
+  const yearNumber = Number(year);
+  const monthNumber = Number(month);
+  const dayNumber = Number(day);
+  const date = new Date(Date.UTC(yearNumber, monthNumber - 1, dayNumber));
+
+  if (
+    date.getUTCFullYear() !== yearNumber ||
+    date.getUTCMonth() !== monthNumber - 1 ||
+    date.getUTCDate() !== dayNumber
+  ) {
+    return null;
+  }
+
+  return `${String(yearNumber).padStart(4, "0")}-${String(monthNumber).padStart(2, "0")}-${String(dayNumber).padStart(2, "0")}`;
+}
+
 function saveDuel() {
   const dateInput = document.getElementById("duelDate");
+  const manualDateInput = document.getElementById("duelDateManual");
   const opponentInput = document.getElementById("opponentName");
   const myScoreInput = document.getElementById("myScore");
   const oppScoreInput = document.getElementById("oppScore");
@@ -88,13 +125,20 @@ function saveDuel() {
   const myWeaponInput = document.getElementById("myWeapon");
   const oppWeaponInput = document.getElementById("oppWeapon");
 
-  const date = dateInput.value || todayInputValue();
+  const manualDate = manualDateInput.value.trim();
+  const date = manualDate ? normalizeDuelDate(manualDate) : dateInput.value || todayInputValue();
   const opponentName = opponentInput.value.trim();
   const myScore = parseInt(myScoreInput.value, 10);
   const oppScore = parseInt(oppScoreInput.value, 10);
   const eloDelta = parseEloNumber(eloDeltaInput.value);
   const myWeapon = normalizeWeapon(myWeaponInput.value);
   const oppWeapon = normalizeWeapon(oppWeaponInput.value);
+
+  if (!date) {
+    alert("Zadej platné datum, například 10. 8. 2026, 10082026 nebo 2026-08-10.");
+    manualDateInput.focus();
+    return;
+  }
 
   if (isNaN(myScore) || isNaN(oppScore)) {
     alert("Vyplň prosím obě skóre.");
@@ -132,6 +176,7 @@ function resetDuelForm() {
   document.getElementById("saveDuelBtn").textContent = "Uložit duel";
   document.getElementById("cancelEditDuelBtn").style.display = "none";
   document.getElementById("duelDate").value = todayInputValue();
+  document.getElementById("duelDateManual").value = "";
   document.getElementById("opponentName").value = "";
   document.getElementById("myScore").value = "";
   document.getElementById("oppScore").value = "";
@@ -150,6 +195,7 @@ function editDuel(id) {
   document.getElementById("saveDuelBtn").textContent = "Uložit změny";
   document.getElementById("cancelEditDuelBtn").style.display = "block";
   document.getElementById("duelDate").value = duel.date || todayInputValue();
+  document.getElementById("duelDateManual").value = "";
   document.getElementById("opponentName").value = duel.opponentName || "";
   document.getElementById("myScore").value = duel.myScore;
   document.getElementById("oppScore").value = duel.oppScore;
@@ -590,6 +636,15 @@ function renderAllDuels() {
 document.addEventListener("DOMContentLoaded", () => {
   migrateDuelWeapons();
   resetDuelForm();
+  const dateInput = document.getElementById("duelDate");
+  const manualDateInput = document.getElementById("duelDateManual");
+  dateInput.addEventListener("change", () => {
+    manualDateInput.value = "";
+  });
+  manualDateInput.addEventListener("input", () => {
+    const date = normalizeDuelDate(manualDateInput.value);
+    if (date) dateInput.value = date;
+  });
   document.getElementById("saveDuelBtn").addEventListener("click", saveDuel);
   document.getElementById("cancelEditDuelBtn").addEventListener("click", resetDuelForm);
   document.getElementById("importLeagueBtn").addEventListener("click", importLeagueDuels);
