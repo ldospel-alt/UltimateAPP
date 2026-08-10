@@ -8,7 +8,6 @@ const EXERCISE_TYPES = {
 
 const DEFAULT_EXERCISES = {
   "běh": { name: "Běh", type: "distance-time" },
-  "kliky": { name: "Kliky", type: "reps" },
   "plavání": { name: "Plavání", type: "swim" },
 };
 
@@ -106,9 +105,10 @@ function renderExerciseEntries(block, entries = [null]) {
   });
 }
 
-function createExerciseBlock(exercise = null) {
+function createExerciseBlock(exercise = null, forcedType = null) {
   const wrap = document.createElement("div");
   wrap.className = "exercise-block";
+  wrap.dataset.forcedType = forcedType || "";
   wrap.innerHTML = `
     <div class="ex-header">
       <input type="text" class="ex-name" placeholder="Název cviku" list="exerciseNamesList" autocomplete="off" />
@@ -120,10 +120,12 @@ function createExerciseBlock(exercise = null) {
   `;
 
   const nameInput = wrap.querySelector(".ex-name");
-  const initialType = exercise?.type || getExerciseType(exercise?.name);
+  const initialType = forcedType || exercise?.type || getExerciseType(exercise?.name);
   const typeSelect = createTypeSelect(initialType);
-  typeSelect.disabled = Boolean(getFixedExerciseType(exercise?.name));
-  wrap.querySelector(".exercise-type-row").appendChild(typeSelect);
+  typeSelect.disabled = true;
+  const typeRow = wrap.querySelector(".exercise-type-row");
+  typeRow.hidden = true;
+  typeRow.appendChild(typeSelect);
   nameInput.value = exercise?.name || "";
 
   wrap.querySelector(".remove-exercise").addEventListener("click", () => wrap.remove());
@@ -133,7 +135,7 @@ function createExerciseBlock(exercise = null) {
   typeSelect.addEventListener("change", () => renderExerciseEntries(wrap));
   nameInput.addEventListener("input", () => {
     const fixedType = getFixedExerciseType(nameInput.value);
-    typeSelect.disabled = Boolean(fixedType);
+    if (fixedType) wrap.dataset.forcedType = fixedType;
     if (fixedType && fixedType !== typeSelect.value) {
       typeSelect.value = fixedType;
       renderExerciseEntries(wrap);
@@ -170,7 +172,8 @@ function collectSessionFromForm() {
 
   document.querySelectorAll("#exerciseList .exercise-block").forEach((block) => {
     const name = block.querySelector(".ex-name").value.trim();
-    const type = getExerciseType(name, block.querySelector(".ex-type").value);
+    const type = getFixedExerciseType(name) || block.dataset.forcedType ||
+      getExerciseType(name, block.querySelector(".ex-type").value);
     if (!name) {
       if (Array.from(block.querySelectorAll(".performance-row")).some(entryHasAnyValue)) invalid = true;
       return;
@@ -200,7 +203,6 @@ function resetForm() {
   document.getElementById("sessionDate").value = todayInputValue();
   const list = document.getElementById("exerciseList");
   list.innerHTML = "";
-  list.appendChild(createExerciseBlock());
 }
 
 function saveSession() {
@@ -463,7 +465,7 @@ function renderProgress() {
   });
 }
 
-function addExerciseByName(name = "") {
+function addExerciseByName(name = "", forcedType = null) {
   const blocks = Array.from(document.querySelectorAll("#exerciseList .exercise-block"));
   const existing = blocks
     .map((block) => block.querySelector(".ex-name"))
@@ -481,16 +483,17 @@ function addExerciseByName(name = "") {
     const nameInput = emptyBlock.querySelector(".ex-name");
     if (name) {
       nameInput.value = name;
-      emptyBlock.querySelector(".ex-type").value = getExerciseType(name);
-      emptyBlock.querySelector(".ex-type").disabled = Boolean(getFixedExerciseType(name));
-      renderExerciseEntries(emptyBlock);
     }
+    emptyBlock.dataset.forcedType = forcedType || "";
+    emptyBlock.querySelector(".ex-type").value = forcedType || getExerciseType(name);
+    renderExerciseEntries(emptyBlock);
     nameInput.focus();
     return;
   }
 
-  const exercise = name ? { name, type: getExerciseType(name), entries: [] } : null;
-  const block = createExerciseBlock(exercise);
+  const type = forcedType || getExerciseType(name);
+  const exercise = name ? { name, type, entries: [] } : null;
+  const block = createExerciseBlock(exercise, forcedType);
   document.getElementById("exerciseList").appendChild(block);
   block.querySelector(".ex-name").focus();
 }
@@ -505,9 +508,10 @@ function renderAll() {
 document.addEventListener("DOMContentLoaded", () => {
   resetForm();
   document.querySelectorAll(".quick-exercise").forEach((button) => {
-    button.addEventListener("click", () => addExerciseByName(button.dataset.name));
+    button.addEventListener("click", () =>
+      addExerciseByName(button.dataset.name, button.dataset.type)
+    );
   });
-  document.getElementById("addExerciseBtn").addEventListener("click", () => addExerciseByName());
   document.getElementById("saveSessionBtn").addEventListener("click", saveSession);
   document.getElementById("cancelEditSessionBtn").addEventListener("click", resetForm);
   document.getElementById("progressExercise").addEventListener("change", renderProgress);
