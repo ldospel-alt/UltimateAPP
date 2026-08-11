@@ -19,6 +19,28 @@
   <div class="container">
 
     <div class="card">
+      <h2>Statistiky dnů</h2>
+      <h3 class="diary-stat-title">Nálada</h3>
+      <div class="stat-row diary-stat-row">
+        <div class="stat-box"><div class="value positive" id="moodPositive">0</div><div class="label">pozitivní</div></div>
+        <div class="stat-box"><div class="value neutral" id="moodNeutral">0</div><div class="label">neutrální</div></div>
+        <div class="stat-box"><div class="value negative" id="moodNegative">0</div><div class="label">negativní</div></div>
+      </div>
+      <h3 class="diary-stat-title">Spánek</h3>
+      <div class="stat-row diary-stat-row">
+        <div class="stat-box"><div class="value positive" id="sleepPositive">0</div><div class="label">pozitivní</div></div>
+        <div class="stat-box"><div class="value neutral" id="sleepNeutral">0</div><div class="label">neutrální</div></div>
+        <div class="stat-box"><div class="value negative" id="sleepNegative">0</div><div class="label">negativní</div></div>
+      </div>
+      <h3 class="diary-stat-title">Stres</h3>
+      <div class="stat-row diary-stat-row">
+        <div class="stat-box"><div class="value positive" id="stressPositive">0</div><div class="label">pozitivní</div></div>
+        <div class="stat-box"><div class="value neutral" id="stressNeutral">0</div><div class="label">neutrální</div></div>
+        <div class="stat-box"><div class="value negative" id="stressNegative">0</div><div class="label">negativní</div></div>
+      </div>
+    </div>
+
+    <div class="card">
       <h2>Nový zápisek</h2>
       <div class="field">
         <label>Datum</label>
@@ -26,6 +48,14 @@
       </div>
       <div class="field">
         <textarea id="diaryText" placeholder="Jak proběhl den...?"></textarea>
+      </div>
+      <div class="diary-rating-group">
+        <p>Jak hodnotíš spánek?</p>
+        <div class="star-rating" id="sleepRating" role="group" aria-label="Hodnocení spánku od 1 do 5"></div>
+      </div>
+      <div class="diary-rating-group">
+        <p>Jak hodnotíš stres? <span>(1 = nízký, 5 = vysoký)</span></p>
+        <div class="star-rating" id="stressRating" role="group" aria-label="Hodnocení stresu od 1 do 5"></div>
       </div>
       <p style="color:var(--text-dim); font-size:13px; margin:0 0 4px 0;">Jak hodnotíš tento den?</p>
       <div class="rating-row">

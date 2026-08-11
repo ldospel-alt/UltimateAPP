@@ -1,6 +1,8 @@
 // Logika pro stránku Deníček: přidávání zápisků s hodnocením +/-/0 a jejich zobrazení
 
 const DIARY_KEY = "gym_diary";
+let selectedSleep = 0;
+let selectedStress = 0;
 
 function getEntries() {
   return Storage.read(DIARY_KEY, []);
@@ -27,6 +29,55 @@ function entryDateValue(entry) {
   return `${year}-${month}-${day}`;
 }
 
+function validStarRating(value) {
+  return Number.isInteger(value) && value >= 1 && value <= 5;
+}
+
+function starText(value) {
+  if (!validStarRating(value)) return "";
+  return `${"★".repeat(value)}${"☆".repeat(5 - value)}`;
+}
+
+function updateStarButtons(containerId, value) {
+  document.querySelectorAll(`#${containerId} .star-btn`).forEach((button) => {
+    const selected = Number(button.dataset.value) <= value;
+    button.classList.toggle("selected", selected);
+    button.setAttribute("aria-pressed", String(Number(button.dataset.value) === value));
+  });
+}
+
+function setStarRating(kind, value) {
+  if (kind === "sleep") {
+    selectedSleep = value;
+    updateStarButtons("sleepRating", value);
+  } else {
+    selectedStress = value;
+    updateStarButtons("stressRating", value);
+  }
+}
+
+function createStarRating(containerId, kind) {
+  const container = document.getElementById(containerId);
+  for (let value = 1; value <= 5; value += 1) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "star-btn";
+    button.dataset.value = String(value);
+    button.textContent = "★";
+    button.setAttribute("aria-label", `${value} z 5`);
+    button.setAttribute("aria-pressed", "false");
+    button.addEventListener("click", () => setStarRating(kind, value));
+    container.appendChild(button);
+  }
+}
+
+function resetWellbeingRatings() {
+  selectedSleep = 0;
+  selectedStress = 0;
+  updateStarButtons("sleepRating", 0);
+  updateStarButtons("stressRating", 0);
+}
+
 function addEntry(rating) {
   const textarea = document.getElementById("diaryText");
   const dateInput = document.getElementById("diaryDate");
@@ -37,6 +88,10 @@ function addEntry(rating) {
     alert("Napiš prosím nějaký text zápisku.");
     return;
   }
+  if (!validStarRating(selectedSleep) || !validStarRating(selectedStress)) {
+    alert("Ohodnoť prosím spánek i stres pomocí 1–5 hvězdiček.");
+    return;
+  }
 
   const entries = getEntries();
   entries.push({
@@ -45,18 +100,71 @@ function addEntry(rating) {
     createdAt: new Date().toISOString(),
     text,
     rating,
+    sleepRating: selectedSleep,
+    stressRating: selectedStress,
   });
   saveEntries(entries);
   textarea.value = "";
   dateInput.value = todayInputValue();
-  renderEntries();
+  resetWellbeingRatings();
+  renderAll();
 }
 
 function deleteEntry(id) {
   if (!confirm("Opravdu smazat tento zápisek?")) return;
   const entries = getEntries().filter((e) => e.id !== id);
   saveEntries(entries);
-  renderEntries();
+  renderAll();
+}
+
+function latestEntryPerDay(entries) {
+  const byDate = new Map();
+  entries.forEach((entry) => {
+    const date = entryDateValue(entry);
+    if (!date) return;
+    const current = byDate.get(date);
+    const timestamp = entry.createdAt || entry.date || "";
+    const currentTimestamp = current?.createdAt || current?.date || "";
+    if (!current || timestamp >= currentTimestamp) byDate.set(date, entry);
+  });
+  return Array.from(byDate.values());
+}
+
+function classifyRating(value, positiveWhenHigh) {
+  if (!validStarRating(value)) return null;
+  if (value === 3) return "Neutral";
+  const positive = positiveWhenHigh ? value >= 4 : value <= 2;
+  return positive ? "Positive" : "Negative";
+}
+
+function renderStats() {
+  const days = latestEntryPerDay(getEntries());
+  const counts = {
+    moodPositive: 0,
+    moodNeutral: 0,
+    moodNegative: 0,
+    sleepPositive: 0,
+    sleepNeutral: 0,
+    sleepNegative: 0,
+    stressPositive: 0,
+    stressNeutral: 0,
+    stressNegative: 0,
+  };
+
+  days.forEach((entry) => {
+    if (entry.rating === "+") counts.moodPositive += 1;
+    else if (entry.rating === "-") counts.moodNegative += 1;
+    else counts.moodNeutral += 1;
+
+    const sleepClass = classifyRating(entry.sleepRating, true);
+    const stressClass = classifyRating(entry.stressRating, false);
+    if (sleepClass) counts[`sleep${sleepClass}`] += 1;
+    if (stressClass) counts[`stress${stressClass}`] += 1;
+  });
+
+  Object.entries(counts).forEach(([id, value]) => {
+    document.getElementById(id).textContent = value;
+  });
 }
 
 function renderEntries() {
@@ -89,19 +197,37 @@ function renderEntries() {
       <div class="content">
         <div class="diary-date">${dateStr}</div>
         <div class="diary-text"></div>
+        <div class="diary-wellbeing"></div>
       </div>
       <button class="diary-del">✕</button>
     `;
     el.querySelector(".diary-text").textContent = entry.text;
+    const wellbeing = [];
+    if (validStarRating(entry.sleepRating)) {
+      wellbeing.push(`Spánek ${starText(entry.sleepRating)}`);
+    }
+    if (validStarRating(entry.stressRating)) {
+      wellbeing.push(`Stres ${starText(entry.stressRating)}`);
+    }
+    const wellbeingElement = el.querySelector(".diary-wellbeing");
+    wellbeingElement.textContent = wellbeing.join(" · ");
+    wellbeingElement.style.display = wellbeing.length > 0 ? "block" : "none";
     el.querySelector(".diary-del").addEventListener("click", () => deleteEntry(entry.id));
     container.appendChild(el);
   });
 }
 
+function renderAll() {
+  renderStats();
+  renderEntries();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("diaryDate").value = todayInputValue();
+  createStarRating("sleepRating", "sleep");
+  createStarRating("stressRating", "stress");
   document.querySelectorAll(".rate-btn").forEach((btn) => {
     btn.addEventListener("click", () => addEntry(btn.dataset.rating));
   });
-  renderEntries();
+  renderAll();
 });

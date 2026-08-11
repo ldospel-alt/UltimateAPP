@@ -348,6 +348,44 @@ input, select, textarea, button {
 }
 
 /* Deníček */
+.diary-stat-title {
+  margin: 14px 0 8px;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+.diary-stat-row .stat-box {
+  padding: 10px 6px;
+}
+.stat-box .value.positive { color: var(--green); }
+.stat-box .value.neutral { color: var(--gray); }
+.stat-box .value.negative { color: var(--red); }
+.diary-rating-group {
+  margin-bottom: 14px;
+}
+.diary-rating-group p {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin: 0 0 6px;
+}
+.diary-rating-group p span {
+  font-size: 11px;
+}
+.star-rating {
+  display: flex;
+  gap: 4px;
+}
+.star-btn {
+  border: 0;
+  background: transparent;
+  color: #555b68;
+  font-size: 32px;
+  line-height: 1;
+  padding: 2px;
+  cursor: pointer;
+}
+.star-btn.selected {
+  color: #f5c542;
+}
 .rating-row {
   display: flex;
   gap: 10px;
@@ -397,6 +435,11 @@ input, select, textarea, button {
 .diary-entry .diary-text {
   white-space: pre-wrap;
   font-size: 15px;
+}
+.diary-wellbeing {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-top: 8px;
 }
 .diary-entry .diary-del {
   background: none;
