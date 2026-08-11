@@ -282,8 +282,8 @@ function renderProgress() {
   if (!exerciseName || workouts.length === 0) {
     emptyHint.style.display = "block";
     canvas.style.display = "none";
-    document.getElementById("maxWeightValue").textContent = "–";
-    document.getElementById("maxWeightDate").textContent = "–";
+    document.getElementById("totalVolumeValue").textContent = "–";
+    document.getElementById("totalVolumeDate").textContent = "–";
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
     return;
   }
@@ -293,22 +293,22 @@ function renderProgress() {
 
   const labels = [];
   const data = [];
-  let prWeight = -Infinity;
-  let prDate = "";
+  let maxVolume = -Infinity;
+  let maxVolumeDate = "";
 
   workouts.forEach((w) => {
     const ex = w.exercises.find((e) => e.name === exerciseName);
-    const maxWeight = Math.max(...ex.sets.map((s) => s.weight));
+    const totalVolume = ex.sets.reduce((sum, set) => sum + (set.reps * set.weight), 0);
     labels.push(formatDate(w.date));
-    data.push(maxWeight);
-    if (maxWeight > prWeight) {
-      prWeight = maxWeight;
-      prDate = w.date;
+    data.push(totalVolume);
+    if (totalVolume > maxVolume) {
+      maxVolume = totalVolume;
+      maxVolumeDate = w.date;
     }
   });
 
-  document.getElementById("maxWeightValue").textContent = `${prWeight} kg`;
-  document.getElementById("maxWeightDate").textContent = formatDate(prDate);
+  document.getElementById("totalVolumeValue").textContent = `${Math.round(maxVolume)} kg`;
+  document.getElementById("totalVolumeDate").textContent = formatDate(maxVolumeDate);
 
   if (chartInstance) chartInstance.destroy();
   chartInstance = new Chart(canvas.getContext("2d"), {
@@ -317,7 +317,7 @@ function renderProgress() {
       labels,
       datasets: [
         {
-          label: `${exerciseName} – max váha (kg)`,
+          label: `${exerciseName} – celkem nazvedáno (kg)`,
           data,
           borderColor: "#8677e0",
           backgroundColor: "rgba(134,119,224,0.25)",

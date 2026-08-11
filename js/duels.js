@@ -543,7 +543,8 @@ function getAllOpponentNames() {
   const duels = getDuels();
   const names = new Set();
   duels.forEach((d) => {
-    if (d.opponentName) names.add(d.opponentName);
+    const name = d.opponentName?.trim();
+    if (name) names.add(name);
   });
   return Array.from(names).sort((a, b) => a.localeCompare(b, "cs"));
 }
