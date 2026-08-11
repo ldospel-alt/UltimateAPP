@@ -1,6 +1,6 @@
-# Gym Deník (Dark Side)
+# UltimateApp
 
-Dark-themed PWA fitness diary for Gym, Calisthenics, Duels and Daily Wellbeing with offline support and instant updates.
+Dark-themed PWA fitness diary for Gym, Calisthenics, Duels and Daily Wellbeing with offline support and much more.
 
 ## Instalace jako appka (PWA)
 
