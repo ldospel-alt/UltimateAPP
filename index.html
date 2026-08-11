@@ -13,24 +13,24 @@
 </head>
 <body>
   <div class="home-title">
-    <h1>Ahoj 👋</h1>
+    <h1 id="homeTitle" tabindex="0" role="button" title="Kliknutím upravit">Welcome to the Dark Side</h1>
     <p>Vyber si, co chceš dnes zapsat</p>
   </div>
 
-  <div class="tile-grid">
-    <a class="tile" href="workout.html">
+  <div class="tile-grid" id="subappGrid">
+    <a class="tile" href="workout.html" data-subapp="gym">
       <div class="emoji">🏋️</div>
       <div class="label">Gym</div>
     </a>
-    <a class="tile" href="calisthenics.html">
+    <a class="tile" href="calisthenics.html" data-subapp="calisthenics">
       <div class="emoji">🤸</div>
       <div class="label">Calistenika</div>
     </a>
-    <a class="tile" href="diary.html">
+    <a class="tile" href="diary.html" data-subapp="diary">
       <div class="emoji">📔</div>
       <div class="label">Deníček</div>
     </a>
-    <a class="tile" href="duels.html">
+    <a class="tile" href="duels.html" data-subapp="duels">
       <div class="emoji">
         <svg viewBox="0 0 100 100" width="34" height="34" xmlns="http://www.w3.org/2000/svg">
           <line x1="78" y1="18" x2="22" y2="82" stroke="#b13cff" stroke-width="9" stroke-linecap="round" />
@@ -44,10 +44,11 @@
   </div>
 
   <div class="container" style="text-align:center;">
-    <a href="backup.html" class="btn ghost small" style="display:inline-block;">⚙️ Záloha dat</a>
+    <a href="settings.html" class="btn ghost small" style="display:inline-block;">⚙️ Settings</a>
   </div>
 
   <script src="js/storage.js"></script>
+  <script src="js/home.js"></script>
   <script>registerServiceWorker();</script>
 </body>
 </html>

@@ -2,12 +2,14 @@ const CALISTHENICS_KEY = "gym_calisthenics";
 
 const EXERCISE_TYPES = {
   reps: "Počet opakování",
+  duration: "Doba trvání (sekundy)",
   "distance-time": "Vzdálenost + čas",
   swim: "Styl + vzdálenost",
 };
 
 const DEFAULT_EXERCISES = {
   "běh": { name: "Běh", type: "distance-time" },
+  "kolo": { name: "Kolo", type: "distance-time" },
   "plavání": { name: "Plavání", type: "swim" },
 };
 
@@ -43,17 +45,17 @@ function getExerciseType(name, fallback = "reps") {
   return EXERCISE_TYPES[fallback] ? fallback : "reps";
 }
 
-function createTypeSelect(type) {
+function createTypeSelect(type, allowedTypes = Object.keys(EXERCISE_TYPES)) {
   const select = document.createElement("select");
   select.className = "ex-type";
   select.setAttribute("aria-label", "Typ měřených údajů");
-  Object.entries(EXERCISE_TYPES).forEach(([value, label]) => {
+  allowedTypes.forEach((value) => {
     const option = document.createElement("option");
     option.value = value;
-    option.textContent = label;
+    option.textContent = EXERCISE_TYPES[value];
     select.appendChild(option);
   });
-  select.value = EXERCISE_TYPES[type] ? type : "reps";
+  select.value = allowedTypes.includes(type) ? type : allowedTypes[0];
   return select;
 }
 
@@ -81,6 +83,12 @@ function createEntryRow(type, entry = null) {
       row.querySelector(".entry-style").value = entry.style ?? "";
       row.querySelector(".entry-distance").value = entry.distance ?? "";
     }
+  } else if (type === "duration") {
+    row.innerHTML = `
+      <input type="number" inputmode="numeric" class="entry-duration" placeholder="Doba trvání (sekundy)" min="0" step="1" />
+      <button type="button" class="remove-set">✕</button>
+    `;
+    if (entry) row.querySelector(".entry-duration").value = entry.duration ?? "";
   } else {
     row.innerHTML = `
       <input type="number" inputmode="numeric" class="entry-reps" placeholder="Počet opakování" min="0" step="1" />
@@ -105,13 +113,27 @@ function renderExerciseEntries(block, entries = [null]) {
   });
 }
 
-function createExerciseBlock(exercise = null, forcedType = null) {
+function exerciseCategory(exercise, requestedCategory = null) {
+  if (requestedCategory) return requestedCategory;
+  if (exercise?.type === "swim") return "swim";
+  if (
+    exercise?.type === "distance-time" &&
+    ["běh", "kolo"].includes(exerciseKey(exercise.name))
+  ) {
+    return "cardio";
+  }
+  if (["reps", "duration"].includes(exercise?.type)) return "exercise";
+  return "legacy";
+}
+
+function createExerciseBlock(exercise = null, forcedType = null, requestedCategory = null) {
   const wrap = document.createElement("div");
   wrap.className = "exercise-block";
   wrap.dataset.forcedType = forcedType || "";
+  wrap.dataset.category = exerciseCategory(exercise, requestedCategory);
   wrap.innerHTML = `
     <div class="ex-header">
-      <input type="text" class="ex-name" placeholder="Název cviku" list="exerciseNamesList" autocomplete="off" />
+      <span class="exercise-name-control"></span>
       <button type="button" class="btn ghost small remove-exercise">✕</button>
     </div>
     <div class="exercise-type-row"></div>
@@ -119,14 +141,40 @@ function createExerciseBlock(exercise = null, forcedType = null) {
     <button type="button" class="btn ghost small add-entry">+ Přidat výkon</button>
   `;
 
-  const nameInput = wrap.querySelector(".ex-name");
+  const nameControl = wrap.querySelector(".exercise-name-control");
+  let nameInput;
+  if (wrap.dataset.category === "cardio") {
+    nameInput = document.createElement("select");
+    nameInput.className = "ex-name";
+    ["Běh", "Kolo"].forEach((name) => {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      nameInput.appendChild(option);
+    });
+  } else {
+    nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.className = "ex-name";
+    nameInput.placeholder = "Název cviku";
+    nameInput.setAttribute("list", "exerciseNamesList");
+    nameInput.autocomplete = "off";
+  }
+  nameControl.appendChild(nameInput);
+
   const initialType = forcedType || exercise?.type || getExerciseType(exercise?.name);
-  const typeSelect = createTypeSelect(initialType);
-  typeSelect.disabled = true;
+  const allowedTypes = wrap.dataset.category === "exercise"
+    ? ["reps", "duration"]
+    : [initialType];
+  const typeSelect = createTypeSelect(initialType, allowedTypes);
+  typeSelect.disabled =
+    allowedTypes.length === 1 || Boolean(getFixedExerciseType(exercise?.name));
   const typeRow = wrap.querySelector(".exercise-type-row");
-  typeRow.hidden = true;
+  typeRow.hidden = wrap.dataset.category !== "exercise";
   typeRow.appendChild(typeSelect);
-  nameInput.value = exercise?.name || "";
+  nameInput.value = wrap.dataset.category === "cardio"
+    ? DEFAULT_EXERCISES[exerciseKey(exercise?.name)]?.name || "Běh"
+    : exercise?.name || "";
 
   wrap.querySelector(".remove-exercise").addEventListener("click", () => wrap.remove());
   wrap.querySelector(".add-entry").addEventListener("click", () => {
@@ -134,9 +182,10 @@ function createExerciseBlock(exercise = null, forcedType = null) {
   });
   typeSelect.addEventListener("change", () => renderExerciseEntries(wrap));
   nameInput.addEventListener("input", () => {
+    if (wrap.dataset.category !== "exercise") return;
     const fixedType = getFixedExerciseType(nameInput.value);
-    if (fixedType) wrap.dataset.forcedType = fixedType;
-    if (fixedType && fixedType !== typeSelect.value) {
+    typeSelect.disabled = Boolean(fixedType);
+    if (fixedType && ["reps", "duration"].includes(fixedType) && fixedType !== typeSelect.value) {
       typeSelect.value = fixedType;
       renderExerciseEntries(wrap);
     }
@@ -161,6 +210,10 @@ function collectEntry(row, type) {
     const distance = Number.parseFloat(row.querySelector(".entry-distance").value);
     return style && Number.isFinite(distance) && distance >= 0 ? { style, distance } : null;
   }
+  if (type === "duration") {
+    const duration = Number.parseInt(row.querySelector(".entry-duration").value, 10);
+    return Number.isInteger(duration) && duration >= 0 ? { duration } : null;
+  }
 
   const reps = Number.parseInt(row.querySelector(".entry-reps").value, 10);
   return Number.isInteger(reps) && reps >= 0 ? { reps } : null;
@@ -172,8 +225,23 @@ function collectSessionFromForm() {
 
   document.querySelectorAll("#exerciseList .exercise-block").forEach((block) => {
     const name = block.querySelector(".ex-name").value.trim();
-    const type = getFixedExerciseType(name) || block.dataset.forcedType ||
-      getExerciseType(name, block.querySelector(".ex-type").value);
+    const selectedType = block.querySelector(".ex-type").value;
+    const fixedType = getFixedExerciseType(name);
+    if (
+      block.dataset.category === "exercise" &&
+      fixedType &&
+      !["reps", "duration"].includes(fixedType)
+    ) {
+      invalid = true;
+      return;
+    }
+    const type = block.dataset.category === "exercise"
+      ? (
+        fixedType && ["reps", "duration"].includes(fixedType)
+          ? fixedType
+          : selectedType
+      )
+      : block.dataset.forcedType || getExerciseType(name, selectedType);
     if (!name) {
       if (Array.from(block.querySelectorAll(".performance-row")).some(entryHasAnyValue)) invalid = true;
       return;
@@ -185,7 +253,16 @@ function collectSessionFromForm() {
       if (entry) entries.push(entry);
       else if (entryHasAnyValue(row)) invalid = true;
     });
-    if (entries.length > 0) exercises.push({ name, type, entries });
+    if (entries.length > 0) {
+      const existing = exercises.find((exercise) => exerciseKey(exercise.name) === exerciseKey(name));
+      if (existing && existing.type !== type) {
+        invalid = true;
+      } else if (existing) {
+        existing.entries.push(...entries);
+      } else {
+        exercises.push({ name, type, entries });
+      }
+    }
   });
 
   return {
@@ -261,11 +338,16 @@ function metricInfo(type) {
   if (type === "swim") {
     return { label: "nejdelší vzdálenost", unit: "m", chartLabel: "vzdálenost (m)" };
   }
+  if (type === "duration") {
+    return { label: "nejdelší trvání", unit: "s", chartLabel: "doba trvání (s)" };
+  }
   return { label: "maximum opakování", unit: "opak.", chartLabel: "počet opakování" };
 }
 
 function entryMetric(entry, type) {
-  return type === "reps" ? entry.reps : entry.distance;
+  if (type === "reps") return entry.reps;
+  if (type === "duration") return entry.duration;
+  return entry.distance;
 }
 
 function exerciseSummary(exercise) {
@@ -277,6 +359,7 @@ function exerciseSummary(exercise) {
 function entryDescription(entry, type) {
   if (type === "distance-time") return `${entry.distance} km · čas ${entry.time}`;
   if (type === "swim") return `${entry.style} · ${entry.distance} m`;
+  if (type === "duration") return `${entry.duration} sekund`;
   return `${entry.reps} opakování`;
 }
 
@@ -465,7 +548,7 @@ function renderProgress() {
   });
 }
 
-function addExerciseByName(name = "", forcedType = null) {
+function addExerciseByName(name = "", forcedType = null, category = null) {
   const blocks = Array.from(document.querySelectorAll("#exerciseList .exercise-block"));
   const existing = blocks
     .map((block) => block.querySelector(".ex-name"))
@@ -475,25 +558,9 @@ function addExerciseByName(name = "", forcedType = null) {
     return;
   }
 
-  const emptyBlock = blocks.find((block) =>
-    block.querySelector(".ex-name").value.trim() === "" &&
-    !Array.from(block.querySelectorAll(".performance-row input")).some((input) => input.value.trim() !== "")
-  );
-  if (emptyBlock) {
-    const nameInput = emptyBlock.querySelector(".ex-name");
-    if (name) {
-      nameInput.value = name;
-    }
-    emptyBlock.dataset.forcedType = forcedType || "";
-    emptyBlock.querySelector(".ex-type").value = forcedType || getExerciseType(name);
-    renderExerciseEntries(emptyBlock);
-    nameInput.focus();
-    return;
-  }
-
   const type = forcedType || getExerciseType(name);
   const exercise = name ? { name, type, entries: [] } : null;
-  const block = createExerciseBlock(exercise, forcedType);
+  const block = createExerciseBlock(exercise, forcedType, category);
   document.getElementById("exerciseList").appendChild(block);
   block.querySelector(".ex-name").focus();
 }
@@ -509,7 +576,7 @@ document.addEventListener("DOMContentLoaded", () => {
   resetForm();
   document.querySelectorAll(".quick-exercise").forEach((button) => {
     button.addEventListener("click", () =>
-      addExerciseByName(button.dataset.name, button.dataset.type)
+      addExerciseByName(button.dataset.name, button.dataset.type, button.dataset.category)
     );
   });
   document.getElementById("saveSessionBtn").addEventListener("click", saveSession);

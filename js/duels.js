@@ -2,7 +2,7 @@
 
 const DUEL_KEY = "gym_duels";
 const DUEL_ELO_START_KEY = "gym_duel_elo_start";
-const LEAGUE_PLAYER = "Lisan al Kebab";
+const DUEL_ELO_STARTS_KEY = "gym_duel_elo_starts";
 const DUEL_WEAPONS = ["Blade", "Double-blade", "Staff"];
 const LEAGUE_CSV_URL = "https://docs.google.com/spreadsheets/d/1QD5NBWdrUu2Q9LsAINGSaiSThkKZ8VMreDJK7Afvl24/export?format=csv&gid=77153702";
 const LEAGUE_RANKING_CSV_URL = "https://docs.google.com/spreadsheets/d/1QD5NBWdrUu2Q9LsAINGSaiSThkKZ8VMreDJK7Afvl24/export?format=csv&gid=0";
@@ -17,6 +17,52 @@ function getDuels() {
 
 function saveDuels(list) {
   Storage.write(DUEL_KEY, list);
+}
+
+function getLeaguePlayer() {
+  return getAppSettings().nickname;
+}
+
+function leagueDuelKey(player, matchId) {
+  return `${player}\u0000${matchId}`;
+}
+
+function getLeagueDuelPlayer(duel) {
+  if (!duel.sourceId?.startsWith("summer-league-")) return null;
+  return duel.leaguePlayer || "Lisan al Kebab";
+}
+
+function getLeagueMatchId(duel) {
+  if (duel.leagueMatchId) return String(duel.leagueMatchId);
+  if (!duel.sourceId?.startsWith("summer-league-")) return null;
+
+  const player = getLeagueDuelPlayer(duel);
+  const scopedPrefix = `summer-league-${encodeURIComponent(player)}-`;
+  if (duel.sourceId.startsWith(scopedPrefix)) {
+    return duel.sourceId.slice(scopedPrefix.length);
+  }
+  return duel.sourceId.slice("summer-league-".length);
+}
+
+function getStoredLeagueDuelKey(duel) {
+  const player = getLeagueDuelPlayer(duel);
+  const matchId = getLeagueMatchId(duel);
+  return player && matchId ? leagueDuelKey(player, matchId) : null;
+}
+
+function isEloDuelForCurrentPlayer(duel) {
+  const player = getLeagueDuelPlayer(duel);
+  return player === null || player === getLeaguePlayer();
+}
+
+function mergeImportedDuel(duel, importedDuel) {
+  return {
+    ...duel,
+    sourceId: importedDuel.sourceId,
+    leagueMatchId: importedDuel.leagueMatchId,
+    leaguePlayer: importedDuel.leaguePlayer,
+    eloDelta: importedDuel.eloDelta,
+  };
 }
 
 function normalizeWeapon(value) {
@@ -36,8 +82,24 @@ function migrateDuelWeapons() {
 }
 
 function getEloStart() {
+  const player = getLeaguePlayer();
+  const starts = Storage.read(DUEL_ELO_STARTS_KEY, {});
+  const playerValue = starts && typeof starts === "object" ? starts[player] : null;
+  if (typeof playerValue === "number" && Number.isFinite(playerValue)) return playerValue;
+
   const value = Storage.read(DUEL_ELO_START_KEY, null);
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
+  return player === "Lisan al Kebab" && typeof value === "number" && Number.isFinite(value)
+    ? value
+    : null;
+}
+
+function saveEloStart(value) {
+  const starts = Storage.read(DUEL_ELO_STARTS_KEY, {});
+  const next = starts && typeof starts === "object" && !Array.isArray(starts)
+    ? { ...starts }
+    : {};
+  next[getLeaguePlayer()] = value;
+  Storage.write(DUEL_ELO_STARTS_KEY, next);
 }
 
 function parseEloNumber(value) {
@@ -266,6 +328,7 @@ function leagueDateToIso(value) {
 }
 
 function leagueRowToDuel(row) {
+  const leaguePlayer = getLeaguePlayer();
   const duelNumber = row[0]?.trim();
   const player1 = row[1]?.trim();
   const player2 = row[2]?.trim();
@@ -279,15 +342,17 @@ function leagueRowToDuel(row) {
     !date ||
     !Number.isInteger(score1) ||
     !Number.isInteger(score2) ||
-    (player1 !== LEAGUE_PLAYER && player2 !== LEAGUE_PLAYER)
+    (player1 !== leaguePlayer && player2 !== leaguePlayer)
   ) {
     return null;
   }
 
-  const playerIsFirst = player1 === LEAGUE_PLAYER;
+  const playerIsFirst = player1 === leaguePlayer;
   return {
     id: Storage.uid(),
-    sourceId: `summer-league-${duelNumber}`,
+    sourceId: `summer-league-${encodeURIComponent(leaguePlayer)}-${duelNumber}`,
+    leagueMatchId: duelNumber,
+    leaguePlayer,
     date,
     opponentName: playerIsFirst ? player2 : player1,
     myScore: playerIsFirst ? score1 : score2,
@@ -304,7 +369,7 @@ function leagueRowToDuel(row) {
 }
 
 function getRankingElo(rows) {
-  const playerRow = rows.find((row) => row[0]?.trim() === LEAGUE_PLAYER);
+  const playerRow = rows.find((row) => row[0]?.trim() === getLeaguePlayer());
   return playerRow ? parseEloNumber(playerRow[2]) : null;
 }
 
@@ -315,6 +380,7 @@ function showLeagueImportStatus(message, isError) {
 }
 
 async function importLeagueDuels() {
+  const leaguePlayer = getLeaguePlayer();
   const button = document.getElementById("importLeagueBtn");
   button.disabled = true;
   showLeagueImportStatus("Načítám Google tabulku...", false);
@@ -332,25 +398,29 @@ async function importLeagueDuels() {
     const rankingRows = parseCsv(await rankingResponse.text()).slice(1);
     const imported = rows.map(leagueRowToDuel).filter(Boolean);
     const duels = getDuels();
-    const importedBySourceId = new Map(imported.map((duel) => [duel.sourceId, duel]));
+    const importedByKey = new Map(imported.map((duel) => [
+      leagueDuelKey(duel.leaguePlayer, duel.leagueMatchId),
+      duel,
+    ]));
     let updatedCount = 0;
     const updatedDuels = duels.map((duel) => {
-      const importedDuel = importedBySourceId.get(duel.sourceId);
+      const storedKey = getStoredLeagueDuelKey(duel);
+      const importedDuel = storedKey ? importedByKey.get(storedKey) : null;
       if (!importedDuel) return duel;
-      importedBySourceId.delete(duel.sourceId);
+      importedByKey.delete(storedKey);
       if (duel.eloDelta !== importedDuel.eloDelta) updatedCount += 1;
-      return { ...duel, eloDelta: importedDuel.eloDelta };
+      return mergeImportedDuel(duel, importedDuel);
     });
-    const newDuels = Array.from(importedBySourceId.values());
+    const newDuels = Array.from(importedByKey.values());
     const rankingElo = getRankingElo(rankingRows);
 
     if (rankingElo === null) {
-      throw new Error(`V žebříčku nebyl nalezen hráč ${LEAGUE_PLAYER}.`);
+      throw new Error(`V žebříčku nebyl nalezen hráč ${leaguePlayer}.`);
     }
 
     if (
       newDuels.length > 0 &&
-      !confirm(`Přidat ${newDuels.length} zápasů hráče ${LEAGUE_PLAYER}?`)
+      !confirm(`Přidat ${newDuels.length} zápasů hráče ${leaguePlayer}?`)
     ) {
       showLeagueImportStatus("Import byl zrušen.", false);
       return;
@@ -358,9 +428,11 @@ async function importLeagueDuels() {
 
     const allDuels = [...updatedDuels, ...newDuels];
     const importedEloTotal = allDuels
-      .filter((duel) => duel.sourceId?.startsWith("summer-league-"))
+      .filter((duel) =>
+        getLeagueDuelPlayer(duel) === leaguePlayer
+      )
       .reduce((sum, duel) => sum + (duel.eloDelta || 0), 0);
-    Storage.write(DUEL_ELO_START_KEY, rankingElo - importedEloTotal);
+    saveEloStart(rankingElo - importedEloTotal);
     saveDuels(allDuels);
     currentOpponentFilter = null;
     renderAllDuels();
@@ -370,7 +442,10 @@ async function importLeagueDuels() {
     );
   } catch (error) {
     console.error("Import duelů selhal", error);
-    showLeagueImportStatus("Tabulku se nepodařilo načíst. Zkontroluj připojení a zkus to znovu.", true);
+    const message = error instanceof Error && error.message.startsWith("V žebříčku")
+      ? error.message
+      : "Tabulku se nepodařilo načíst. Zkontroluj připojení a zkus to znovu.";
+    showLeagueImportStatus(message, true);
   } finally {
     button.disabled = false;
   }
@@ -386,9 +461,10 @@ function renderDuelStats() {
   const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
   const scoreDiff = duels.reduce((sum, d) => sum + (d.myScore - d.oppScore), 0);
   const eloStart = getEloStart();
+  const eloDuels = duels.filter(isEloDuelForCurrentPlayer);
   const currentElo = eloStart === null
     ? null
-    : eloStart + duels.reduce((sum, duel) => sum + (duel.eloDelta || 0), 0);
+    : eloStart + eloDuels.reduce((sum, duel) => sum + (duel.eloDelta || 0), 0);
 
   document.getElementById("statDuels").textContent = total;
   document.getElementById("statWins").textContent = wins;
@@ -576,7 +652,9 @@ function renderDuelChart() {
 function renderEloChart() {
   const eloStart = getEloStart();
   const duels = getDuels()
-    .filter((duel) => typeof duel.eloDelta === "number")
+    .filter((duel) =>
+      typeof duel.eloDelta === "number" && isEloDuelForCurrentPlayer(duel)
+    )
     .slice()
     .sort((a, b) => (a.date > b.date ? 1 : -1));
   const canvas = document.getElementById("eloChart");
@@ -644,6 +722,7 @@ function renderAllDuels() {
 document.addEventListener("DOMContentLoaded", () => {
   migrateDuelWeapons();
   resetDuelForm();
+  document.getElementById("leaguePlayerName").textContent = getLeaguePlayer();
   const dateInput = document.getElementById("duelDate");
   const datePicker = document.getElementById("duelDatePicker");
   datePicker.addEventListener("change", () => {

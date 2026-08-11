@@ -17,6 +17,56 @@ const Storage = {
   }
 };
 
+const APP_SETTINGS_KEY = "gym_settings";
+const DEFAULT_SUBAPPS = [
+  { id: "gym", visible: true },
+  { id: "calisthenics", visible: true },
+  { id: "diary", visible: true },
+  { id: "duels", visible: true },
+];
+
+function normalizeAppSettings(value) {
+  const raw = value && typeof value === "object" ? value : {};
+  const seen = new Set();
+  const subapps = [];
+
+  if (Array.isArray(raw.subapps)) {
+    raw.subapps.forEach((item) => {
+      if (
+        item &&
+        DEFAULT_SUBAPPS.some((subapp) => subapp.id === item.id) &&
+        !seen.has(item.id)
+      ) {
+        seen.add(item.id);
+        subapps.push({ id: item.id, visible: item.visible !== false });
+      }
+    });
+  }
+  DEFAULT_SUBAPPS.forEach((item) => {
+    if (!seen.has(item.id)) subapps.push({ ...item });
+  });
+
+  return {
+    nickname: typeof raw.nickname === "string" && raw.nickname.trim()
+      ? raw.nickname.trim()
+      : "Lisan al Kebab",
+    homeTitle: typeof raw.homeTitle === "string" && raw.homeTitle.trim()
+      ? raw.homeTitle.trim()
+      : "Welcome to the Dark Side",
+    subapps,
+  };
+}
+
+function getAppSettings() {
+  return normalizeAppSettings(Storage.read(APP_SETTINGS_KEY, null));
+}
+
+function saveAppSettings(settings) {
+  const normalized = normalizeAppSettings(settings);
+  Storage.write(APP_SETTINGS_KEY, normalized);
+  return normalized;
+}
+
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

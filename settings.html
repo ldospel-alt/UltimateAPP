@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>Settings – Gym Deník</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#111318" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a class="back-btn" href="index.html">←</a>
+    <h1>⚙️ Settings</h1>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h2>Nickname</h2>
+      <p style="color:var(--text-dim); font-size:14px;">
+        Jméno používané pro rozpoznání tvých zápasů v Summer League.
+      </p>
+      <div class="field">
+        <label for="nicknameInput">Nickname</label>
+        <input type="text" id="nicknameInput" autocomplete="off" />
+      </div>
+      <button class="btn block" id="saveNicknameBtn">Uložit nickname</button>
+      <p id="nicknameStatus" style="margin:10px 0 0; font-size:14px;"></p>
+    </div>
+
+    <div class="card">
+      <h2>Subappky na úvodní stránce</h2>
+      <p style="color:var(--text-dim); font-size:14px;">
+        Zaškrtni zobrazené subappky a šipkami změň jejich pořadí.
+      </p>
+      <div id="subappSettingsList"></div>
+    </div>
+
+    <a class="card settings-backup-link" href="backup.html" style="display:block;">
+      <h2>💾 Zálohování dat</h2>
+      <p style="color:var(--text-dim); font-size:14px; margin-bottom:0;">
+        Export, import a obnova dat z GitHubu.
+      </p>
+    </a>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/settings.js"></script>
+  <script>registerServiceWorker();</script>
+</body>
+</html>

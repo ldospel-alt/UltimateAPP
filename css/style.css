@@ -71,6 +71,11 @@ a { color: inherit; text-decoration: none; }
   padding: calc(32px + env(safe-area-inset-top)) 16px 8px 16px;
 }
 .home-title h1 { margin: 0 0 4px 0; font-size: 26px; }
+.home-title h1[contenteditable="true"] {
+  outline: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 4px 8px;
+}
 .home-title p { margin: 0; color: var(--text-dim); font-size: 14px; }
 
 .tile-grid {
@@ -94,6 +99,7 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 4px 14px rgba(0,0,0,0.35);
   transition: transform 0.1s ease;
 }
+.tile[hidden] { display: none !important; }
 .tile:active { transform: scale(0.96); }
 .tile .emoji { font-size: 34px; display: flex; align-items: center; justify-content: center; }
 .tile .label { font-size: 13px; font-weight: 600; text-align: center; }
@@ -225,6 +231,35 @@ input, select, textarea, button {
 }
 .quick-exercise-row .btn {
   flex: 1 1 auto;
+}
+.exercise-name-control {
+  flex: 1;
+}
+.exercise-name-control .ex-name {
+  width: 100%;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #2a2e38;
+}
+.settings-item:last-child { border-bottom: 0; }
+.settings-item label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.settings-item input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+}
+.settings-order-actions {
+  display: flex;
+  gap: 6px;
 }
 
 .set-row {
