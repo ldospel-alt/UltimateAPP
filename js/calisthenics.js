@@ -66,7 +66,7 @@ function createEntryRow(type, entry = null) {
   if (type === "distance-time") {
     row.innerHTML = `
       <input type="number" inputmode="decimal" class="entry-distance" placeholder="Vzdálenost (km)" min="0" step="0.01" />
-      <input type="text" inputmode="numeric" class="entry-time" placeholder="Čas (např. 25:30)" />
+      <input type="text" inputmode="text" class="entry-time" placeholder="Čas (např. 25:30)" autocomplete="off" />
       <button type="button" class="remove-set">✕</button>
     `;
     if (entry) {
