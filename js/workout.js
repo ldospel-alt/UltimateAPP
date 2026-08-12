@@ -3,6 +3,7 @@
 const WORKOUT_KEY = "gym_workouts";
 
 let chartInstance = null;
+let maxWeightChartInstance = null;
 let editingSessionId = null;
 
 function getWorkouts() {
@@ -282,25 +283,33 @@ function renderProgress() {
   if (!exerciseName || workouts.length === 0) {
     emptyHint.style.display = "block";
     canvas.style.display = "none";
+    const maxWeightCanvas = document.getElementById("maxWeightChart");
+    maxWeightCanvas.style.display = "none";
     document.getElementById("totalVolumeValue").textContent = "–";
     document.getElementById("totalVolumeDate").textContent = "–";
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+    if (maxWeightChartInstance) { maxWeightChartInstance.destroy(); maxWeightChartInstance = null; }
     return;
   }
 
   emptyHint.style.display = "none";
   canvas.style.display = "block";
+  const maxWeightCanvas = document.getElementById("maxWeightChart");
+  maxWeightCanvas.style.display = "block";
 
   const labels = [];
-  const data = [];
+  const totalVolumeData = [];
+  const maxWeightData = [];
   let maxVolume = -Infinity;
   let maxVolumeDate = "";
 
   workouts.forEach((w) => {
     const ex = w.exercises.find((e) => e.name === exerciseName);
     const totalVolume = ex.sets.reduce((sum, set) => sum + (set.reps * set.weight), 0);
+    const maxWeight = Math.max(...ex.sets.map((s) => s.weight));
     labels.push(formatDate(w.date));
-    data.push(totalVolume);
+    totalVolumeData.push(totalVolume);
+    maxWeightData.push(maxWeight);
     if (totalVolume > maxVolume) {
       maxVolume = totalVolume;
       maxVolumeDate = w.date;
@@ -318,13 +327,41 @@ function renderProgress() {
       datasets: [
         {
           label: `${exerciseName} – celkem nazvedáno (kg)`,
-          data,
+          data: totalVolumeData,
           borderColor: "#8677e0",
           backgroundColor: "rgba(134,119,224,0.25)",
           tension: 0.25,
           fill: true,
           pointRadius: 4,
           pointBackgroundColor: "#8677e0",
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: "#f2f2f5" } } },
+      scales: {
+        x: { ticks: { color: "#9a9ea8" }, grid: { color: "#2a2e38" } },
+        y: { ticks: { color: "#9a9ea8" }, grid: { color: "#2a2e38" } },
+      },
+    },
+  });
+
+  if (maxWeightChartInstance) maxWeightChartInstance.destroy();
+  maxWeightChartInstance = new Chart(maxWeightCanvas.getContext("2d"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: `${exerciseName} – maximálka série (kg)`,
+          data: maxWeightData,
+          borderColor: "#3ecf72",
+          backgroundColor: "rgba(62,207,114,0.2)",
+          tension: 0.25,
+          fill: true,
+          pointRadius: 4,
+          pointBackgroundColor: "#3ecf72",
         },
       ],
     },
