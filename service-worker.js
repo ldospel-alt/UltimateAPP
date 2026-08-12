@@ -4,6 +4,7 @@ const CACHE_NAME = "gym-denik-cache-v3";
 const STATIC_ASSETS = [
   "./js/chart.umd.min.js",
   "./manifest.json",
+  "./icons/icon.svg",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png"
