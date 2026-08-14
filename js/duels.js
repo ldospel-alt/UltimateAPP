@@ -138,6 +138,18 @@ function resultColor(result) {
   return "var(--gray)";
 }
 
+function normalizeOpponentName(value) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function showDuelResultMessage(result) {
+  if (result === "win") {
+    alert("Well done young padawan");
+    return;
+  }
+  alert("Learn much more, you must");
+}
+
 // ---- Nový duel ----
 
 function normalizeDuelDate(value) {
@@ -195,7 +207,7 @@ function saveDuel() {
 
   const enteredDate = dateInput.value.trim();
   const date = enteredDate ? normalizeDuelDate(enteredDate) : todayInputValue();
-  const opponentName = opponentInput.value.trim();
+  const opponentName = normalizeOpponentName(opponentInput.value);
   const myScore = parseInt(myScoreInput.value, 10);
   const oppScore = parseInt(oppScoreInput.value, 10);
   const eloDelta = parseEloNumber(eloDeltaInput.value);
@@ -210,6 +222,12 @@ function saveDuel() {
 
   if (isNaN(myScore) || isNaN(oppScore)) {
     alert("Vyplň prosím obě skóre.");
+    return;
+  }
+
+  if (!opponentName) {
+    alert("Vyplň prosím jméno soupeře.");
+    opponentInput.focus();
     return;
   }
 
@@ -234,6 +252,7 @@ function saveDuel() {
     saveDuels(duels);
   }
 
+  showDuelResultMessage(duelResult(duelData));
   resetDuelForm();
   renderAllDuels();
 }
@@ -543,7 +562,7 @@ function getAllOpponentNames() {
   const duels = getDuels();
   const names = new Set();
   duels.forEach((d) => {
-    const name = d.opponentName?.trim();
+    const name = normalizeOpponentName(d.opponentName || "");
     if (name) names.add(name);
   });
   return Array.from(names).sort((a, b) => a.localeCompare(b, "cs"));
