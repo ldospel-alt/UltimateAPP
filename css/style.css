@@ -447,6 +447,13 @@ input, select, textarea, button {
   color: var(--text-dim);
   font-size: 16px;
 }
+.diary-entry .diary-edit {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 16px;
+  cursor: pointer;
+}
 
 .chart-wrap {
   background: #12141a;

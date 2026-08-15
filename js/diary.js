@@ -3,6 +3,7 @@
 const DIARY_KEY = "gym_diary";
 let selectedSleep = 0;
 let selectedStress = 0;
+let editingEntryId = null;
 
 function getEntries() {
   return Storage.read(DIARY_KEY, []);
@@ -78,6 +79,15 @@ function resetWellbeingRatings() {
   updateStarButtons("stressRating", 0);
 }
 
+function resetForm() {
+  editingEntryId = null;
+  document.getElementById("diaryFormTitle").textContent = "Nový zápisek";
+  document.getElementById("cancelEditDiaryBtn").style.display = "none";
+  document.getElementById("diaryText").value = "";
+  document.getElementById("diaryDate").value = todayInputValue();
+  resetWellbeingRatings();
+}
+
 function addEntry(rating) {
   const textarea = document.getElementById("diaryText");
   const dateInput = document.getElementById("diaryDate");
@@ -94,19 +104,28 @@ function addEntry(rating) {
   }
 
   const entries = getEntries();
-  entries.push({
-    id: Storage.uid(),
+  const entryData = {
     date,
-    createdAt: new Date().toISOString(),
     text,
     rating,
     sleepRating: selectedSleep,
     stressRating: selectedStress,
-  });
-  saveEntries(entries);
-  textarea.value = "";
-  dateInput.value = todayInputValue();
-  resetWellbeingRatings();
+  };
+
+  if (editingEntryId) {
+    saveEntries(entries.map((entry) =>
+      entry.id === editingEntryId ? { ...entry, ...entryData } : entry
+    ));
+  } else {
+    entries.push({
+      id: Storage.uid(),
+      createdAt: new Date().toISOString(),
+      ...entryData,
+    });
+    saveEntries(entries);
+  }
+
+  resetForm();
   renderAll();
 }
 
@@ -114,7 +133,30 @@ function deleteEntry(id) {
   if (!confirm("Opravdu smazat tento zápisek?")) return;
   const entries = getEntries().filter((e) => e.id !== id);
   saveEntries(entries);
+  if (editingEntryId === id) resetForm();
   renderAll();
+}
+
+function editEntry(id) {
+  const entry = getEntries().find((e) => e.id === id);
+  if (!entry) return;
+
+  editingEntryId = id;
+  document.getElementById("diaryFormTitle").textContent = "Upravit zápisek";
+  document.getElementById("cancelEditDiaryBtn").style.display = "block";
+  document.getElementById("diaryDate").value = entryDateValue(entry) || todayInputValue();
+  document.getElementById("diaryText").value = entry.text || "";
+  
+  if (validStarRating(entry.sleepRating)) {
+    selectedSleep = entry.sleepRating;
+    updateStarButtons("sleepRating", entry.sleepRating);
+  }
+  if (validStarRating(entry.stressRating)) {
+    selectedStress = entry.stressRating;
+    updateStarButtons("stressRating", entry.stressRating);
+  }
+
+  document.getElementById("diaryFormTitle").scrollIntoView({ behavior: "smooth" });
 }
 
 function latestEntryPerDay(entries) {
@@ -200,6 +242,7 @@ function renderEntries() {
         <div class="diary-wellbeing"></div>
       </div>
       <button class="diary-del">✕</button>
+      <button class="diary-edit">✎</button>
     `;
     el.querySelector(".diary-text").textContent = entry.text;
     const wellbeing = [];
@@ -213,6 +256,7 @@ function renderEntries() {
     wellbeingElement.textContent = wellbeing.join(" · ");
     wellbeingElement.style.display = wellbeing.length > 0 ? "block" : "none";
     el.querySelector(".diary-del").addEventListener("click", () => deleteEntry(entry.id));
+    el.querySelector(".diary-edit").addEventListener("click", () => editEntry(entry.id));
     container.appendChild(el);
   });
 }
@@ -229,5 +273,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".rate-btn").forEach((btn) => {
     btn.addEventListener("click", () => addEntry(btn.dataset.rating));
   });
+  document.getElementById("cancelEditDiaryBtn").addEventListener("click", resetForm);
   renderAll();
 });
