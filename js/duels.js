@@ -143,11 +143,18 @@ function normalizeOpponentName(value) {
 }
 
 function showDuelResultMessage(result) {
+  const modal = document.getElementById("duelResultModal");
+  const messageEl = document.getElementById("duelResultMessage");
+  
   if (result === "win") {
-    alert("Well done young padawan");
-    return;
+    messageEl.textContent = "Well done young padawan";
+    messageEl.style.color = "var(--green)";
+  } else {
+    messageEl.textContent = "Learn much more, you must";
+    messageEl.style.color = "var(--red)";
   }
-  alert("Learn much more, you must");
+  
+  modal.style.display = "flex";
 }
 
 // ---- Nový duel ----
@@ -745,12 +752,22 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("leaguePlayerName").textContent = getLeaguePlayer();
   const dateInput = document.getElementById("duelDate");
   const datePicker = document.getElementById("duelDatePicker");
+  const opponentInput = document.getElementById("opponentName");
+  const modal = document.getElementById("duelResultModal");
+  const okBtn = document.getElementById("duelResultOkBtn");
+  
   datePicker.addEventListener("change", () => {
     if (datePicker.value) dateInput.value = formatDuelDateInput(datePicker.value);
   });
   dateInput.addEventListener("input", () => {
     const date = normalizeDuelDate(dateInput.value);
     if (date) datePicker.value = date;
+  });
+  opponentInput.addEventListener("focus", () => {
+    populateOpponentDatalist();
+  });
+  okBtn.addEventListener("click", () => {
+    modal.style.display = "none";
   });
   document.getElementById("saveDuelBtn").addEventListener("click", saveDuel);
   document.getElementById("cancelEditDuelBtn").addEventListener("click", resetDuelForm);
