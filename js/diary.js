@@ -3,6 +3,8 @@
 const DIARY_KEY = "gym_diary";
 let selectedSleep = 0;
 let selectedStress = 0;
+let hasBeer = false;
+let hasSmoke = false;
 let editingEntryId = null;
 
 function getEntries() {
@@ -79,13 +81,51 @@ function resetWellbeingRatings() {
   updateStarButtons("stressRating", 0);
 }
 
+function updateToggleBtnStyle() {
+  const beerBtn = document.getElementById("hasBeerBtn");
+  const smokeBtn = document.getElementById("hasSmokeBtn");
+  
+  if (hasBeer && beerBtn) {
+    beerBtn.style.filter = "brightness(1.3) hue-rotate(-20deg)";
+    beerBtn.querySelector("svg rect").style.fill = "#d4a574";
+    beerBtn.querySelectorAll("path").forEach(p => p.style.stroke = "#f4d090");
+  } else if (beerBtn) {
+    beerBtn.style.filter = "none";
+    beerBtn.querySelector("svg rect").style.fill = "#555b68";
+    beerBtn.querySelectorAll("path").forEach(p => p.style.stroke = "#888");
+  }
+  
+  if (hasSmoke && smokeBtn) {
+    smokeBtn.style.filter = "brightness(1.3) hue-rotate(-10deg)";
+    smokeBtn.querySelector("svg rect").style.fill = "#4a7c3a";
+    smokeBtn.querySelectorAll("path").forEach(p => p.style.stroke = "#6fb456");
+  } else if (smokeBtn) {
+    smokeBtn.style.filter = "none";
+    smokeBtn.querySelector("svg rect").style.fill = "#555b68";
+    smokeBtn.querySelectorAll("path").forEach(p => p.style.stroke = "#888");
+  }
+}
+
+function toggleBeer() {
+  hasBeer = !hasBeer;
+  updateToggleBtnStyle();
+}
+
+function toggleSmoke() {
+  hasSmoke = !hasSmoke;
+  updateToggleBtnStyle();
+}
+
 function resetForm() {
   editingEntryId = null;
   document.getElementById("diaryFormTitle").textContent = "Nový zápisek";
   document.getElementById("cancelEditDiaryBtn").style.display = "none";
   document.getElementById("diaryText").value = "";
   document.getElementById("diaryDate").value = todayInputValue();
+  hasBeer = false;
+  hasSmoke = false;
   resetWellbeingRatings();
+  updateToggleBtnStyle();
 }
 
 function addEntry(rating) {
@@ -110,6 +150,8 @@ function addEntry(rating) {
     rating,
     sleepRating: selectedSleep,
     stressRating: selectedStress,
+    hasBeer,
+    hasSmoke,
   };
 
   if (editingEntryId) {
@@ -147,6 +189,9 @@ function editEntry(id) {
   document.getElementById("diaryDate").value = entryDateValue(entry) || todayInputValue();
   document.getElementById("diaryText").value = entry.text || "";
   
+  hasBeer = entry.hasBeer || false;
+  hasSmoke = entry.hasSmoke || false;
+  
   if (validStarRating(entry.sleepRating)) {
     selectedSleep = entry.sleepRating;
     updateStarButtons("sleepRating", entry.sleepRating);
@@ -156,6 +201,7 @@ function editEntry(id) {
     updateStarButtons("stressRating", entry.stressRating);
   }
 
+  updateToggleBtnStyle();
   document.getElementById("diaryFormTitle").scrollIntoView({ behavior: "smooth" });
 }
 
@@ -252,6 +298,12 @@ function renderEntries() {
     if (validStarRating(entry.stressRating)) {
       wellbeing.push(`Stres ${starText(entry.stressRating)}`);
     }
+    if (entry.hasBeer) {
+      wellbeing.push("🍺 Pivo");
+    }
+    if (entry.hasSmoke) {
+      wellbeing.push("🌿 Kouření");
+    }
     const wellbeingElement = el.querySelector(".diary-wellbeing");
     wellbeingElement.textContent = wellbeing.join(" · ");
     wellbeingElement.style.display = wellbeing.length > 0 ? "block" : "none";
@@ -273,6 +325,15 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".rate-btn").forEach((btn) => {
     btn.addEventListener("click", () => addEntry(btn.dataset.rating));
   });
+  document.getElementById("hasBeerBtn").addEventListener("click", (e) => {
+    e.preventDefault();
+    toggleBeer();
+  });
+  document.getElementById("hasSmokeBtn").addEventListener("click", (e) => {
+    e.preventDefault();
+    toggleSmoke();
+  });
   document.getElementById("cancelEditDiaryBtn").addEventListener("click", resetForm);
+  updateToggleBtnStyle();
   renderAll();
 });

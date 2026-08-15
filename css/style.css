@@ -455,6 +455,24 @@ input, select, textarea, button {
   cursor: pointer;
 }
 
+.diary-toggle-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.diary-toggle-btn:hover {
+  transform: scale(1.05);
+}
+
+.diary-toggle-btn svg {
+  display: block;
+  transition: all 0.2s ease;
+}
+
 .chart-wrap {
   background: #12141a;
   border-radius: 12px;

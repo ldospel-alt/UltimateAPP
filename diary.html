@@ -63,6 +63,25 @@
         <button class="rate-btn rate-zero" data-rating="0">0</button>
         <button class="rate-btn rate-plus" data-rating="+">+</button>
       </div>
+      <div style="margin-top:14px; display:flex; gap:12px; align-items:center;">
+        <p style="color:var(--text-dim); font-size:13px; margin:0;">Čistý den:</p>
+        <button class="diary-toggle-btn" id="hasBeerBtn" title="Pivo">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect width="40" height="40" rx="8" fill="#555b68"/>
+            <path d="M12 28 Q12 20 15 12 L25 12 Q28 20 28 28 Q28 30 26 30 L14 30 Q12 30 12 28 Z" fill="none" stroke="#888" stroke-width="1.5"/>
+            <path d="M26 12 Q28 14 28 18" fill="none" stroke="#888" stroke-width="1.5"/>
+          </svg>
+        </button>
+        <button class="diary-toggle-btn" id="hasSmokeBtn" title="Kouření">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect width="40" height="40" rx="8" fill="#555b68"/>
+            <path d="M14 26 L14 14 Q14 12 16 12 L24 12 Q26 12 26 14 L26 26" fill="none" stroke="#888" stroke-width="1.5"/>
+            <path d="M16 10 Q16 8 18 8" fill="none" stroke="#888" stroke-width="1.5"/>
+            <path d="M20 10 Q20 8 22 8" fill="none" stroke="#888" stroke-width="1.5"/>
+            <path d="M24 10 Q24 8 26 8" fill="none" stroke="#888" stroke-width="1.5"/>
+          </svg>
+        </button>
+      </div>
       <button class="btn ghost block" id="cancelEditDiaryBtn" style="display:none; margin-top:8px;">Zrušit úpravu</button>
     </div>
 
