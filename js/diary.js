@@ -233,6 +233,9 @@ function renderStats() {
     stressPositive: 0,
     stressNeutral: 0,
     stressNegative: 0,
+    cleanDays: 0,
+    noBeerDays: 0,
+    noSmokeDays: 0,
   };
 
   days.forEach((entry) => {
@@ -244,10 +247,15 @@ function renderStats() {
     const stressClass = classifyRating(entry.stressRating, false);
     if (sleepClass) counts[`sleep${sleepClass}`] += 1;
     if (stressClass) counts[`stress${stressClass}`] += 1;
+
+    if (!entry.hasBeer && !entry.hasSmoke) counts.cleanDays += 1;
+    if (!entry.hasBeer) counts.noBeerDays += 1;
+    if (!entry.hasSmoke) counts.noSmokeDays += 1;
   });
 
   Object.entries(counts).forEach(([id, value]) => {
-    document.getElementById(id).textContent = value;
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
   });
 }
 
