@@ -82,23 +82,15 @@ function resetWellbeingRatings() {
 }
 
 function updateToggleBtnStyle() {
-  const beerBtn = document.getElementById("hasBeerBtn");
-  const smokeBtn = document.getElementById("hasSmokeBtn");
+  const beerImg = document.getElementById("beerImg");
+  const smokeImg = document.getElementById("smokeImg");
   
-  if (hasBeer && beerBtn) {
-    beerBtn.style.filter = "brightness(1.4) hue-rotate(-20deg) saturate(1.5)";
-    beerBtn.style.opacity = "1";
-  } else if (beerBtn) {
-    beerBtn.style.filter = "brightness(0.8) saturate(0)";
-    beerBtn.style.opacity = "0.7";
+  if (beerImg) {
+    beerImg.src = hasBeer ? "icons/beer-on.png" : "icons/beer-off.png";
   }
   
-  if (hasSmoke && smokeBtn) {
-    smokeBtn.style.filter = "brightness(1.4) hue-rotate(-30deg) saturate(1.5)";
-    smokeBtn.style.opacity = "1";
-  } else if (smokeBtn) {
-    smokeBtn.style.filter = "brightness(0.8) saturate(0)";
-    smokeBtn.style.opacity = "0.7";
+  if (smokeImg) {
+    smokeImg.src = hasSmoke ? "icons/smoke-on.png" : "icons/smoke-off.png";
   }
 }
 
