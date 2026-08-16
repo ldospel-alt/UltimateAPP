@@ -103,6 +103,8 @@ function saveSession() {
     return;
   }
   const workouts = getWorkouts();
+  const isNewSession = !editingSessionId;
+  
   if (editingSessionId) {
     saveWorkouts(workouts.map((workout) =>
       workout.id === editingSessionId ? { ...workout, ...session } : workout
@@ -111,8 +113,14 @@ function saveSession() {
     workouts.push({ id: Storage.uid(), ...session });
     saveWorkouts(workouts);
   }
+  
   resetForm();
   renderAll();
+  
+  // Zobraz modální okno s informací o objemu pouze pro nové tréninky
+  if (isNewSession) {
+    showWorkoutResultMessage(session.exercises);
+  }
 }
 
 // ---- Historie tréninků ----
@@ -378,6 +386,33 @@ function renderProgress() {
 
 // ---- Init ----
 
+
+function calculateTotalVolume(exercises) {
+  let totalKg = 0;
+  exercises.forEach((exercise) => {
+    exercise.sets.forEach((set) => {
+      const volumeForSet = (set.reps || 0) * (set.weight || 0);
+      totalKg += volumeForSet;
+    });
+  });
+  return totalKg;
+}
+
+function showWorkoutResultMessage(exercises) {
+  const modal = document.getElementById("workoutResultModal");
+  const messageEl = document.getElementById("workoutResultMessage");
+  const volumeEl = document.getElementById("workoutResultVolume");
+  
+  const totalKg = calculateTotalVolume(exercises);
+  
+  // Příprava pro budoucí hlášky - zatím pouze informace o kg
+  messageEl.textContent = "Skvělá práce!";
+  messageEl.style.color = "var(--green)";
+  volumeEl.textContent = `Celkem: ${totalKg} kg`;
+  
+  modal.style.display = "flex";
+}
+
 function renderAll() {
   renderStats();
   renderSessionsList();
@@ -394,5 +429,24 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("saveSessionBtn").addEventListener("click", saveSession);
   document.getElementById("cancelEditSessionBtn").addEventListener("click", resetForm);
   document.getElementById("progressExercise").addEventListener("change", renderProgress);
+  
+  // Modální okno pro výsledek tréninku
+  const modal = document.getElementById("workoutResultModal");
+  const okBtn = document.getElementById("workoutResultOkBtn");
+  
+  if (okBtn) {
+    okBtn.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+  }
+  
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+  }
+  
   renderAll();
 });
