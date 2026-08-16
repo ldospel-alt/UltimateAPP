@@ -406,7 +406,19 @@ document.addEventListener("DOMContentLoaded", () => {
   createStarRating("sleepRating", "sleep");
   createStarRating("stressRating", "stress");
   document.querySelectorAll(".rate-btn").forEach((btn) => {
-    btn.addEventListener("click", () => addEntry(btn.dataset.rating));
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".rate-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      addEntry(btn.dataset.rating);
+    });
+  });
+  document.getElementById("saveDiaryBtn").addEventListener("click", () => {
+    const moodRating = document.querySelector(".rate-btn.active")?.dataset.rating;
+    if (moodRating !== undefined) {
+      addEntry(moodRating);
+    } else {
+      alert("Vyberte prosím hodnocení dne (−, 0, nebo +)");
+    }
   });
   document.getElementById("hasBeerBtn").addEventListener("click", (e) => {
     e.preventDefault();

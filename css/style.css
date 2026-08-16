@@ -399,6 +399,11 @@ input, select, textarea, button {
   font-size: 20px;
   font-weight: 700;
   color: white;
+  transition: transform 0.1s ease;
+}
+.rate-btn.active {
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
 }
 .rate-plus { background: var(--green); }
 .rate-zero { background: var(--gray); }
