@@ -16,6 +16,23 @@ function saveWorkouts(list) {
 
 // ---- Formulář na nový trénink ----
 
+function getExerciseMaxWeight(exerciseName) {
+  const workouts = getWorkouts();
+  let maxWeight = 0;
+  
+  workouts.forEach((w) => {
+    w.exercises.forEach((ex) => {
+      if (ex.name.toLowerCase() === exerciseName.toLowerCase()) {
+        ex.sets.forEach((set) => {
+          if (set.weight > maxWeight) maxWeight = set.weight;
+        });
+      }
+    });
+  });
+  
+  return maxWeight;
+}
+
 function createExerciseBlock(exercise = null) {
   const wrap = document.createElement("div");
   wrap.className = "exercise-block";
@@ -24,9 +41,28 @@ function createExerciseBlock(exercise = null) {
       <input type="text" class="ex-name" placeholder="Název cviku (např. Bench press)" list="exerciseNamesList" autocomplete="off" />
       <button type="button" class="btn ghost small remove-exercise">✕</button>
     </div>
+    <div class="ex-info" style="font-size: 12px; color: var(--text-dim); margin-bottom: 8px; display: none;"></div>
     <div class="sets-container"></div>
     <button type="button" class="btn ghost small add-set">+ Přidat sérii</button>
   `;
+
+  const nameInput = wrap.querySelector(".ex-name");
+  const infoDiv = wrap.querySelector(".ex-info");
+  
+  nameInput.addEventListener("change", () => {
+    const name = nameInput.value.trim();
+    if (name) {
+      const maxWeight = getExerciseMaxWeight(name);
+      if (maxWeight > 0) {
+        infoDiv.textContent = `Tvoje maximálka: ${maxWeight} kg`;
+        infoDiv.style.display = "block";
+      } else {
+        infoDiv.style.display = "none";
+      }
+    } else {
+      infoDiv.style.display = "none";
+    }
+  });
 
   wrap.querySelector(".remove-exercise").addEventListener("click", () => wrap.remove());
   wrap.querySelector(".add-set").addEventListener("click", () => {
