@@ -462,15 +462,19 @@ input, select, textarea, button {
   cursor: pointer;
   transition: all 0.2s ease;
   border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .diary-toggle-btn:hover {
-  transform: scale(1.05);
+  transform: scale(1.1);
 }
 
-.diary-toggle-btn svg {
+.diary-toggle-btn img {
   display: block;
   transition: all 0.2s ease;
+  border-radius: 6px;
 }
 
 .chart-wrap {

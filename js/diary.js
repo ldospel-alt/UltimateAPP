@@ -86,23 +86,19 @@ function updateToggleBtnStyle() {
   const smokeBtn = document.getElementById("hasSmokeBtn");
   
   if (hasBeer && beerBtn) {
-    beerBtn.style.filter = "brightness(1.3) hue-rotate(-20deg)";
-    beerBtn.querySelector("svg rect").style.fill = "#d4a574";
-    beerBtn.querySelectorAll("path").forEach(p => p.style.stroke = "#f4d090");
+    beerBtn.style.filter = "brightness(1.4) hue-rotate(-20deg) saturate(1.5)";
+    beerBtn.style.opacity = "1";
   } else if (beerBtn) {
-    beerBtn.style.filter = "none";
-    beerBtn.querySelector("svg rect").style.fill = "#555b68";
-    beerBtn.querySelectorAll("path").forEach(p => p.style.stroke = "#888");
+    beerBtn.style.filter = "brightness(0.8) saturate(0)";
+    beerBtn.style.opacity = "0.7";
   }
   
   if (hasSmoke && smokeBtn) {
-    smokeBtn.style.filter = "brightness(1.3) hue-rotate(-10deg)";
-    smokeBtn.querySelector("svg rect").style.fill = "#4a7c3a";
-    smokeBtn.querySelectorAll("path").forEach(p => p.style.stroke = "#6fb456");
+    smokeBtn.style.filter = "brightness(1.4) hue-rotate(-30deg) saturate(1.5)";
+    smokeBtn.style.opacity = "1";
   } else if (smokeBtn) {
-    smokeBtn.style.filter = "none";
-    smokeBtn.querySelector("svg rect").style.fill = "#555b68";
-    smokeBtn.querySelectorAll("path").forEach(p => p.style.stroke = "#888");
+    smokeBtn.style.filter = "brightness(0.8) saturate(0)";
+    smokeBtn.style.opacity = "0.7";
   }
 }
 
