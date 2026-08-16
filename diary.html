@@ -19,31 +19,53 @@
   <div class="container">
 
     <div class="card">
-      <h2>Statistiky dnů</h2>
-      <h3 class="diary-stat-title">Nálada</h3>
+      <h2>Nálada</h2>
       <div class="stat-row diary-stat-row">
         <div class="stat-box"><div class="value positive" id="moodPositive">0</div><div class="label">pozitivní</div></div>
         <div class="stat-box"><div class="value neutral" id="moodNeutral">0</div><div class="label">neutrální</div></div>
         <div class="stat-box"><div class="value negative" id="moodNegative">0</div><div class="label">negativní</div></div>
       </div>
-      <h3 class="diary-stat-title">Spánek</h3>
-      <div class="stat-row diary-stat-row">
-        <div class="stat-box"><div class="value positive" id="sleepPositive">0</div><div class="label">pozitivní</div></div>
-        <div class="stat-box"><div class="value neutral" id="sleepNeutral">0</div><div class="label">neutrální</div></div>
-        <div class="stat-box"><div class="value negative" id="sleepNegative">0</div><div class="label">negativní</div></div>
+      <button class="btn block" id="openAdvancedStatsBtn" style="margin-top:12px;">Více statistik</button>
+    </div>
+
+    <!-- Modal pro rozšířené statistiky -->
+    <div id="advancedStatsModal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:600px;">
+        <h2>Rozšířené statistiky</h2>
+        
+        <h3 class="diary-stat-title">Spánek</h3>
+        <div class="stat-row diary-stat-row">
+          <div class="stat-box"><div class="value positive" id="sleepPositive">0</div><div class="label">pozitivní</div></div>
+          <div class="stat-box"><div class="value neutral" id="sleepNeutral">0</div><div class="label">neutrální</div></div>
+          <div class="stat-box"><div class="value negative" id="sleepNegative">0</div><div class="label">negativní</div></div>
+        </div>
+
+        <h3 class="diary-stat-title">Stres</h3>
+        <div class="stat-row diary-stat-row">
+          <div class="stat-box"><div class="value positive" id="stressPositive">0</div><div class="label">pozitivní</div></div>
+          <div class="stat-box"><div class="value neutral" id="stressNeutral">0</div><div class="label">neutrální</div></div>
+          <div class="stat-box"><div class="value negative" id="stressNegative">0</div><div class="label">negativní</div></div>
+        </div>
+
+        <h3 class="diary-stat-title">Čistý den</h3>
+        <div class="stat-row diary-stat-row">
+          <div class="stat-box"><div class="value positive" id="cleanDays">0</div><div class="label">bez piva a kouření</div></div>
+          <div class="stat-box"><div class="value" style="color:var(--green);" id="noBeerDays">0</div><div class="label">bez piva</div></div>
+          <div class="stat-box"><div class="value" style="color:var(--green);" id="noSmokeDays">0</div><div class="label">bez kouření</div></div>
+        </div>
+
+        <h3 class="diary-stat-title">Série bez piva a kouření</h3>
+        <div class="stat-row diary-stat-row">
+          <div class="stat-box"><div class="value" id="currentStreak" style="color:var(--green);">0</div><div class="label">dní v řadě</div></div>
+          <div class="stat-box"><div class="value" id="bestStreak" style="color:var(--green);">0</div><div class="label">osobní rekord</div></div>
+        </div>
+
+        <h3 class="diary-stat-title">Měsíční statistika</h3>
+        <div id="monthlyStats" style="font-size:12px; color:var(--text-dim);">Načítání...</div>
+
+        <button class="btn ghost block" id="closeAdvancedStatsBtn" style="margin-top:12px;">Zavřít</button>
       </div>
-      <h3 class="diary-stat-title">Stres</h3>
-      <div class="stat-row diary-stat-row">
-        <div class="stat-box"><div class="value positive" id="stressPositive">0</div><div class="label">pozitivní</div></div>
-        <div class="stat-box"><div class="value neutral" id="stressNeutral">0</div><div class="label">neutrální</div></div>
-        <div class="stat-box"><div class="value negative" id="stressNegative">0</div><div class="label">negativní</div></div>
-      </div>
-      <h3 class="diary-stat-title">Čistý den</h3>
-      <div class="stat-row diary-stat-row">
-        <div class="stat-box"><div class="value positive" id="cleanDays">0</div><div class="label">bez piva a kouření</div></div>
-        <div class="stat-box"><div class="value" style="color:var(--green);" id="noBeerDays">0</div><div class="label">bez piva</div></div>
-        <div class="stat-box"><div class="value" style="color:var(--green);" id="noSmokeDays">0</div><div class="label">bez kouření</div></div>
-      </div>
+    </div>
 
     <div class="card">
       <h2 id="diaryFormTitle">Nový zápisek</h2>

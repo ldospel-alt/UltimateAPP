@@ -257,6 +257,93 @@ function renderStats() {
     const element = document.getElementById(id);
     if (element) element.textContent = value;
   });
+  
+  updateStreaks();
+  updateMonthlyStats();
+}
+
+function updateStreaks() {
+  const entries = getEntries().slice().sort((a, b) => {
+    return entryDateValue(b).localeCompare(entryDateValue(a));
+  });
+  
+  let currentStreak = 0;
+  let bestStreak = 0;
+  
+  for (const entry of entries) {
+    if (!(entry.hasBeer || entry.hasSmoke)) {
+      currentStreak += 1;
+      bestStreak = Math.max(bestStreak, currentStreak);
+    } else {
+      currentStreak = 0;
+    }
+  }
+  
+  const currentStreakEl = document.getElementById("currentStreak");
+  const bestStreakEl = document.getElementById("bestStreak");
+  if (currentStreakEl) currentStreakEl.textContent = currentStreak;
+  if (bestStreakEl) bestStreakEl.textContent = bestStreak;
+}
+
+function updateMonthlyStats() {
+  const entries = getEntries();
+  const monthlyData = {};
+  
+  entries.forEach((entry) => {
+    const date = entryDateValue(entry);
+    if (!date) return;
+    
+    const [year, month] = date.split("-");
+    const monthKey = `${year}-${month}`;
+    
+    if (!monthlyData[monthKey]) {
+      monthlyData[monthKey] = {
+        beerDays: 0,
+        noBeerDays: 0,
+        smokeDays: 0,
+        noSmokeDays: 0,
+      };
+    }
+    
+    if (entry.hasBeer) {
+      monthlyData[monthKey].beerDays += 1;
+    } else {
+      monthlyData[monthKey].noBeerDays += 1;
+    }
+    
+    if (entry.hasSmoke) {
+      monthlyData[monthKey].smokeDays += 1;
+    } else {
+      monthlyData[monthKey].noSmokeDays += 1;
+    }
+  });
+  
+  const container = document.getElementById("monthlyStats");
+  if (!container) return;
+  
+  const months = Object.keys(monthlyData).sort().reverse();
+  if (months.length === 0) {
+    container.innerHTML = "<p>Žádná data</p>";
+    return;
+  }
+  
+  let html = "<div style='display: grid; gap: 8px;'>";
+  months.forEach((monthKey) => {
+    const [year, month] = monthKey.split("-");
+    const monthName = new Date(`${year}-${month}-01`).toLocaleDateString("cs-CZ", { month: "long", year: "numeric" });
+    const stats = monthlyData[monthKey];
+    html += `
+      <div style="padding: 8px; background: var(--bg-card); border-radius: 4px;">
+        <div style="font-weight: bold; margin-bottom: 4px;">${monthName}</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
+          <div>🍺 Pivo: ${stats.beerDays}/${stats.beerDays + stats.noBeerDays}</div>
+          <div>🌿 Kouření: ${stats.smokeDays}/${stats.smokeDays + stats.noSmokeDays}</div>
+        </div>
+      </div>
+    `;
+  });
+  html += "</div>";
+  container.innerHTML = html;
 }
 
 function renderEntries() {
@@ -338,6 +425,32 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleSmoke();
   });
   document.getElementById("cancelEditDiaryBtn").addEventListener("click", resetForm);
+  
+  // Modální okno pro rozšířené statistiky
+  const modal = document.getElementById("advancedStatsModal");
+  const openBtn = document.getElementById("openAdvancedStatsBtn");
+  const closeBtn = document.getElementById("closeAdvancedStatsBtn");
+  
+  if (openBtn) {
+    openBtn.addEventListener("click", () => {
+      modal.style.display = "flex";
+    });
+  }
+  
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+  }
+  
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+  }
+  
   updateToggleBtnStyle();
   renderAll();
 });
