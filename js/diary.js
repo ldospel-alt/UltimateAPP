@@ -3,9 +3,12 @@
 const DIARY_KEY = "gym_diary";
 let selectedSleep = 0;
 let selectedStress = 0;
+let selectedMood = null;
 let hasBeer = false;
 let hasSmoke = false;
 let editingEntryId = null;
+let editingEntry = null;
+let changedFields = new Set();
 
 function getEntries() {
   return Storage.read(DIARY_KEY, []);
@@ -36,6 +39,14 @@ function validStarRating(value) {
   return Number.isInteger(value) && value >= 1 && value <= 5;
 }
 
+function validMoodRating(value) {
+  return value === "+" || value === "0" || value === "-";
+}
+
+function hasOwnField(entry, field) {
+  return Object.prototype.hasOwnProperty.call(entry, field);
+}
+
 function starText(value) {
   if (!validStarRating(value)) return "";
   return `${"★".repeat(value)}${"☆".repeat(5 - value)}`;
@@ -57,6 +68,21 @@ function setStarRating(kind, value) {
     selectedStress = value;
     updateStarButtons("stressRating", value);
   }
+  changedFields.add(kind);
+}
+
+function updateMoodButtons() {
+  document.querySelectorAll(".rate-btn").forEach((button) => {
+    const selected = button.dataset.rating === selectedMood;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+}
+
+function setMoodRating(value) {
+  selectedMood = value;
+  changedFields.add("mood");
+  updateMoodButtons();
 }
 
 function createStarRating(containerId, kind) {
@@ -96,37 +122,48 @@ function updateToggleBtnStyle() {
 
 function toggleBeer() {
   hasBeer = !hasBeer;
+  changedFields.add("beer");
   updateToggleBtnStyle();
 }
 
 function toggleSmoke() {
   hasSmoke = !hasSmoke;
+  changedFields.add("smoke");
   updateToggleBtnStyle();
 }
 
 function resetForm() {
   editingEntryId = null;
+  editingEntry = null;
+  changedFields = new Set();
   document.getElementById("diaryFormTitle").textContent = "Nový zápisek";
   document.getElementById("cancelEditDiaryBtn").style.display = "none";
   document.getElementById("diaryText").value = "";
   document.getElementById("diaryDate").value = todayInputValue();
+  selectedMood = null;
   hasBeer = false;
   hasSmoke = false;
   resetWellbeingRatings();
+  updateMoodButtons();
   updateToggleBtnStyle();
 }
 
-function addEntry(rating) {
+function addEntry() {
   const textarea = document.getElementById("diaryText");
   const dateInput = document.getElementById("diaryDate");
   const text = textarea.value.trim();
   const date = dateInput.value || todayInputValue();
+  const isEditing = editingEntryId !== null;
 
   if (!text) {
     alert("Napiš prosím nějaký text zápisku.");
     return;
   }
-  if (!validStarRating(selectedSleep) || !validStarRating(selectedStress)) {
+  if (!validMoodRating(selectedMood)) {
+    alert("Vyberte prosím hodnocení dne (−, 0, nebo +)");
+    return;
+  }
+  if (!isEditing && (!validStarRating(selectedSleep) || !validStarRating(selectedStress))) {
     alert("Ohodnoť prosím spánek i stres pomocí 1–5 hvězdiček.");
     return;
   }
@@ -135,14 +172,24 @@ function addEntry(rating) {
   const entryData = {
     date,
     text,
-    rating,
-    sleepRating: selectedSleep,
-    stressRating: selectedStress,
-    hasBeer,
-    hasSmoke,
+    rating: selectedMood,
   };
 
-  if (editingEntryId) {
+  // Keep fields absent from legacy entries absent unless the user explicitly supplies them.
+  if (!isEditing || hasOwnField(editingEntry, "sleepRating") || changedFields.has("sleep")) {
+    entryData.sleepRating = selectedSleep;
+  }
+  if (!isEditing || hasOwnField(editingEntry, "stressRating") || changedFields.has("stress")) {
+    entryData.stressRating = selectedStress;
+  }
+  if (!isEditing || hasOwnField(editingEntry, "hasBeer") || changedFields.has("beer")) {
+    entryData.hasBeer = hasBeer;
+  }
+  if (!isEditing || hasOwnField(editingEntry, "hasSmoke") || changedFields.has("smoke")) {
+    entryData.hasSmoke = hasSmoke;
+  }
+
+  if (isEditing) {
     saveEntries(entries.map((entry) =>
       entry.id === editingEntryId ? { ...entry, ...entryData } : entry
     ));
@@ -172,23 +219,22 @@ function editEntry(id) {
   if (!entry) return;
 
   editingEntryId = id;
+  editingEntry = entry;
+  changedFields = new Set();
   document.getElementById("diaryFormTitle").textContent = "Upravit zápisek";
   document.getElementById("cancelEditDiaryBtn").style.display = "block";
   document.getElementById("diaryDate").value = entryDateValue(entry) || todayInputValue();
   document.getElementById("diaryText").value = entry.text || "";
-  
-  hasBeer = entry.hasBeer || false;
-  hasSmoke = entry.hasSmoke || false;
-  
-  if (validStarRating(entry.sleepRating)) {
-    selectedSleep = entry.sleepRating;
-    updateStarButtons("sleepRating", entry.sleepRating);
-  }
-  if (validStarRating(entry.stressRating)) {
-    selectedStress = entry.stressRating;
-    updateStarButtons("stressRating", entry.stressRating);
-  }
 
+  selectedMood = validMoodRating(entry.rating) ? entry.rating : null;
+  selectedSleep = validStarRating(entry.sleepRating) ? entry.sleepRating : 0;
+  selectedStress = validStarRating(entry.stressRating) ? entry.stressRating : 0;
+  hasBeer = Boolean(entry.hasBeer);
+  hasSmoke = Boolean(entry.hasSmoke);
+
+  updateMoodButtons();
+  updateStarButtons("sleepRating", selectedSleep);
+  updateStarButtons("stressRating", selectedStress);
   updateToggleBtnStyle();
   document.getElementById("diaryFormTitle").scrollIntoView({ behavior: "smooth" });
 }
@@ -407,18 +453,11 @@ document.addEventListener("DOMContentLoaded", () => {
   createStarRating("stressRating", "stress");
   document.querySelectorAll(".rate-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".rate-btn").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      addEntry(btn.dataset.rating);
+      setMoodRating(btn.dataset.rating);
     });
   });
   document.getElementById("saveDiaryBtn").addEventListener("click", () => {
-    const moodRating = document.querySelector(".rate-btn.active")?.dataset.rating;
-    if (moodRating !== undefined) {
-      addEntry(moodRating);
-    } else {
-      alert("Vyberte prosím hodnocení dne (−, 0, nebo +)");
-    }
+    addEntry();
   });
   document.getElementById("hasBeerBtn").addEventListener("click", (e) => {
     e.preventDefault();
