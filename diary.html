@@ -86,16 +86,16 @@
       </div>
       <p style="color:var(--text-dim); font-size:13px; margin:0 0 4px 0;">Jak hodnotíš tento den?</p>
       <div class="rating-row">
-        <button class="rate-btn rate-minus" data-rating="-">−</button>
-        <button class="rate-btn rate-zero" data-rating="0">0</button>
-        <button class="rate-btn rate-plus" data-rating="+">+</button>
+        <button type="button" class="rate-btn rate-minus" data-rating="-" aria-pressed="false">−</button>
+        <button type="button" class="rate-btn rate-zero" data-rating="0" aria-pressed="false">0</button>
+        <button type="button" class="rate-btn rate-plus" data-rating="+" aria-pressed="false">+</button>
       </div>
       <div style="margin-top:14px; display:flex; gap:12px; align-items:center;">
         <p style="color:var(--text-dim); font-size:13px; margin:0;">Čistý den:</p>
-        <button class="diary-toggle-btn" id="hasBeerBtn" title="Pivo">
+        <button type="button" class="diary-toggle-btn" id="hasBeerBtn" title="Pivo">
           <img src="icons/beer-off.png" id="beerImg" width="40" height="40" alt="Pivo" />
         </button>
-        <button class="diary-toggle-btn" id="hasSmokeBtn" title="Kouření">
+        <button type="button" class="diary-toggle-btn" id="hasSmokeBtn" title="Kouření">
           <img src="icons/smoke-off.png" id="smokeImg" width="40" height="40" alt="Kouření" />
         </button>
       </div>
