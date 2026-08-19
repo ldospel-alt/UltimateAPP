@@ -1,6 +1,33 @@
 // Logika pro stránku Gym: přidávání tréninků, historie, progres grafy, maximální váhy
 
 const WORKOUT_KEY = "gym_workouts";
+const WORKOUT_RESULT_MESSAGES = [
+  "The Force was with you today.",
+  "Every rep strengthens your connection to the Force.",
+  "The dark side promises shortcuts. You chose discipline.",
+  "The path of a Jedi is built through training.",
+  "Today, you defeated your toughest opponent: your own laziness.",
+  "The Force flows through those who persevere.",
+  "Every Master was once a Padawan who refused to quit.",
+  "Your Force level has increased.",
+  "Stamina +10, Discipline +10",
+  "The galaxy doesn't need more excuses. It needs more training.",
+  "Training complete. Mission accomplished.",
+  "Today's discipline is tomorrow's strength.",
+  "A Jedi does not wait for results. A Jedi works for them.",
+  "Fear leads to excuses. Excuses lead to inaction. Inaction leads to weakness.",
+  "Don't try. Train.",
+  "The Force is not a gift. It is a habit.",
+  "One workout speaks louder than a thousand plans.",
+  "You just gained experience points for your skill tree.",
+  "Discipline is the lightsaber of success.",
+  "Workout complete. XP gained.",
+  "Better than y",
+  "Boss \"Laziness\" defeated.",
+  "Achievement unlocked: I showed up today.",
+  "Calories have left the chat.",
+  "Body updated to a newer version.",
+];
 
 let chartInstance = null;
 let maxWeightChartInstance = null;
@@ -441,8 +468,8 @@ function showWorkoutResultMessage(exercises) {
   
   const totalKg = calculateTotalVolume(exercises);
   
-  // Příprava pro budoucí hlášky - zatím pouze informace o kg
-  messageEl.textContent = "Skvělá práce!";
+  const messageIndex = Math.floor(Math.random() * WORKOUT_RESULT_MESSAGES.length);
+  messageEl.textContent = WORKOUT_RESULT_MESSAGES[messageIndex];
   messageEl.style.color = "var(--green)";
   volumeEl.textContent = `Celkem: ${totalKg} kg`;
   

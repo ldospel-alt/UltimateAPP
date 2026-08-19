@@ -4,6 +4,104 @@ const DUEL_KEY = "gym_duels";
 const DUEL_ELO_START_KEY = "gym_duel_elo_start";
 const DUEL_ELO_STARTS_KEY = "gym_duel_elo_starts";
 const DUEL_WEAPONS = ["Blade", "Double-blade", "Staff"];
+const DUEL_WIN_MESSAGES = [
+  "The Force was with you today.",
+  "The Force was strong with you today.",
+  "Another Jedi has fallen.",
+  "A true Sith victory.",
+  "Your lightsaber shines brighter today.",
+  "The Force chose its champion.",
+  "Balance has been restored.",
+  "You have brought honor to the Order.",
+  "Victory belongs to the disciplined.",
+  "The Light Side never stood a chance.",
+  "Jedi Master status: loading...",
+  "You didn't just win. You dominated.",
+  "Your opponent has left the chat.",
+  "The outcome was never in doubt.",
+  "That's not a win. That's a statement.",
+  "Your opponent should request a rematch with easier settings.",
+  "Another victim of your consistency.",
+  "Main character energy detected.",
+  "Impressive. Most impressive.",
+  "The Force serves you well today.",
+  "Your power grows stronger.",
+  "You have proven your worth.",
+  "At last, a worthy performance.",
+  "This victory was inevitable.",
+  "The weak have fallen before you.",
+  "You brought order to this battlefield.",
+  "The Force bends to your will.",
+  "You have exceeded my expectations.",
+  "he Dark Side flows through you.",
+  "Your anger has made you stronger.",
+  "Today, power chose you.",
+  "Let the galaxy witness your strength.",
+  "Another victory for the Dark Side.",
+  "Your enemy's failure is your triumph.",
+  "Their weakness became your advantage.",
+  "Fear was their ally. Power was yours.",
+  "Domination achieved.",
+  "The Dark Side is pleased.",
+];
+const DUEL_NON_WIN_MESSAGES = [
+  "You are a loser!",
+  "Again? I am not your father anymore!",
+  "You are not worthy to be my padawan.",
+  "Respawn unavailable.",
+  "The Dark Side prevailed today.",
+  "The Force has lessons for you today.",
+  "Defeat is temporary. Training is forever.",
+  "Stronger you must become.",
+  "Return and fight again.",
+  "You call that fight?",
+  "Defeat detected.",
+  "The Force has abandoned you.",
+  "A stormtrooper showed better accuracy.",
+  "The younglings are laughing.",
+  "Your lightsaber privileges have been revoked.",
+  "Even Jar Jar expected more.",
+  "Error 404: Victory not found.",
+  "Darth Failure has gained a new apprentice.",
+  "Please return after installing skill.",
+  "Achievement unlocked: Professional loser.",
+  "Not even the Force can explain that result.",
+  "You're making stormtroopers look competent.",
+  "You brought a training saber to a real fight.",
+  "The Force suggested more cardio.",
+  "The Dark Side sends its regards.",
+  "The Force is strong... just not with you.",
+  "You have failed me for the last time.",
+  "Your lack of power is disturbing.",
+  "I expected a challenge. I received this.",
+  "Even a Padawan would have fought better.",
+  "The Dark Side finds you... disappointing.",
+  "You were defeated long before the duel began.",
+  "You are not worthy of my attention.",
+  "Your training has been... insufficient.",
+  "You should have stayed on the training grounds.",
+  "How predictable.",
+  "You are no Sith. You are an inconvenience.",
+  "Pathetic.",
+  "Your failure strengthens my power.",
+  "Kneel and accept your weakness.",
+  "The Dark Side expected nothing and is still disappointed.",
+  "If weakness had a champion, it would be you.",
+  "You fought like a rebel. And lost like one.",
+  "Your defeat pleases me.",
+  "You bring shame to the Empire.",
+  "There is no victory in your future. Only training.",
+];
+const LISAN_AL_KEBAB_LOSS_MESSAGES = [
+  "Of course. You cannot defeat Lisan al-Kebab.",
+  "Fool. You cannot defeat Lisan al-Kebab.",
+  "Did you really think you could defeat Lisan al-Kebab?",
+  "No one can defeat Lisan al-Kebab.",
+  "Your defeat was inevitable. Lisan al-Kebab prevails.",
+  "You challenged Lisan al-Kebab. That was your first mistake.",
+  "Lisan al-Kebab remains undefeated.",
+  "The prophecy was true. Lisan al-Kebab cannot be defeated.",
+];
 const LEAGUE_CSV_URL = "https://docs.google.com/spreadsheets/d/1QD5NBWdrUu2Q9LsAINGSaiSThkKZ8VMreDJK7Afvl24/export?format=csv&gid=77153702";
 const LEAGUE_RANKING_CSV_URL = "https://docs.google.com/spreadsheets/d/1QD5NBWdrUu2Q9LsAINGSaiSThkKZ8VMreDJK7Afvl24/export?format=csv&gid=0";
 let duelChartInstance = null;
@@ -142,15 +240,28 @@ function normalizeOpponentName(value) {
   return value.trim().replace(/\s+/g, " ");
 }
 
-function showDuelResultMessage(result) {
+function randomMessage(messages) {
+  return messages[Math.floor(Math.random() * messages.length)];
+}
+
+function isLisanAlKebab(name) {
+  return normalizeOpponentName(name).toLocaleLowerCase("cs") === "lisan al kebab";
+}
+
+function showDuelResultMessage(duel) {
   const modal = document.getElementById("duelResultModal");
   const messageEl = document.getElementById("duelResultMessage");
-  
+  const result = duelResult(duel);
+
   if (result === "win") {
-    messageEl.textContent = "Well done young padawan";
+    messageEl.textContent = isLisanAlKebab(duel.opponentName)
+      ? "Impossible! He spared your miserable life."
+      : randomMessage(DUEL_WIN_MESSAGES);
     messageEl.style.color = "var(--green)";
   } else {
-    messageEl.textContent = "Learn much more, you must";
+    messageEl.textContent = isLisanAlKebab(duel.opponentName)
+      ? randomMessage(LISAN_AL_KEBAB_LOSS_MESSAGES)
+      : randomMessage(DUEL_NON_WIN_MESSAGES);
     messageEl.style.color = "var(--red)";
   }
   
@@ -259,7 +370,7 @@ function saveDuel() {
     saveDuels(duels);
   }
 
-  showDuelResultMessage(duelResult(duelData));
+  showDuelResultMessage(duelData);
   resetDuelForm();
   renderAllDuels();
 }
