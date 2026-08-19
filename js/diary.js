@@ -279,9 +279,6 @@ function renderStats() {
     stressPositive: 0,
     stressNeutral: 0,
     stressNegative: 0,
-    cleanDays: 0,
-    noBeerDays: 0,
-    noSmokeDays: 0,
   };
 
   days.forEach((entry) => {
@@ -294,9 +291,6 @@ function renderStats() {
     if (sleepClass) counts[`sleep${sleepClass}`] += 1;
     if (stressClass) counts[`stress${stressClass}`] += 1;
 
-    if (!entry.hasBeer && !entry.hasSmoke) counts.cleanDays += 1;
-    if (!entry.hasBeer) counts.noBeerDays += 1;
-    if (!entry.hasSmoke) counts.noSmokeDays += 1;
   });
 
   Object.entries(counts).forEach(([id, value]) => {
@@ -308,27 +302,55 @@ function renderStats() {
   updateMonthlyStats();
 }
 
-function updateStreaks() {
-  const entries = latestEntryPerDay(getEntries()).sort((a, b) => {
+function previousDay(date) {
+  const value = new Date(`${date}T12:00:00`);
+  value.setDate(value.getDate() - 1);
+  return value.toISOString().slice(0, 10);
+}
+
+function calculateStreaks(entries, field) {
+  const days = entries.slice().sort((a, b) => {
     return entryDateValue(b).localeCompare(entryDateValue(a));
   });
-  
-  let currentStreak = 0;
-  let bestStreak = 0;
-  
-  for (const entry of entries) {
-    if (!(entry.hasBeer || entry.hasSmoke)) {
-      currentStreak += 1;
-      bestStreak = Math.max(bestStreak, currentStreak);
-    } else {
-      currentStreak = 0;
+
+  let current = 0;
+  let previous = "";
+  for (const entry of days) {
+    const date = entryDateValue(entry);
+    if ((previous && date !== previousDay(previous)) || !hasOwnField(entry, field) || entry[field]) {
+      break;
     }
+    current += 1;
+    previous = date;
   }
-  
-  const currentStreakEl = document.getElementById("currentStreak");
-  const bestStreakEl = document.getElementById("bestStreak");
-  if (currentStreakEl) currentStreakEl.textContent = currentStreak;
-  if (bestStreakEl) bestStreakEl.textContent = bestStreak;
+
+  let best = 0;
+  let running = 0;
+  previous = "";
+  for (const entry of days) {
+    const date = entryDateValue(entry);
+    const consecutive = !previous || date === previousDay(previous);
+    if (consecutive && hasOwnField(entry, field) && !entry[field]) {
+      running += 1;
+      best = Math.max(best, running);
+    } else {
+      running = 0;
+    }
+    previous = date;
+  }
+
+  return { current, best };
+}
+
+function updateStreaks() {
+  const entries = latestEntryPerDay(getEntries());
+  const beer = calculateStreaks(entries, "hasBeer");
+  const smoke = calculateStreaks(entries, "hasSmoke");
+
+  document.getElementById("currentBeerStreak").textContent = beer.current;
+  document.getElementById("currentSmokeStreak").textContent = smoke.current;
+  document.getElementById("bestBeerStreak").textContent = beer.best;
+  document.getElementById("bestSmokeStreak").textContent = smoke.best;
 }
 
 function updateMonthlyStats() {
@@ -345,51 +367,75 @@ function updateMonthlyStats() {
     if (!monthlyData[monthKey]) {
       monthlyData[monthKey] = {
         beerDays: 0,
-        noBeerDays: 0,
+        beerEntries: 0,
         smokeDays: 0,
-        noSmokeDays: 0,
+        smokeEntries: 0,
       };
     }
     
-    if (entry.hasBeer) {
-      monthlyData[monthKey].beerDays += 1;
-    } else {
-      monthlyData[monthKey].noBeerDays += 1;
+    if (hasOwnField(entry, "hasBeer")) {
+      monthlyData[monthKey].beerEntries += 1;
+      if (entry.hasBeer) monthlyData[monthKey].beerDays += 1;
     }
     
-    if (entry.hasSmoke) {
-      monthlyData[monthKey].smokeDays += 1;
-    } else {
-      monthlyData[monthKey].noSmokeDays += 1;
+    if (hasOwnField(entry, "hasSmoke")) {
+      monthlyData[monthKey].smokeEntries += 1;
+      if (entry.hasSmoke) monthlyData[monthKey].smokeDays += 1;
     }
   });
   
   const container = document.getElementById("monthlyStats");
   if (!container) return;
   
-  const months = Object.keys(monthlyData).sort().reverse();
+  const months = Object.keys(monthlyData)
+    .filter((monthKey) => monthlyData[monthKey].beerEntries || monthlyData[monthKey].smokeEntries)
+    .sort()
+    .reverse();
   if (months.length === 0) {
     container.innerHTML = "<p>Žádná data</p>";
+  } else {
+    let html = "<div style='display: grid; gap: 8px;'>";
+    months.forEach((monthKey) => {
+      const [year, month] = monthKey.split("-");
+      const monthName = new Date(`${year}-${month}-01`).toLocaleDateString("cs-CZ", { month: "long", year: "numeric" });
+      const stats = monthlyData[monthKey];
+      html += `
+        <div style="padding: 8px; background: var(--bg-card); border-radius: 4px;">
+          <div style="font-weight: bold; margin-bottom: 4px;">${monthName}</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
+            <div>🍺 Pivo: ${stats.beerDays}/${stats.beerEntries}</div>
+            <div>🌿 Kouření: ${stats.smokeDays}/${stats.smokeEntries}</div>
+          </div>
+        </div>
+      `;
+    });
+    html += "</div>";
+    container.innerHTML = html;
+  }
+
+  const yearlyContainer = document.getElementById("yearlyStats");
+  if (!yearlyContainer) return;
+
+  const currentYear = String(new Date().getFullYear());
+  const yearEntries = entries.filter((entry) => entryDateValue(entry).startsWith(`${currentYear}-`));
+  const beerEntries = yearEntries.filter((entry) => hasOwnField(entry, "hasBeer"));
+  const smokeEntries = yearEntries.filter((entry) => hasOwnField(entry, "hasSmoke"));
+  const beerDays = beerEntries.filter((entry) => entry.hasBeer).length;
+  const smokeDays = smokeEntries.filter((entry) => entry.hasSmoke).length;
+
+  if (beerEntries.length === 0 && smokeEntries.length === 0) {
+    yearlyContainer.innerHTML = "<p>Žádná data</p>";
     return;
   }
-  
-  let html = "<div style='display: grid; gap: 8px;'>";
-  months.forEach((monthKey) => {
-    const [year, month] = monthKey.split("-");
-    const monthName = new Date(`${year}-${month}-01`).toLocaleDateString("cs-CZ", { month: "long", year: "numeric" });
-    const stats = monthlyData[monthKey];
-    html += `
-      <div style="padding: 8px; background: var(--bg-card); border-radius: 4px;">
-        <div style="font-weight: bold; margin-bottom: 4px;">${monthName}</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
-          <div>🍺 Pivo: ${stats.beerDays}/${stats.beerDays + stats.noBeerDays}</div>
-          <div>🌿 Kouření: ${stats.smokeDays}/${stats.smokeDays + stats.noSmokeDays}</div>
-        </div>
+
+  yearlyContainer.innerHTML = `
+    <div style="padding: 8px; background: var(--bg-card); border-radius: 4px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
+        <div>🍺 Pivo: ${beerDays}/${beerEntries.length}</div>
+        <div>🌿 Kouření: ${smokeDays}/${smokeEntries.length}</div>
       </div>
-    `;
-  });
-  html += "</div>";
-  container.innerHTML = html;
+    </div>
+  `;
 }
 
 function renderEntries() {

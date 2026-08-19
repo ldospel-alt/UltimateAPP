@@ -48,20 +48,17 @@
         </div>
 
         <h3 class="diary-stat-title">DarkHabbit</h3>
-        <div class="stat-row diary-stat-row">
-          <div class="stat-box"><div class="value positive" id="cleanDays">0</div><div class="label">bez piva a kouření</div></div>
-          <div class="stat-box"><div class="value" style="color:var(--green);" id="noBeerDays">0</div><div class="label">bez piva</div></div>
-          <div class="stat-box"><div class="value" style="color:var(--green);" id="noSmokeDays">0</div><div class="label">bez kouření</div></div>
-        </div>
-
-        <h3 class="diary-stat-title">Série bez piva a kouření</h3>
-        <div class="stat-row diary-stat-row diary-stat-row--two">
-          <div class="stat-box"><div class="value" id="currentStreak" style="color:var(--green);">0</div><div class="label">dní v řadě</div></div>
-          <div class="stat-box"><div class="value" id="bestStreak" style="color:var(--green);">0</div><div class="label">osobní rekord</div></div>
+        <div class="stat-row diary-stat-row diary-stat-row--four">
+          <div class="stat-box"><div class="value" id="currentBeerStreak" style="color:var(--green);">0</div><div class="label">aktuální série bez piva</div></div>
+          <div class="stat-box"><div class="value" id="currentSmokeStreak" style="color:var(--green);">0</div><div class="label">aktuální série bez kouření</div></div>
+          <div class="stat-box"><div class="value" id="bestBeerStreak" style="color:var(--green);">0</div><div class="label">rekord bez piva</div></div>
+          <div class="stat-box"><div class="value" id="bestSmokeStreak" style="color:var(--green);">0</div><div class="label">rekord bez kouření</div></div>
         </div>
 
         <h3 class="diary-stat-title">Měsíční statistika</h3>
         <div id="monthlyStats" style="font-size:12px; color:var(--text-dim);">Načítání...</div>
+        <h3 class="diary-stat-title">Aktuální rok</h3>
+        <div id="yearlyStats" style="font-size:12px; color:var(--text-dim);">Načítání...</div>
 
         <button class="btn ghost block" id="closeAdvancedStatsBtn" style="margin-top:12px;">Zavřít</button>
       </div>
