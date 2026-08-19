@@ -302,50 +302,45 @@ function renderStats() {
   updateMonthlyStats();
 }
 
-function previousDay(date) {
-  const value = new Date(`${date}T12:00:00`);
-  value.setDate(value.getDate() - 1);
-  return value.toISOString().slice(0, 10);
+function dayNumber(date) {
+  const [year, month, day] = date.split("-").map(Number);
+  return Date.UTC(year, month - 1, day) / 86400000;
 }
 
-function calculateStreaks(entries, field) {
-  const days = entries.slice().sort((a, b) => {
-    return entryDateValue(b).localeCompare(entryDateValue(a));
-  });
+function calculateUsageStreaks(entries, field) {
+  const today = todayInputValue();
+  const dates = entries
+    .map(entryDateValue)
+    .filter((date) => date && date <= today)
+    .sort();
+  if (dates.length === 0) return { current: 0, best: 0 };
 
-  let current = 0;
-  let previous = "";
-  for (const entry of days) {
-    const date = entryDateValue(entry);
-    if ((previous && date !== previousDay(previous)) || !hasOwnField(entry, field) || entry[field]) {
-      break;
-    }
-    current += 1;
-    previous = date;
-  }
+  const usageDates = entries
+    .filter((entry) => entryDateValue(entry) <= today && Boolean(entry[field]))
+    .map(entryDateValue)
+    .sort();
+  const firstDate = dates[0];
+  const lastUsageDate = usageDates.at(-1);
+  const current = lastUsageDate
+    ? dayNumber(today) - dayNumber(lastUsageDate)
+    : dayNumber(today) - dayNumber(firstDate) + 1;
 
-  let best = 0;
-  let running = 0;
-  previous = "";
-  for (const entry of days) {
-    const date = entryDateValue(entry);
-    const consecutive = !previous || date === previousDay(previous);
-    if (consecutive && hasOwnField(entry, field) && !entry[field]) {
-      running += 1;
-      best = Math.max(best, running);
-    } else {
-      running = 0;
-    }
-    previous = date;
+  let best = lastUsageDate
+    ? dayNumber(usageDates[0]) - dayNumber(firstDate)
+    : current;
+  for (let index = 1; index < usageDates.length; index += 1) {
+    const gap = dayNumber(usageDates[index]) - dayNumber(usageDates[index - 1]) - 1;
+    best = Math.max(best, gap);
   }
+  best = Math.max(best, current);
 
   return { current, best };
 }
 
 function updateStreaks() {
   const entries = latestEntryPerDay(getEntries());
-  const beer = calculateStreaks(entries, "hasBeer");
-  const smoke = calculateStreaks(entries, "hasSmoke");
+  const beer = calculateUsageStreaks(entries, "hasBeer");
+  const smoke = calculateUsageStreaks(entries, "hasSmoke");
 
   document.getElementById("currentBeerStreak").textContent = beer.current;
   document.getElementById("currentSmokeStreak").textContent = smoke.current;
@@ -367,28 +362,20 @@ function updateMonthlyStats() {
     if (!monthlyData[monthKey]) {
       monthlyData[monthKey] = {
         beerDays: 0,
-        beerEntries: 0,
+        totalDays: 0,
         smokeDays: 0,
-        smokeEntries: 0,
       };
     }
     
-    if (hasOwnField(entry, "hasBeer")) {
-      monthlyData[monthKey].beerEntries += 1;
-      if (entry.hasBeer) monthlyData[monthKey].beerDays += 1;
-    }
-    
-    if (hasOwnField(entry, "hasSmoke")) {
-      monthlyData[monthKey].smokeEntries += 1;
-      if (entry.hasSmoke) monthlyData[monthKey].smokeDays += 1;
-    }
+    monthlyData[monthKey].totalDays += 1;
+    if (entry.hasBeer) monthlyData[monthKey].beerDays += 1;
+    if (entry.hasSmoke) monthlyData[monthKey].smokeDays += 1;
   });
   
   const container = document.getElementById("monthlyStats");
   if (!container) return;
   
   const months = Object.keys(monthlyData)
-    .filter((monthKey) => monthlyData[monthKey].beerEntries || monthlyData[monthKey].smokeEntries)
     .sort()
     .reverse();
   if (months.length === 0) {
@@ -403,8 +390,8 @@ function updateMonthlyStats() {
         <div style="padding: 8px; background: var(--bg-card); border-radius: 4px;">
           <div style="font-weight: bold; margin-bottom: 4px;">${monthName}</div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
-            <div>🍺 Pivo: ${stats.beerDays}/${stats.beerEntries}</div>
-            <div>🌿 Kouření: ${stats.smokeDays}/${stats.smokeEntries}</div>
+            <div>🍺 Pivo: ${stats.beerDays}/${stats.totalDays}</div>
+            <div>🌿 Kouření: ${stats.smokeDays}/${stats.totalDays}</div>
           </div>
         </div>
       `;
@@ -418,12 +405,10 @@ function updateMonthlyStats() {
 
   const currentYear = String(new Date().getFullYear());
   const yearEntries = entries.filter((entry) => entryDateValue(entry).startsWith(`${currentYear}-`));
-  const beerEntries = yearEntries.filter((entry) => hasOwnField(entry, "hasBeer"));
-  const smokeEntries = yearEntries.filter((entry) => hasOwnField(entry, "hasSmoke"));
-  const beerDays = beerEntries.filter((entry) => entry.hasBeer).length;
-  const smokeDays = smokeEntries.filter((entry) => entry.hasSmoke).length;
+  const beerDays = yearEntries.filter((entry) => entry.hasBeer).length;
+  const smokeDays = yearEntries.filter((entry) => entry.hasSmoke).length;
 
-  if (beerEntries.length === 0 && smokeEntries.length === 0) {
+  if (yearEntries.length === 0) {
     yearlyContainer.innerHTML = "<p>Žádná data</p>";
     return;
   }
@@ -431,8 +416,8 @@ function updateMonthlyStats() {
   yearlyContainer.innerHTML = `
     <div style="padding: 8px; background: var(--bg-card); border-radius: 4px;">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
-        <div>🍺 Pivo: ${beerDays}/${beerEntries.length}</div>
-        <div>🌿 Kouření: ${smokeDays}/${smokeEntries.length}</div>
+        <div>🍺 Pivo: ${beerDays}/${yearEntries.length}</div>
+        <div>🌿 Kouření: ${smokeDays}/${yearEntries.length}</div>
       </div>
     </div>
   `;

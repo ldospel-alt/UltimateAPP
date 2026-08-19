@@ -365,8 +365,8 @@ input, select, textarea, button {
 .diary-stat-row--two {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-.diary-stat-row--four {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+.diary-stat-row-spaced {
+  margin-top: 6px;
 }
 .diary-stat-row .stat-box .label {
   overflow-wrap: anywhere;
