@@ -354,7 +354,19 @@ input, select, textarea, button {
   font-size: 14px;
 }
 .diary-stat-row .stat-box {
+  min-width: 0;
   padding: 10px 6px;
+}
+.diary-stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.diary-stat-row--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.diary-stat-row .stat-box .label {
+  overflow-wrap: anywhere;
 }
 .stat-box .value.positive { color: var(--green); }
 .stat-box .value.neutral { color: var(--gray); }
@@ -480,6 +492,12 @@ input, select, textarea, button {
   display: block;
   transition: all 0.2s ease;
   border-radius: 6px;
+}
+.diary-substance-toggles {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 14px;
 }
 
 .chart-wrap {

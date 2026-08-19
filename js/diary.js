@@ -114,9 +114,17 @@ function updateToggleBtnStyle() {
   if (beerImg) {
     beerImg.src = hasBeer ? "icons/beer-on.png" : "icons/beer-off.png";
   }
+  const beerButton = document.getElementById("hasBeerBtn");
+  if (beerButton) {
+    beerButton.setAttribute("aria-pressed", String(hasBeer));
+  }
   
   if (smokeImg) {
     smokeImg.src = hasSmoke ? "icons/smoke-on.png" : "icons/smoke-off.png";
+  }
+  const smokeButton = document.getElementById("hasSmokeBtn");
+  if (smokeButton) {
+    smokeButton.setAttribute("aria-pressed", String(hasSmoke));
   }
 }
 
@@ -301,7 +309,7 @@ function renderStats() {
 }
 
 function updateStreaks() {
-  const entries = getEntries().slice().sort((a, b) => {
+  const entries = latestEntryPerDay(getEntries()).sort((a, b) => {
     return entryDateValue(b).localeCompare(entryDateValue(a));
   });
   
@@ -324,7 +332,7 @@ function updateStreaks() {
 }
 
 function updateMonthlyStats() {
-  const entries = getEntries();
+  const entries = latestEntryPerDay(getEntries());
   const monthlyData = {};
   
   entries.forEach((entry) => {

@@ -47,7 +47,7 @@
           <div class="stat-box"><div class="value negative" id="stressNegative">0</div><div class="label">negativní</div></div>
         </div>
 
-        <h3 class="diary-stat-title">Čistý den</h3>
+        <h3 class="diary-stat-title">DarkHabbit</h3>
         <div class="stat-row diary-stat-row">
           <div class="stat-box"><div class="value positive" id="cleanDays">0</div><div class="label">bez piva a kouření</div></div>
           <div class="stat-box"><div class="value" style="color:var(--green);" id="noBeerDays">0</div><div class="label">bez piva</div></div>
@@ -55,7 +55,7 @@
         </div>
 
         <h3 class="diary-stat-title">Série bez piva a kouření</h3>
-        <div class="stat-row diary-stat-row">
+        <div class="stat-row diary-stat-row diary-stat-row--two">
           <div class="stat-box"><div class="value" id="currentStreak" style="color:var(--green);">0</div><div class="label">dní v řadě</div></div>
           <div class="stat-box"><div class="value" id="bestStreak" style="color:var(--green);">0</div><div class="label">osobní rekord</div></div>
         </div>
@@ -90,12 +90,11 @@
         <button type="button" class="rate-btn rate-zero" data-rating="0" aria-pressed="false">0</button>
         <button type="button" class="rate-btn rate-plus" data-rating="+" aria-pressed="false">+</button>
       </div>
-      <div style="margin-top:14px; display:flex; gap:12px; align-items:center;">
-        <p style="color:var(--text-dim); font-size:13px; margin:0;">Čistý den:</p>
-        <button type="button" class="diary-toggle-btn" id="hasBeerBtn" title="Pivo">
+      <div class="diary-substance-toggles">
+        <button type="button" class="diary-toggle-btn" id="hasBeerBtn" title="Pivo použito" aria-pressed="false">
           <img src="icons/beer-off.png" id="beerImg" width="40" height="40" alt="Pivo" />
         </button>
-        <button type="button" class="diary-toggle-btn" id="hasSmokeBtn" title="Kouření">
+        <button type="button" class="diary-toggle-btn" id="hasSmokeBtn" title="Kouření použito" aria-pressed="false">
           <img src="icons/smoke-off.png" id="smokeImg" width="40" height="40" alt="Kouření" />
         </button>
       </div>
