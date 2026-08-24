@@ -46,18 +46,87 @@ function saveWorkouts(list) {
 function getExerciseMaxWeight(exerciseName) {
   const workouts = getWorkouts();
   let maxWeight = 0;
-  
-  workouts.forEach((w) => {
-    w.exercises.forEach((ex) => {
-      if (ex.name.toLowerCase() === exerciseName.toLowerCase()) {
-        ex.sets.forEach((set) => {
-          if (set.weight > maxWeight) maxWeight = set.weight;
+
+  workouts.forEach((workout) => {
+    if (!Array.isArray(workout?.exercises)) return;
+    workout.exercises.forEach((exercise) => {
+      if (normalizeExerciseName(exercise?.name) === normalizeExerciseName(exerciseName)) {
+        (Array.isArray(exercise.sets) ? exercise.sets : []).forEach((set) => {
+          const weight = Number(set?.weight);
+          if (Number.isFinite(weight) && weight > maxWeight) maxWeight = weight;
         });
       }
     });
   });
-  
+
   return maxWeight;
+}
+
+function normalizeExerciseName(name) {
+  return String(name || "").trim().toLocaleLowerCase("cs");
+}
+
+function isWorkoutDate(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value || "");
+}
+
+function getMostRecentExercise(exerciseName, excludedWorkoutId = null) {
+  const normalizedName = normalizeExerciseName(exerciseName);
+  if (!normalizedName) return null;
+
+  const matches = getWorkouts()
+    .map((workout, workoutIndex) => {
+      if (
+        workout?.id === excludedWorkoutId ||
+        !isWorkoutDate(workout?.date) ||
+        !Array.isArray(workout?.exercises)
+      ) {
+        return null;
+      }
+
+      const exercise = workout.exercises.find((item) =>
+        normalizeExerciseName(item?.name) === normalizedName &&
+        Array.isArray(item?.sets) &&
+        item.sets.length > 0
+      );
+      return exercise ? { workout, exercise, workoutIndex } : null;
+    })
+    .filter(Boolean);
+
+  matches.sort((first, second) => {
+    const dateOrder = second.workout.date.localeCompare(first.workout.date);
+    return dateOrder || second.workoutIndex - first.workoutIndex;
+  });
+  return matches[0] || null;
+}
+
+function formatPreviousSet(set) {
+  const reps = Number(set?.reps);
+  const weight = Number(set?.weight);
+  const formattedReps = Number.isFinite(reps) ? reps : "—";
+  const formattedWeight = Number.isFinite(weight) ? weight : "—";
+  return `${formattedReps} × ${formattedWeight} kg`;
+}
+
+function updateExerciseHistory(exerciseName, infoDiv, historyDiv) {
+  const maxWeight = getExerciseMaxWeight(exerciseName);
+  const previous = getMostRecentExercise(exerciseName, editingSessionId);
+
+  infoDiv.style.display = maxWeight > 0 ? "block" : "none";
+  infoDiv.textContent = maxWeight > 0 ? `Tvoje maximálka: ${maxWeight} kg` : "";
+
+  historyDiv.replaceChildren();
+  if (maxWeight <= 0 || !previous) {
+    historyDiv.hidden = true;
+    return;
+  }
+
+  const title = document.createElement("strong");
+  title.textContent = `Poslední trénink: ${formatDate(previous.workout.date)}`;
+  const sets = document.createElement("div");
+  sets.textContent = previous.exercise.sets.map(formatPreviousSet).join(" · ");
+  historyDiv.append(title, sets);
+  historyDiv.hidden = false;
 }
 
 function createExerciseBlock(exercise = null) {
@@ -69,26 +138,17 @@ function createExerciseBlock(exercise = null) {
       <button type="button" class="btn ghost small remove-exercise">✕</button>
     </div>
     <div class="ex-info" style="font-size: 12px; color: var(--text-dim); margin-bottom: 8px; display: none;"></div>
+    <div class="ex-history" hidden></div>
     <div class="sets-container"></div>
     <button type="button" class="btn ghost small add-set">+ Přidat sérii</button>
   `;
 
   const nameInput = wrap.querySelector(".ex-name");
   const infoDiv = wrap.querySelector(".ex-info");
-  
-  nameInput.addEventListener("change", () => {
-    const name = nameInput.value.trim();
-    if (name) {
-      const maxWeight = getExerciseMaxWeight(name);
-      if (maxWeight > 0) {
-        infoDiv.textContent = `Tvoje maximálka: ${maxWeight} kg`;
-        infoDiv.style.display = "block";
-      } else {
-        infoDiv.style.display = "none";
-      }
-    } else {
-      infoDiv.style.display = "none";
-    }
+  const historyDiv = wrap.querySelector(".ex-history");
+
+  nameInput.addEventListener("input", () => {
+    updateExerciseHistory(nameInput.value, infoDiv, historyDiv);
   });
 
   wrap.querySelector(".remove-exercise").addEventListener("click", () => wrap.remove());
@@ -99,7 +159,10 @@ function createExerciseBlock(exercise = null) {
   const setsContainer = wrap.querySelector(".sets-container");
   const sets = exercise?.sets?.length ? exercise.sets : [null];
   sets.forEach((set) => setsContainer.appendChild(createSetRow(set)));
-  if (exercise) wrap.querySelector(".ex-name").value = exercise.name || "";
+  if (exercise) {
+    nameInput.value = exercise.name || "";
+    updateExerciseHistory(nameInput.value, infoDiv, historyDiv);
+  }
   return wrap;
 }
 

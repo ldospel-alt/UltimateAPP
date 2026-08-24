@@ -212,6 +212,19 @@ input, select, textarea, button {
   margin-bottom: 8px;
 }
 .exercise-block .ex-header input { flex: 1; }
+.ex-history {
+  margin: -2px 0 8px;
+  padding: 7px 8px;
+  border-left: 2px solid var(--accent-2);
+  background: #191c24;
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.ex-history strong {
+  display: block;
+  color: var(--text);
+}
 .exercise-type-row {
   margin-bottom: 8px;
 }
