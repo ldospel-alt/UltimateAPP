@@ -242,6 +242,7 @@ input, select, textarea, button {
   padding: 24px;
   background: var(--bg);
 }
+.military-active[hidden] { display: none; }
 .military-active-content {
   width: min(100%, 480px);
   text-align: center;
