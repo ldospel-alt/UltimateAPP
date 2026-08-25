@@ -199,6 +199,67 @@ input, select, textarea, button {
   color: var(--text-dim);
 }
 
+/* Military Training */
+.military-note, .military-duration {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.military-preset-row, .military-active-actions {
+  display: flex;
+  gap: 8px;
+}
+.military-preset-row .btn, .military-active-actions .btn { flex: 1; }
+.military-block {
+  background: #12141a;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.military-block-header, .military-template {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.military-time-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.military-templates { margin-top: 12px; }
+.military-template {
+  border-bottom: 1px solid #2a2e38;
+  padding: 8px 0;
+}
+.military-template span { flex: 1; font-size: 14px; }
+.military-active {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--bg);
+}
+.military-active-content {
+  width: min(100%, 480px);
+  text-align: center;
+}
+.military-active-section { min-height: 20px; color: var(--text-dim); }
+.military-active-type { color: var(--accent-2); font-weight: 700; letter-spacing: .15em; }
+.military-active h2 { font-size: clamp(28px, 9vw, 46px); margin: 18px 0; }
+.military-countdown { font-size: clamp(72px, 25vw, 132px); font-weight: 700; font-variant-numeric: tabular-nums; }
+.military-progress { color: var(--text-dim); }
+.military-progress-track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: var(--bg-card);
+  margin: 16px 0 28px;
+}
+.military-progress-track div { height: 100%; width: 0; background: var(--green); transition: width .2s; }
+
 .exercise-block {
   background: #12141a;
   border-radius: 12px;

@@ -23,6 +23,7 @@ const DEFAULT_SUBAPPS = [
   { id: "calisthenics", visible: true },
   { id: "diary", visible: true },
   { id: "duels", visible: true },
+  { id: "military", visible: true },
 ];
 
 function normalizeAppSettings(value) {

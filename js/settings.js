@@ -3,6 +3,7 @@ const SUBAPP_LABELS = {
   calisthenics: "🤸 Calistenika",
   diary: "📔 Deníček",
   duels: "⚔️ Duely",
+  military: "🎖️ Military Training",
 };
 
 let settingsState = getAppSettings();

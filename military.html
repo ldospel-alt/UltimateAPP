@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>Military Training – Gym Deník</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#111318" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a class="back-btn" href="index.html">←</a>
+    <h1>🎖️ Military Training</h1>
+  </div>
+
+  <main class="container">
+    <section class="card">
+      <h2>Rychlé tréninky</h2>
+      <p class="military-note">10 a 20 minut obsahuje i poslední pauzu. 30min plán má po každém kole bloku 60s odpočinek; finisher končí bez závěrečné pauzy.</p>
+      <div class="military-preset-row">
+        <button class="btn secondary small preset-btn" data-preset="10" type="button">10 min</button>
+        <button class="btn secondary small preset-btn" data-preset="20" type="button">20 min</button>
+        <button class="btn secondary small preset-btn" data-preset="30" type="button">30 min</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Intervalový trénink</h2>
+      <div id="militaryExerciseList"></div>
+      <button class="btn secondary block" id="addMilitaryExerciseBtn" type="button">+ Přidat interval</button>
+      <p id="militaryDuration" class="military-duration">Celkem: 0:00</p>
+      <button class="btn block" id="startMilitaryWorkoutBtn" type="button">Spustit trénink</button>
+    </section>
+
+    <section class="card">
+      <h2>Uložené tréninky</h2>
+      <div class="field">
+        <label for="militaryTemplateName">Název aktuálního tréninku</label>
+        <input id="militaryTemplateName" type="text" placeholder="Např. Ranní rutina" maxlength="60" />
+      </div>
+      <button class="btn secondary block" id="saveMilitaryTemplateBtn" type="button">Uložit aktuální trénink</button>
+      <div id="militaryTemplates" class="military-templates"></div>
+      <p id="militaryTemplatesEmpty" class="empty-hint">Zatím nemáš uložené žádné tréninky.</p>
+    </section>
+  </main>
+
+  <section id="militaryActiveWorkout" class="military-active" hidden aria-live="assertive">
+    <div class="military-active-content">
+      <p id="militaryActiveSection" class="military-active-section"></p>
+      <p id="militaryActiveType" class="military-active-type">CVIK</p>
+      <h2 id="militaryActiveName">Připrav se</h2>
+      <div id="militaryCountdown" class="military-countdown">0:00</div>
+      <p id="militaryProgress" class="military-progress"></p>
+      <div class="military-progress-track"><div id="militaryProgressBar"></div></div>
+      <div class="military-active-actions">
+        <button id="pauseMilitaryWorkoutBtn" class="btn secondary" type="button">Pauza</button>
+        <button id="skipMilitaryWorkoutBtn" class="btn secondary" type="button">Přeskočit</button>
+        <button id="stopMilitaryWorkoutBtn" class="btn ghost" type="button">Ukončit</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/storage.js"></script>
+  <script src="js/military.js"></script>
+  <script>registerServiceWorker();</script>
+</body>
+</html>
