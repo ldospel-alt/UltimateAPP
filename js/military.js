@@ -2,6 +2,7 @@ const MILITARY_TEMPLATES_KEY = "gym_military_templates";
 let militaryBlocks = [];
 let activeWorkout = null;
 let militaryAudioContext = null;
+let militaryNextToneAt = 0;
 
 function formatSeconds(seconds) {
   const safeSeconds = Math.max(0, Math.round(Number(seconds) || 0));
@@ -190,21 +191,58 @@ function saveCurrentTemplate() {
   renderTemplates();
 }
 
-function beep() {
+function unlockMilitaryAudio() {
   try {
-    if (!militaryAudioContext) militaryAudioContext = new (window.AudioContext || window.webkitAudioContext)();
-    if (militaryAudioContext.state === "suspended") militaryAudioContext.resume();
-    const oscillator = militaryAudioContext.createOscillator();
-    const gain = militaryAudioContext.createGain();
-    oscillator.frequency.value = 880;
-    gain.gain.setValueAtTime(0.07, militaryAudioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, militaryAudioContext.currentTime + 0.08);
-    oscillator.connect(gain).connect(militaryAudioContext.destination);
-    oscillator.start();
-    oscillator.stop(militaryAudioContext.currentTime + 0.08);
+    const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextConstructor) return Promise.resolve(false);
+    if (!militaryAudioContext) militaryAudioContext = new AudioContextConstructor();
+    if (militaryAudioContext.state === "running") return Promise.resolve(true);
+    return Promise.resolve(militaryAudioContext.resume())
+      .then(() => militaryAudioContext.state === "running")
+      .catch(() => false);
   } catch {
-    // Web Audio may be unavailable or blocked; the visual countdown remains usable.
+    return Promise.resolve(false);
   }
+}
+
+function playToneSequence(tones) {
+  if (!militaryAudioContext || militaryAudioContext.state !== "running") return;
+  try {
+    let startAt = Math.max(militaryAudioContext.currentTime, militaryNextToneAt);
+    tones.forEach(({ frequency, duration, gap = 0.04 }) => {
+      const oscillator = militaryAudioContext.createOscillator();
+      const gain = militaryAudioContext.createGain();
+      oscillator.frequency.value = frequency;
+      gain.gain.setValueAtTime(0.07, startAt);
+      gain.gain.exponentialRampToValueAtTime(0.001, startAt + duration);
+      oscillator.connect(gain).connect(militaryAudioContext.destination);
+      oscillator.start(startAt);
+      oscillator.stop(startAt + duration);
+      startAt += duration + gap;
+    });
+    militaryNextToneAt = startAt;
+  } catch {
+    // Web Audio can become unavailable after initialization; the timer continues silently.
+  }
+}
+
+function playCountdownBeep() {
+  playToneSequence([{ frequency: 880, duration: 0.08 }]);
+}
+
+function playTransitionSignal() {
+  playToneSequence([
+    { frequency: 660, duration: 0.1 },
+    { frequency: 990, duration: 0.14 },
+  ]);
+}
+
+function playCompletionSignal() {
+  playToneSequence([
+    { frequency: 660, duration: 0.1 },
+    { frequency: 880, duration: 0.1 },
+    { frequency: 1320, duration: 0.18 },
+  ]);
 }
 
 function updateActiveWorkout() {
@@ -220,27 +258,29 @@ function updateActiveWorkout() {
   document.getElementById("pauseMilitaryWorkoutBtn").textContent = activeWorkout.paused ? "Pokračovat" : "Pauza";
 }
 
-function finishWorkout() {
+function finishWorkout(completed = false) {
   clearInterval(activeWorkout?.timer);
   activeWorkout = null;
   document.getElementById("militaryActiveWorkout").hidden = true;
   if (document.fullscreenElement) document.exitFullscreen?.();
+  if (completed) playCompletionSignal();
 }
 
 function advanceWorkout() {
   activeWorkout.index += 1;
   if (activeWorkout.index >= activeWorkout.segments.length) {
-    finishWorkout();
+    finishWorkout(true);
     return;
   }
   activeWorkout.remaining = activeWorkout.segments[activeWorkout.index].seconds;
+  playTransitionSignal();
   updateActiveWorkout();
 }
 
 function workoutTick() {
   if (!activeWorkout || activeWorkout.paused) return;
   activeWorkout.remaining -= 1;
-  if (activeWorkout.remaining > 0 && activeWorkout.remaining <= 5) beep();
+  if (activeWorkout.remaining > 0 && activeWorkout.remaining <= 5) playCountdownBeep();
   if (activeWorkout.remaining <= 0) advanceWorkout();
   else updateActiveWorkout();
 }
@@ -251,7 +291,8 @@ function startWorkout() {
     alert("Přidej alespoň jeden interval s názvem a délkou cviku.");
     return;
   }
-  beep();
+  // This runs directly in the Start button's user-gesture handler, satisfying autoplay rules.
+  void unlockMilitaryAudio();
   activeWorkout = {
     segments,
     blockCount: validBlocks(militaryBlocks).length,
