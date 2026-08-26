@@ -229,6 +229,28 @@ function unlockMilitaryAudio() {
   }
 }
 
+function playSirenSignal() {
+  if (!militaryAudioContext || militaryAudioContext.state !== "running") return;
+  try {
+    const duration = 0.65;
+    const startAt = Math.max(militaryAudioContext.currentTime, militaryNextToneAt);
+    const oscillator = militaryAudioContext.createOscillator();
+    const gain = militaryAudioContext.createGain();
+    oscillator.type = "sawtooth";
+    oscillator.frequency.setValueAtTime(520, startAt);
+    oscillator.frequency.exponentialRampToValueAtTime(1180, startAt + duration * 0.5);
+    oscillator.frequency.exponentialRampToValueAtTime(520, startAt + duration);
+    gain.gain.setValueAtTime(0.18, startAt);
+    gain.gain.exponentialRampToValueAtTime(0.001, startAt + duration);
+    oscillator.connect(gain).connect(militaryAudioContext.destination);
+    oscillator.start(startAt);
+    oscillator.stop(startAt + duration);
+    militaryNextToneAt = startAt + duration + 0.04;
+  } catch {
+    // The timer remains usable if Web Audio becomes unavailable after unlocking.
+  }
+}
+
 function testMilitarySound() {
   // Called from the Test zvuku button's user gesture, before any async work.
   unlockMilitaryAudio().then((enabled) => {
@@ -244,7 +266,8 @@ function testMilitarySound() {
       { frequency: 784, duration: 0.12 },
       { frequency: 1047, duration: 0.2 },
     ]);
-    setMilitaryAudioStatus("Testovací tón byl spuštěn. Aplikace nemůže ověřit, zda jej zařízení skutečně přehrálo.", "success");
+    playSirenSignal();
+    setMilitaryAudioStatus("Testovací tóny a hlasitější přechodová siréna byly spuštěny. Aplikace nemůže ověřit, zda je zařízení skutečně přehrálo.", "success");
   }).catch(() => {
     setMilitaryAudioStatus("Zvuk není na tomto zařízení dostupný.", "error");
   });
@@ -276,10 +299,7 @@ function playCountdownBeep() {
 }
 
 function playTransitionSignal() {
-  playToneSequence([
-    { frequency: 660, duration: 0.1 },
-    { frequency: 990, duration: 0.14 },
-  ]);
+  playSirenSignal();
 }
 
 function playCompletionSignal() {
