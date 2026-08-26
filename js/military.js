@@ -191,10 +191,34 @@ function saveCurrentTemplate() {
   renderTemplates();
 }
 
+function setMilitaryAudioStatus(message, kind = "") {
+  const status = document.getElementById("militaryAudioStatus");
+  if (!status) return;
+  status.textContent = message;
+  status.dataset.status = kind;
+}
+
+function configureMilitaryAudioSession() {
+  try {
+    if (typeof navigator !== "undefined" && navigator.audioSession) {
+      navigator.audioSession.type = "playback";
+      return true;
+    }
+  } catch {
+    // Some Safari versions expose audioSession but reject setting its type.
+  }
+  return false;
+}
+
+function supportsMilitaryAudio() {
+  return Boolean(window.AudioContext || window.webkitAudioContext);
+}
+
 function unlockMilitaryAudio() {
   try {
+    configureMilitaryAudioSession();
+    if (!supportsMilitaryAudio()) return Promise.resolve(false);
     const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextConstructor) return Promise.resolve(false);
     if (!militaryAudioContext) militaryAudioContext = new AudioContextConstructor();
     if (militaryAudioContext.state === "running") return Promise.resolve(true);
     return Promise.resolve(militaryAudioContext.resume())
@@ -203,6 +227,27 @@ function unlockMilitaryAudio() {
   } catch {
     return Promise.resolve(false);
   }
+}
+
+function testMilitarySound() {
+  // Called from the Test zvuku button's user gesture, before any async work.
+  unlockMilitaryAudio().then((enabled) => {
+    if (!enabled) {
+      const message = supportsMilitaryAudio()
+        ? "Zvuk se nepodařilo odemknout. Zkontroluj oprávnění, tichý režim a hlasitost médií."
+        : "Toto zařízení nepodporuje Web Audio API; časovač bude bez zvuku.";
+      setMilitaryAudioStatus(message, "error");
+      return;
+    }
+    playToneSequence([
+      { frequency: 523, duration: 0.12 },
+      { frequency: 784, duration: 0.12 },
+      { frequency: 1047, duration: 0.2 },
+    ]);
+    setMilitaryAudioStatus("Testovací tón byl spuštěn. Aplikace nemůže ověřit, zda jej zařízení skutečně přehrálo.", "success");
+  }).catch(() => {
+    setMilitaryAudioStatus("Zvuk není na tomto zařízení dostupný.", "error");
+  });
 }
 
 function playToneSequence(tones) {
@@ -292,7 +337,10 @@ function startWorkout() {
     return;
   }
   // This runs directly in the Start button's user-gesture handler, satisfying autoplay rules.
-  void unlockMilitaryAudio();
+  void unlockMilitaryAudio().then((enabled) => {
+    if (enabled) setMilitaryAudioStatus("Zvuková upozornění jsou připravena.", "success");
+    else setMilitaryAudioStatus("Zvuk se nepodařilo odemknout; časovač bude pokračovat bez tónů.", "error");
+  });
   activeWorkout = {
     segments,
     blockCount: validBlocks(militaryBlocks).length,
@@ -316,6 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".preset-btn").forEach((button) => button.addEventListener("click", () => { militaryBlocks = presetBlocks(Number(button.dataset.preset)); document.getElementById("militaryTemplateName").value = `${button.dataset.preset} min military`; renderBuilder(); }));
   document.getElementById("saveMilitaryTemplateBtn").addEventListener("click", saveCurrentTemplate);
   document.getElementById("startMilitaryWorkoutBtn").addEventListener("click", startWorkout);
+  document.getElementById("testMilitarySoundBtn").addEventListener("click", testMilitarySound);
   document.getElementById("pauseMilitaryWorkoutBtn").addEventListener("click", () => { activeWorkout.paused = !activeWorkout.paused; updateActiveWorkout(); });
   document.getElementById("skipMilitaryWorkoutBtn").addEventListener("click", advanceWorkout);
   document.getElementById("stopMilitaryWorkoutBtn").addEventListener("click", finishWorkout);
