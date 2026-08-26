@@ -204,14 +204,6 @@ input, select, textarea, button {
   color: var(--text-dim);
   font-size: 13px;
 }
-.military-audio-status, .military-audio-caveat {
-  color: var(--text-dim);
-  font-size: 12px;
-  line-height: 1.4;
-  margin: 10px 0 0;
-}
-.military-audio-status[data-status="success"] { color: var(--green); }
-.military-audio-status[data-status="error"] { color: var(--red); }
 .military-preset-row, .military-active-actions {
   display: flex;
   gap: 8px;
