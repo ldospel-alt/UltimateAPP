@@ -14,6 +14,7 @@
   <div class="topbar">
     <a class="back-btn" href="index.html">←</a>
     <h1>📔 Deníček</h1>
+  <button class="btn ghost small" id="openDiarySettingsBtn" type="button">⚙️</button>
   </div>
 
   <div class="container">
@@ -75,30 +76,52 @@
       <div class="field">
         <textarea id="diaryText" placeholder="Jak proběhl den...?"></textarea>
       </div>
-      <div class="diary-rating-group">
+      <div class="diary-rating-group" data-diary-field="sleep">
         <p>Jak hodnotíš spánek?</p>
         <div class="star-rating" id="sleepRating" role="group" aria-label="Hodnocení spánku od 1 do 5"></div>
       </div>
-      <div class="diary-rating-group">
+      <div class="diary-rating-group" data-diary-field="stress">
         <p>Jak hodnotíš stres? <span>(1 = nízký, 5 = vysoký)</span></p>
         <div class="star-rating" id="stressRating" role="group" aria-label="Hodnocení stresu od 1 do 5"></div>
       </div>
+      <div data-diary-field="mood">
       <p style="color:var(--text-dim); font-size:13px; margin:0 0 4px 0;">Jak hodnotíš tento den?</p>
       <div class="rating-row">
         <button type="button" class="rate-btn rate-minus" data-rating="-" aria-pressed="false">−</button>
         <button type="button" class="rate-btn rate-zero" data-rating="0" aria-pressed="false">0</button>
         <button type="button" class="rate-btn rate-plus" data-rating="+" aria-pressed="false">+</button>
       </div>
+      </div>
+      <div class="diary-rating-group" data-diary-field="fatigue">
+        <p>Jak hodnotíš únavu? <span>(1 = nízká, 5 = vysoká)</span></p>
+        <div class="star-rating" id="fatigueRating" role="group" aria-label="Hodnocení únavy od 1 do 5"></div>
+      </div>
       <div class="diary-substance-toggles">
-        <button type="button" class="diary-toggle-btn" id="hasBeerBtn" title="Pivo použito" aria-pressed="false">
+        <button type="button" class="diary-toggle-btn" id="hasBeerBtn" data-diary-field="beer" title="Pivo použito" aria-pressed="false">
           <img src="icons/beer-off.png" id="beerImg" width="40" height="40" alt="Pivo" />
         </button>
-        <button type="button" class="diary-toggle-btn" id="hasSmokeBtn" title="Kouření použito" aria-pressed="false">
+        <button type="button" class="diary-toggle-btn" id="hasSmokeBtn" data-diary-field="smoke" title="Kouření použito" aria-pressed="false">
           <img src="icons/smoke-off.png" id="smokeImg" width="40" height="40" alt="Kouření" />
         </button>
+        <button type="button" class="diary-toggle-btn diary-meditation-btn" id="hasMeditationBtn" data-diary-field="meditation" title="Meditace provedena" aria-pressed="false" aria-label="Meditace provedena">🧘</button>
+      </div>
+      <div class="diary-rests" data-diary-field="rests">
+        <p>Odpočinek</p>
+        <div id="restList"></div>
+        <datalist id="restTypesList"></datalist>
+        <button class="btn ghost small" id="addRestBtn" type="button">+ Přidat odpočinek</button>
       </div>
       <button class="btn block" id="saveDiaryBtn" style="margin-top:8px;">Uložit zápis</button>
       <button class="btn ghost block" id="cancelEditDiaryBtn" style="display:none; margin-top:8px;">Zrušit úpravu</button>
+    </div>
+
+    <div id="diarySettingsModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <h2>Nastavení deníčku</h2>
+        <p class="diary-settings-hint">Vyber, které sekce chceš při zápisu zobrazovat a vyplňovat.</p>
+        <div id="diarySettingsList"></div>
+        <button class="btn ghost block" id="closeDiarySettingsBtn" type="button" style="margin-top:12px;">Zavřít</button>
+      </div>
     </div>
 
     <div class="card">

@@ -571,11 +571,52 @@ input, select, textarea, button {
   transition: all 0.2s ease;
   border-radius: 6px;
 }
+.diary-toggle-btn[hidden], .diary-substance-toggles [hidden] { display: none; }
+.diary-meditation-btn {
+  width: 48px;
+  height: 48px;
+  color: var(--gray);
+  font-size: 34px;
+  border-radius: 8px;
+  filter: grayscale(1);
+}
+.diary-meditation-btn.active {
+  color: var(--green);
+  filter: none;
+  background: rgba(62, 207, 114, 0.14);
+}
 .diary-substance-toggles {
   display: flex;
   gap: 12px;
   align-items: center;
   margin-top: 14px;
+}
+.diary-rests {
+  margin-top: 14px;
+}
+.diary-rests > p {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin: 0 0 6px;
+}
+.diary-rest-row {
+  display: grid;
+  grid-template-columns: 1fr 72px auto;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.diary-rest-row input {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid #333849;
+  border-radius: 10px;
+  background: #12141a;
+  color: var(--text);
+}
+.diary-settings-hint {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-top: -8px;
 }
 
 .chart-wrap {

@@ -1,11 +1,16 @@
 // Logika pro stránku Deníček: přidávání zápisků s hodnocením +/-/0 a jejich zobrazení
 
 const DIARY_KEY = "gym_diary";
+const DIARY_SETTINGS_KEY = "gym_diary_settings";
+const DIARY_FIELDS = ["sleep", "stress", "mood", "beer", "smoke", "meditation", "fatigue", "rests"];
 let selectedSleep = 0;
 let selectedStress = 0;
+let selectedFatigue = 0;
 let selectedMood = null;
 let hasBeer = false;
 let hasSmoke = false;
+let hasMeditation = false;
+let selectedRests = [];
 let editingEntryId = null;
 let editingEntry = null;
 let changedFields = new Set();
@@ -16,6 +21,20 @@ function getEntries() {
 
 function saveEntries(list) {
   Storage.write(DIARY_KEY, list);
+}
+
+function getDiarySettings() {
+  const raw = Storage.read(DIARY_SETTINGS_KEY, {});
+  const fields = raw && typeof raw === "object" ? raw.fields : {};
+  return { fields: Object.fromEntries(DIARY_FIELDS.map((field) => [field, fields?.[field] !== false])) };
+}
+
+function isDiaryFieldEnabled(field) {
+  return getDiarySettings().fields[field];
+}
+
+function saveDiarySettings(settings) {
+  Storage.write(DIARY_SETTINGS_KEY, settings);
 }
 
 function ratingClass(rating) {
@@ -64,9 +83,12 @@ function setStarRating(kind, value) {
   if (kind === "sleep") {
     selectedSleep = value;
     updateStarButtons("sleepRating", value);
-  } else {
+  } else if (kind === "stress") {
     selectedStress = value;
     updateStarButtons("stressRating", value);
+  } else {
+    selectedFatigue = value;
+    updateStarButtons("fatigueRating", value);
   }
   changedFields.add(kind);
 }
@@ -103,13 +125,16 @@ function createStarRating(containerId, kind) {
 function resetWellbeingRatings() {
   selectedSleep = 0;
   selectedStress = 0;
+  selectedFatigue = 0;
   updateStarButtons("sleepRating", 0);
   updateStarButtons("stressRating", 0);
+  updateStarButtons("fatigueRating", 0);
 }
 
 function updateToggleBtnStyle() {
   const beerImg = document.getElementById("beerImg");
   const smokeImg = document.getElementById("smokeImg");
+  const meditationButton = document.getElementById("hasMeditationBtn");
   
   if (beerImg) {
     beerImg.src = hasBeer ? "icons/beer-on.png" : "icons/beer-off.png";
@@ -126,6 +151,10 @@ function updateToggleBtnStyle() {
   if (smokeButton) {
     smokeButton.setAttribute("aria-pressed", String(hasSmoke));
   }
+  if (meditationButton) {
+    meditationButton.classList.toggle("active", hasMeditation);
+    meditationButton.setAttribute("aria-pressed", String(hasMeditation));
+  }
 }
 
 function toggleBeer() {
@@ -140,6 +169,103 @@ function toggleSmoke() {
   updateToggleBtnStyle();
 }
 
+function toggleMeditation() {
+  hasMeditation = !hasMeditation;
+  changedFields.add("meditation");
+  updateToggleBtnStyle();
+}
+
+function normalizeRests(rests) {
+  return Array.isArray(rests)
+    ? rests.map((rest) => ({ type: String(rest?.type || "").trim(), minutes: Math.round(Number(rest?.minutes) || 0) }))
+      .filter((rest) => rest.type && rest.minutes >= 1)
+    : [];
+}
+
+function getRestTypes() {
+  const types = new Map();
+  getEntries().forEach((entry) => normalizeRests(entry.rests).forEach((rest) => {
+    const key = rest.type.toLocaleLowerCase("cs");
+    if (!types.has(key)) types.set(key, rest.type);
+  }));
+  return Array.from(types.values()).sort((first, second) => first.localeCompare(second, "cs"));
+}
+
+function renderRestTypes() {
+  const datalist = document.getElementById("restTypesList");
+  datalist.replaceChildren();
+  getRestTypes().forEach((type) => {
+    const option = document.createElement("option");
+    option.value = type;
+    datalist.appendChild(option);
+  });
+}
+
+function renderRests() {
+  const list = document.getElementById("restList");
+  list.replaceChildren();
+  selectedRests.forEach((rest, index) => {
+    const row = document.createElement("div");
+    row.className = "diary-rest-row";
+    const type = document.createElement("input");
+    type.type = "text";
+    type.value = rest.type;
+    type.placeholder = "Typ odpočinku";
+    type.setAttribute("list", "restTypesList");
+    type.addEventListener("input", () => { selectedRests[index].type = type.value; changedFields.add("rests"); });
+    const minutes = document.createElement("input");
+    minutes.type = "number";
+    minutes.min = "1";
+    minutes.inputMode = "numeric";
+    minutes.value = rest.minutes || "";
+    minutes.placeholder = "min";
+    minutes.addEventListener("input", () => { selectedRests[index].minutes = Number(minutes.value); changedFields.add("rests"); });
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "btn ghost small";
+    remove.textContent = "✕";
+    remove.addEventListener("click", () => { selectedRests.splice(index, 1); changedFields.add("rests"); renderRests(); });
+    row.append(type, minutes, remove);
+    list.appendChild(row);
+  });
+  renderRestTypes();
+}
+
+function addRest() {
+  selectedRests.push({ type: "", minutes: 0 });
+  changedFields.add("rests");
+  renderRests();
+}
+
+function applyDiarySettings() {
+  const settings = getDiarySettings();
+  document.querySelectorAll("[data-diary-field]").forEach((element) => {
+    element.hidden = !settings.fields[element.dataset.diaryField];
+  });
+  renderDiarySettings();
+}
+
+function renderDiarySettings() {
+  const labels = { sleep: "Spánek", stress: "Stres", mood: "Nálada", beer: "Pivo", smoke: "Kouření", meditation: "Meditace", fatigue: "Únava", rests: "Odpočinek" };
+  const container = document.getElementById("diarySettingsList");
+  if (!container) return;
+  const settings = getDiarySettings();
+  container.replaceChildren();
+  DIARY_FIELDS.forEach((field) => {
+    const label = document.createElement("label");
+    label.className = "settings-item";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = settings.fields[field];
+    checkbox.addEventListener("change", () => {
+      saveDiarySettings({ fields: { ...getDiarySettings().fields, [field]: checkbox.checked } });
+      applyDiarySettings();
+    });
+    label.append(checkbox, document.createTextNode(labels[field]));
+    container.appendChild(label);
+  });
+}
+
 function resetForm() {
   editingEntryId = null;
   editingEntry = null;
@@ -151,9 +277,12 @@ function resetForm() {
   selectedMood = null;
   hasBeer = false;
   hasSmoke = false;
+  hasMeditation = false;
+  selectedRests = [];
   resetWellbeingRatings();
   updateMoodButtons();
   updateToggleBtnStyle();
+  renderRests();
 }
 
 function addEntry() {
@@ -167,34 +296,45 @@ function addEntry() {
     alert("Napiš prosím nějaký text zápisku.");
     return;
   }
-  if (!validMoodRating(selectedMood)) {
+  if (isDiaryFieldEnabled("mood") && !validMoodRating(selectedMood)) {
     alert("Vyberte prosím hodnocení dne (−, 0, nebo +)");
     return;
   }
-  if (!isEditing && (!validStarRating(selectedSleep) || !validStarRating(selectedStress))) {
-    alert("Ohodnoť prosím spánek i stres pomocí 1–5 hvězdiček.");
+  const requiredRatings = [
+    ["sleep", selectedSleep, "spánek"],
+    ["stress", selectedStress, "stres"],
+    ["fatigue", selectedFatigue, "únavu"],
+  ];
+  if (!isEditing && requiredRatings.some(([field, value]) => isDiaryFieldEnabled(field) && !validStarRating(value))) {
+    alert("Ohodnoť prosím všechny zobrazené hvězdičkové sekce pomocí 1–5 hvězdiček.");
     return;
   }
 
   const entries = getEntries();
-  const entryData = {
-    date,
-    text,
-    rating: selectedMood,
-  };
+  const entryData = { date, text };
+  if (isDiaryFieldEnabled("mood")) entryData.rating = selectedMood;
 
   // Keep fields absent from legacy entries absent unless the user explicitly supplies them.
-  if (!isEditing || hasOwnField(editingEntry, "sleepRating") || changedFields.has("sleep")) {
+  if (isDiaryFieldEnabled("sleep") && (!isEditing || hasOwnField(editingEntry, "sleepRating") || changedFields.has("sleep"))) {
     entryData.sleepRating = selectedSleep;
   }
-  if (!isEditing || hasOwnField(editingEntry, "stressRating") || changedFields.has("stress")) {
+  if (isDiaryFieldEnabled("stress") && (!isEditing || hasOwnField(editingEntry, "stressRating") || changedFields.has("stress"))) {
     entryData.stressRating = selectedStress;
   }
-  if (!isEditing || hasOwnField(editingEntry, "hasBeer") || changedFields.has("beer")) {
+  if (isDiaryFieldEnabled("fatigue") && (!isEditing || hasOwnField(editingEntry, "fatigueRating") || changedFields.has("fatigue"))) {
+    entryData.fatigueRating = selectedFatigue;
+  }
+  if (isDiaryFieldEnabled("beer") && (!isEditing || hasOwnField(editingEntry, "hasBeer") || changedFields.has("beer"))) {
     entryData.hasBeer = hasBeer;
   }
-  if (!isEditing || hasOwnField(editingEntry, "hasSmoke") || changedFields.has("smoke")) {
+  if (isDiaryFieldEnabled("smoke") && (!isEditing || hasOwnField(editingEntry, "hasSmoke") || changedFields.has("smoke"))) {
     entryData.hasSmoke = hasSmoke;
+  }
+  if (isDiaryFieldEnabled("meditation") && (!isEditing || hasOwnField(editingEntry, "hasMeditation") || changedFields.has("meditation"))) {
+    entryData.hasMeditation = hasMeditation;
+  }
+  if (isDiaryFieldEnabled("rests") && (!isEditing || hasOwnField(editingEntry, "rests") || changedFields.has("rests"))) {
+    entryData.rests = normalizeRests(selectedRests);
   }
 
   if (isEditing) {
@@ -237,13 +377,18 @@ function editEntry(id) {
   selectedMood = validMoodRating(entry.rating) ? entry.rating : null;
   selectedSleep = validStarRating(entry.sleepRating) ? entry.sleepRating : 0;
   selectedStress = validStarRating(entry.stressRating) ? entry.stressRating : 0;
+  selectedFatigue = validStarRating(entry.fatigueRating) ? entry.fatigueRating : 0;
   hasBeer = Boolean(entry.hasBeer);
   hasSmoke = Boolean(entry.hasSmoke);
+  hasMeditation = Boolean(entry.hasMeditation);
+  selectedRests = normalizeRests(entry.rests);
 
   updateMoodButtons();
   updateStarButtons("sleepRating", selectedSleep);
   updateStarButtons("stressRating", selectedStress);
+  updateStarButtons("fatigueRating", selectedFatigue);
   updateToggleBtnStyle();
+  renderRests();
   document.getElementById("diaryFormTitle").scrollIntoView({ behavior: "smooth" });
 }
 
@@ -466,11 +611,21 @@ function renderEntries() {
     if (validStarRating(entry.stressRating)) {
       wellbeing.push(`Stres ${starText(entry.stressRating)}`);
     }
+    if (validStarRating(entry.fatigueRating)) {
+      wellbeing.push(`Únava ${starText(entry.fatigueRating)}`);
+    }
     if (entry.hasBeer) {
       wellbeing.push("🍺 Pivo");
     }
     if (entry.hasSmoke) {
       wellbeing.push("🌿 Kouření");
+    }
+    if (entry.hasMeditation) {
+      wellbeing.push("🧘 Meditace");
+    }
+    const rests = normalizeRests(entry.rests);
+    if (rests.length) {
+      wellbeing.push(`Odpočinek: ${rests.map((rest) => `${rest.type} ${rest.minutes} min`).join(", ")}`);
     }
     const wellbeingElement = el.querySelector(".diary-wellbeing");
     wellbeingElement.textContent = wellbeing.join(" · ");
@@ -490,6 +645,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("diaryDate").value = todayInputValue();
   createStarRating("sleepRating", "sleep");
   createStarRating("stressRating", "stress");
+  createStarRating("fatigueRating", "fatigue");
   document.querySelectorAll(".rate-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       setMoodRating(btn.dataset.rating);
@@ -506,6 +662,11 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     toggleSmoke();
   });
+  document.getElementById("hasMeditationBtn").addEventListener("click", (e) => {
+    e.preventDefault();
+    toggleMeditation();
+  });
+  document.getElementById("addRestBtn").addEventListener("click", addRest);
   document.getElementById("cancelEditDiaryBtn").addEventListener("click", resetForm);
   
   // Modální okno pro rozšířené statistiky
@@ -532,7 +693,21 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  const diarySettingsModal = document.getElementById("diarySettingsModal");
+  document.getElementById("openDiarySettingsBtn").addEventListener("click", () => {
+    applyDiarySettings();
+    diarySettingsModal.style.display = "flex";
+  });
+  document.getElementById("closeDiarySettingsBtn").addEventListener("click", () => {
+    diarySettingsModal.style.display = "none";
+  });
+  diarySettingsModal.addEventListener("click", (event) => {
+    if (event.target === diarySettingsModal) diarySettingsModal.style.display = "none";
+  });
   
+  applyDiarySettings();
   updateToggleBtnStyle();
+  renderRests();
   renderAll();
 });
