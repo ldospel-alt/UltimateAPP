@@ -19,7 +19,7 @@
 
   <div class="container">
 
-    <div class="card">
+    <div class="card" data-diary-stat-field="mood">
       <h2>Nálada</h2>
       <div class="stat-row diary-stat-row">
         <div class="stat-box"><div class="value positive" id="moodPositive">0</div><div class="label">pozitivní</div></div>
@@ -34,34 +34,64 @@
       <div class="modal-content" style="max-width:600px;">
         <h2>Rozšířené statistiky</h2>
         
-        <h3 class="diary-stat-title">Spánek</h3>
+        <div data-diary-stat-field="sleep"><h3 class="diary-stat-title">Spánek</h3>
         <div class="stat-row diary-stat-row">
           <div class="stat-box"><div class="value positive" id="sleepPositive">0</div><div class="label">pozitivní</div></div>
           <div class="stat-box"><div class="value neutral" id="sleepNeutral">0</div><div class="label">neutrální</div></div>
           <div class="stat-box"><div class="value negative" id="sleepNegative">0</div><div class="label">negativní</div></div>
         </div>
+        </div>
 
-        <h3 class="diary-stat-title">Stres</h3>
+        <div data-diary-stat-field="stress"><h3 class="diary-stat-title">Stres</h3>
         <div class="stat-row diary-stat-row">
           <div class="stat-box"><div class="value positive" id="stressPositive">0</div><div class="label">pozitivní</div></div>
           <div class="stat-box"><div class="value neutral" id="stressNeutral">0</div><div class="label">neutrální</div></div>
           <div class="stat-box"><div class="value negative" id="stressNegative">0</div><div class="label">negativní</div></div>
         </div>
+        </div>
 
-        <h3 class="diary-stat-title">DarkHabbit</h3>
+        <div data-diary-stat-field="fatigue">
+          <h3 class="diary-stat-title">Únava</h3>
+          <div class="stat-row diary-stat-row diary-stat-row--two">
+            <div class="stat-box"><div class="value" id="fatigueAverage">–</div><div class="label">průměr (1–5)</div></div>
+            <div class="stat-box"><div class="value" id="fatigueCount">0</div><div class="label">záznamů</div></div>
+          </div>
+          <p id="fatigueDistribution" class="diary-stats-detail"></p>
+        </div>
+
+        <div data-diary-stat-field="darkhabbit"><h3 class="diary-stat-title">DarkHabbit</h3>
         <div class="stat-row diary-stat-row diary-stat-row--two">
-          <div class="stat-box"><div class="value" id="currentBeerStreak" style="color:var(--green);">0</div><div class="label">aktuálně bez piva</div></div>
-          <div class="stat-box"><div class="value" id="currentSmokeStreak" style="color:var(--green);">0</div><div class="label">aktuálně bez kouření</div></div>
+          <div class="stat-box" data-diary-stat-field="beer"><div class="value" id="currentBeerStreak" style="color:var(--green);">0</div><div class="label">aktuálně bez piva</div></div>
+          <div class="stat-box" data-diary-stat-field="smoke"><div class="value" id="currentSmokeStreak" style="color:var(--green);">0</div><div class="label">aktuálně bez kouření</div></div>
         </div>
         <div class="stat-row diary-stat-row diary-stat-row--two diary-stat-row-spaced">
-          <div class="stat-box"><div class="value" id="bestBeerStreak" style="color:var(--green);">0</div><div class="label">rekord bez piva</div></div>
-          <div class="stat-box"><div class="value" id="bestSmokeStreak" style="color:var(--green);">0</div><div class="label">rekord bez kouření</div></div>
+          <div class="stat-box" data-diary-stat-field="beer"><div class="value" id="bestBeerStreak" style="color:var(--green);">0</div><div class="label">rekord bez piva</div></div>
+          <div class="stat-box" data-diary-stat-field="smoke"><div class="value" id="bestSmokeStreak" style="color:var(--green);">0</div><div class="label">rekord bez kouření</div></div>
+        </div>
         </div>
 
-        <h3 class="diary-stat-title">Měsíční statistika</h3>
+        <div data-diary-stat-field="meditation">
+          <h3 class="diary-stat-title">Meditace</h3>
+          <div class="stat-row diary-stat-row diary-stat-row--two">
+            <div class="stat-box"><div class="value" id="meditationDays">0</div><div class="label">dní s meditací</div></div>
+            <div class="stat-box"><div class="value" id="meditationPercent">–</div><div class="label">z zaznamenaných dnů</div></div>
+          </div>
+        </div>
+
+        <div data-diary-stat-field="rests">
+          <h3 class="diary-stat-title">Odpočinek</h3>
+          <div class="stat-row diary-stat-row">
+            <div class="stat-box"><div class="value" id="restMinutes">0</div><div class="label">minut celkem</div></div>
+            <div class="stat-box"><div class="value" id="restCount">0</div><div class="label">záznamů odpočinku</div></div>
+          </div>
+          <p id="restBreakdown" class="diary-stats-detail"></p>
+        </div>
+
+        <div data-diary-stat-field="darkhabbit"><h3 class="diary-stat-title">Měsíční statistika</h3>
         <div id="monthlyStats" style="font-size:12px; color:var(--text-dim);">Načítání...</div>
         <h3 class="diary-stat-title">Aktuální rok</h3>
         <div id="yearlyStats" style="font-size:12px; color:var(--text-dim);">Načítání...</div>
+        </div>
 
         <button class="btn ghost block" id="closeAdvancedStatsBtn" style="margin-top:12px;">Zavřít</button>
       </div>

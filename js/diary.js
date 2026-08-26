@@ -242,7 +242,14 @@ function applyDiarySettings() {
   document.querySelectorAll("[data-diary-field]").forEach((element) => {
     element.hidden = !settings.fields[element.dataset.diaryField];
   });
+  document.querySelectorAll("[data-diary-stat-field]").forEach((element) => {
+    const field = element.dataset.diaryStatField;
+    element.hidden = field === "darkhabbit"
+      ? !settings.fields.beer && !settings.fields.smoke
+      : !settings.fields[field];
+  });
   renderDiarySettings();
+  renderStats();
 }
 
 function renderDiarySettings() {
@@ -414,6 +421,7 @@ function classifyRating(value, positiveWhenHigh) {
 
 function renderStats() {
   const days = latestEntryPerDay(getEntries());
+  const settings = getDiarySettings();
   const counts = {
     moodPositive: 0,
     moodNeutral: 0,
@@ -442,9 +450,52 @@ function renderStats() {
     const element = document.getElementById(id);
     if (element) element.textContent = value;
   });
+  const fatigueValues = days.map((entry) => entry.fatigueRating).filter(validStarRating);
+  const fatigueAverage = fatigueValues.length
+    ? (fatigueValues.reduce((sum, value) => sum + value, 0) / fatigueValues.length).toFixed(1)
+    : "–";
+  const fatigueDistribution = [1, 2, 3, 4, 5].map((value) =>
+    `${value}: ${fatigueValues.filter((rating) => rating === value).length}`
+  ).join(" · ");
+  const meditationLogged = days.filter((entry) => hasOwnField(entry, "hasMeditation"));
+  const meditationDays = meditationLogged.filter((entry) => entry.hasMeditation).length;
+  const meditationPercent = meditationLogged.length
+    ? `${Math.round((meditationDays / meditationLogged.length) * 100)} %`
+    : "–";
+  const restTotals = new Map();
+  let restMinutes = 0;
+  let restCount = 0;
+  days.forEach((entry) => normalizeRests(entry.rests).forEach((rest) => {
+    restMinutes += rest.minutes;
+    restCount += 1;
+    const key = rest.type.toLocaleLowerCase("cs");
+    const current = restTotals.get(key) || { type: rest.type, minutes: 0 };
+    current.minutes += rest.minutes;
+    restTotals.set(key, current);
+  }));
+  const restBreakdown = Array.from(restTotals.values())
+    .sort((first, second) => first.type.localeCompare(second.type, "cs"))
+    .map((rest) => `${rest.type}: ${rest.minutes} min`)
+    .join(" · ");
+  const statValues = {
+    fatigueAverage,
+    fatigueCount: fatigueValues.length,
+    fatigueDistribution: fatigueValues.length ? fatigueDistribution : "Zatím žádné platné hodnocení únavy.",
+    meditationDays,
+    meditationPercent,
+    restMinutes,
+    restCount,
+    restBreakdown: restBreakdown || "Zatím žádný zaznamenaný odpočinek.",
+  };
+  Object.entries(statValues).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+  });
   
-  updateStreaks();
-  updateMonthlyStats();
+  if (settings.fields.beer || settings.fields.smoke) {
+    updateStreaks();
+    updateMonthlyStats();
+  }
 }
 
 function dayNumber(date) {
