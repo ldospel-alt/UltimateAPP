@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>Habbits – Gym Deník</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#111318" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a class="back-btn" href="index.html" aria-label="Zpět na úvodní stránku">←</a>
+    <h1>💧 Habbits</h1>
+  </div>
+
+  <main class="container">
+    <section class="card">
+      <h2>Voda</h2>
+      <div class="field">
+        <label for="habitsDate">Datum</label>
+        <input id="habitsDate" type="date" />
+      </div>
+      <div class="habits-total">
+        <span id="waterTotalMl">0 ml</span>
+        <small id="waterTotalLiters">0 l</small>
+      </div>
+      <div class="habits-quick-add" aria-label="Rychle přidat vodu">
+        <button class="btn secondary small water-preset" data-amount="250" type="button">+250 ml</button>
+        <button class="btn secondary small water-preset" data-amount="500" type="button">+500 ml</button>
+        <button class="btn secondary small water-preset" data-amount="750" type="button">+750 ml</button>
+        <button class="btn secondary small water-preset" data-amount="1000" type="button">+1 l</button>
+      </div>
+      <div class="habits-custom-add">
+        <label for="customWaterAmount">Vlastní množství v ml</label>
+        <input id="customWaterAmount" type="number" min="1" max="10000" step="1" inputmode="numeric" placeholder="Např. 330" />
+        <button id="addCustomWaterBtn" class="btn" type="button">Přidat</button>
+      </div>
+      <button id="clearWaterDayBtn" class="btn ghost block" type="button">Vymazat záznamy tohoto dne</button>
+    </section>
+
+    <section class="card">
+      <h2>Záznamy dne</h2>
+      <div id="waterRecords"></div>
+      <p id="waterRecordsEmpty" class="empty-hint">Pro tento den zatím nemáš žádný záznam.</p>
+    </section>
+
+    <section class="card">
+      <h2>Poslední dny</h2>
+      <div id="waterDailyHistory"></div>
+      <p id="waterDailyHistoryEmpty" class="empty-hint">Zatím nemáš žádnou historii pití.</p>
+    </section>
+  </main>
+
+  <script src="js/storage.js"></script>
+  <script src="js/habits.js"></script>
+  <script>registerServiceWorker();</script>
+</body>
+</html>

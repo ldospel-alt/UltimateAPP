@@ -261,6 +261,50 @@ input, select, textarea, button {
 }
 .military-progress-track div { height: 100%; width: 0; background: var(--green); transition: width .2s; }
 
+/* Habbits */
+.habits-total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 18px 0;
+}
+.habits-total span {
+  color: var(--accent-2);
+  font-size: 42px;
+  font-weight: 700;
+}
+.habits-total small { color: var(--text-dim); font-size: 16px; margin-top: 4px; }
+.habits-quick-add {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.habits-custom-add {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: end;
+  margin: 12px 0;
+}
+.habits-custom-add label { grid-column: 1 / -1; color: var(--text-dim); font-size: 13px; }
+.habits-custom-add input {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #333849;
+  border-radius: 10px;
+  background: #12141a;
+  color: var(--text);
+}
+.habits-record {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #2a2e38;
+}
+.habits-record:last-child { border-bottom: 0; }
+
 .exercise-block {
   background: #12141a;
   border-radius: 12px;
