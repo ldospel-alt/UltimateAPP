@@ -87,6 +87,15 @@
           <p id="restBreakdown" class="diary-stats-detail"></p>
         </div>
 
+        <div data-diary-stat-field="illness">
+          <h3 class="diary-stat-title">Nemoc</h3>
+          <div class="stat-row diary-stat-row diary-stat-row--two">
+            <div class="stat-box"><div class="value" id="illnessDays">0</div><div class="label">dní s nemocí</div></div>
+            <div class="stat-box"><div class="value" id="illnessPercent">–</div><div class="label">z zaznamenaných dnů</div></div>
+          </div>
+          <p id="symptomBreakdown" class="diary-stats-detail"></p>
+        </div>
+
         <div data-diary-stat-field="darkhabbit"><h3 class="diary-stat-title">Měsíční statistika</h3>
         <div id="monthlyStats" style="font-size:12px; color:var(--text-dim);">Načítání...</div>
         <h3 class="diary-stat-title">Aktuální rok</h3>
@@ -140,6 +149,18 @@
         <div id="restList"></div>
         <datalist id="restTypesList"></datalist>
         <button class="btn ghost small" id="addRestBtn" type="button">+ Přidat odpočinek</button>
+      </div>
+      <div class="diary-illness" data-diary-field="illness">
+        <p>Nemoc</p>
+        <div class="diary-illness-options" role="group" aria-label="Nemoc">
+          <button class="btn secondary small illness-btn" data-illness="false" type="button" aria-pressed="true">Ne</button>
+          <button class="btn ghost small illness-btn" data-illness="true" type="button" aria-pressed="false">Ano</button>
+        </div>
+      </div>
+      <div class="field" data-diary-field="symptoms" id="symptomsField">
+        <label for="diarySymptoms">Projevy</label>
+        <input id="diarySymptoms" type="text" list="symptomsList" autocomplete="off" placeholder="Např. kašel" />
+        <datalist id="symptomsList"></datalist>
       </div>
       <button class="btn block" id="saveDiaryBtn" style="margin-top:8px;">Uložit zápis</button>
       <button class="btn ghost block" id="cancelEditDiaryBtn" style="display:none; margin-top:8px;">Zrušit úpravu</button>

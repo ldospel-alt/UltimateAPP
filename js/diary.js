@@ -2,7 +2,7 @@
 
 const DIARY_KEY = "gym_diary";
 const DIARY_SETTINGS_KEY = "gym_diary_settings";
-const DIARY_FIELDS = ["sleep", "stress", "mood", "beer", "smoke", "meditation", "fatigue", "rests"];
+const DIARY_FIELDS = ["sleep", "stress", "mood", "beer", "smoke", "meditation", "fatigue", "rests", "illness", "symptoms"];
 let selectedSleep = 0;
 let selectedStress = 0;
 let selectedFatigue = 0;
@@ -11,6 +11,7 @@ let hasBeer = false;
 let hasSmoke = false;
 let hasMeditation = false;
 let selectedRests = [];
+let hasIllness = false;
 let editingEntryId = null;
 let editingEntry = null;
 let changedFields = new Set();
@@ -175,6 +176,44 @@ function toggleMeditation() {
   updateToggleBtnStyle();
 }
 
+function updateIllnessButtons() {
+  document.querySelectorAll(".illness-btn").forEach((button) => {
+    const selected = button.dataset.illness === String(hasIllness);
+    button.classList.toggle("secondary", selected);
+    button.classList.toggle("ghost", !selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+  const symptomsField = document.getElementById("symptomsField");
+  if (symptomsField) symptomsField.hidden = !hasIllness || !isDiaryFieldEnabled("symptoms");
+}
+
+function setIllness(value) {
+  hasIllness = value;
+  changedFields.add("illness");
+  updateIllnessButtons();
+}
+
+function getSymptomTypes() {
+  const symptoms = new Map();
+  getEntries().forEach((entry) => {
+    const symptom = String(entry?.symptoms || "").trim();
+    if (!symptom) return;
+    const key = symptom.toLocaleLowerCase("cs");
+    if (!symptoms.has(key)) symptoms.set(key, symptom);
+  });
+  return Array.from(symptoms.values()).sort((first, second) => first.localeCompare(second, "cs"));
+}
+
+function renderSymptomTypes() {
+  const datalist = document.getElementById("symptomsList");
+  datalist.replaceChildren();
+  getSymptomTypes().forEach((symptom) => {
+    const option = document.createElement("option");
+    option.value = symptom;
+    datalist.appendChild(option);
+  });
+}
+
 function normalizeRests(rests) {
   return Array.isArray(rests)
     ? rests.map((rest) => ({ type: String(rest?.type || "").trim(), minutes: Math.round(Number(rest?.minutes) || 0) }))
@@ -242,6 +281,7 @@ function applyDiarySettings() {
   document.querySelectorAll("[data-diary-field]").forEach((element) => {
     element.hidden = !settings.fields[element.dataset.diaryField];
   });
+  updateIllnessButtons();
   document.querySelectorAll("[data-diary-stat-field]").forEach((element) => {
     const field = element.dataset.diaryStatField;
     element.hidden = field === "darkhabbit"
@@ -253,7 +293,7 @@ function applyDiarySettings() {
 }
 
 function renderDiarySettings() {
-  const labels = { sleep: "Spánek", stress: "Stres", mood: "Nálada", beer: "Pivo", smoke: "Kouření", meditation: "Meditace", fatigue: "Únava", rests: "Odpočinek" };
+  const labels = { sleep: "Spánek", stress: "Stres", mood: "Nálada", beer: "Pivo", smoke: "Kouření", meditation: "Meditace", fatigue: "Únava", rests: "Odpočinek", illness: "Nemoc", symptoms: "Projevy" };
   const container = document.getElementById("diarySettingsList");
   if (!container) return;
   const settings = getDiarySettings();
@@ -286,10 +326,14 @@ function resetForm() {
   hasSmoke = false;
   hasMeditation = false;
   selectedRests = [];
+  hasIllness = false;
+  document.getElementById("diarySymptoms").value = "";
   resetWellbeingRatings();
   updateMoodButtons();
   updateToggleBtnStyle();
+  updateIllnessButtons();
   renderRests();
+  renderSymptomTypes();
 }
 
 function addEntry() {
@@ -343,6 +387,12 @@ function addEntry() {
   if (isDiaryFieldEnabled("rests") && (!isEditing || hasOwnField(editingEntry, "rests") || changedFields.has("rests"))) {
     entryData.rests = normalizeRests(selectedRests);
   }
+  if (isDiaryFieldEnabled("illness") && (!isEditing || hasOwnField(editingEntry, "hasIllness") || changedFields.has("illness"))) {
+    entryData.hasIllness = hasIllness;
+  }
+  if (isDiaryFieldEnabled("symptoms") && hasIllness && (!isEditing || hasOwnField(editingEntry, "symptoms") || changedFields.has("symptoms"))) {
+    entryData.symptoms = document.getElementById("diarySymptoms").value.trim();
+  }
 
   if (isEditing) {
     saveEntries(entries.map((entry) =>
@@ -389,13 +439,17 @@ function editEntry(id) {
   hasSmoke = Boolean(entry.hasSmoke);
   hasMeditation = Boolean(entry.hasMeditation);
   selectedRests = normalizeRests(entry.rests);
+  hasIllness = Boolean(entry.hasIllness);
+  document.getElementById("diarySymptoms").value = String(entry.symptoms || "");
 
   updateMoodButtons();
   updateStarButtons("sleepRating", selectedSleep);
   updateStarButtons("stressRating", selectedStress);
   updateStarButtons("fatigueRating", selectedFatigue);
   updateToggleBtnStyle();
+  updateIllnessButtons();
   renderRests();
+  renderSymptomTypes();
   document.getElementById("diaryFormTitle").scrollIntoView({ behavior: "smooth" });
 }
 
@@ -477,6 +531,24 @@ function renderStats() {
     .sort((first, second) => first.type.localeCompare(second.type, "cs"))
     .map((rest) => `${rest.type}: ${rest.minutes} min`)
     .join(" · ");
+  const illnessLogged = days.filter((entry) => hasOwnField(entry, "hasIllness"));
+  const illnessDays = illnessLogged.filter((entry) => entry.hasIllness).length;
+  const illnessPercent = illnessLogged.length
+    ? `${Math.round((illnessDays / illnessLogged.length) * 100)} %`
+    : "–";
+  const symptomTotals = new Map();
+  illnessLogged.filter((entry) => entry.hasIllness).forEach((entry) => {
+    const symptom = String(entry.symptoms || "").trim();
+    if (!symptom) return;
+    const key = symptom.toLocaleLowerCase("cs");
+    const current = symptomTotals.get(key) || { symptom, count: 0 };
+    current.count += 1;
+    symptomTotals.set(key, current);
+  });
+  const symptomBreakdown = Array.from(symptomTotals.values())
+    .sort((first, second) => first.symptom.localeCompare(second.symptom, "cs"))
+    .map((item) => `${item.symptom}: ${item.count}×`)
+    .join(" · ");
   const statValues = {
     fatigueAverage,
     fatigueCount: fatigueValues.length,
@@ -486,6 +558,9 @@ function renderStats() {
     restMinutes,
     restCount,
     restBreakdown: restBreakdown || "Zatím žádný zaznamenaný odpočinek.",
+    illnessDays,
+    illnessPercent,
+    symptomBreakdown: symptomBreakdown || "Zatím žádné zaznamenané projevy.",
   };
   Object.entries(statValues).forEach(([id, value]) => {
     const element = document.getElementById(id);
@@ -674,6 +749,10 @@ function renderEntries() {
     if (entry.hasMeditation) {
       wellbeing.push("🧘 Meditace");
     }
+    if (entry.hasIllness) {
+      const symptoms = String(entry.symptoms || "").trim();
+      wellbeing.push(symptoms ? `🤒 Nemoc: ${symptoms}` : "🤒 Nemoc");
+    }
     const rests = normalizeRests(entry.rests);
     if (rests.length) {
       wellbeing.push(`Odpočinek: ${rests.map((rest) => `${rest.type} ${rest.minutes} min`).join(", ")}`);
@@ -718,6 +797,9 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleMeditation();
   });
   document.getElementById("addRestBtn").addEventListener("click", addRest);
+  document.querySelectorAll(".illness-btn").forEach((button) => {
+    button.addEventListener("click", () => setIllness(button.dataset.illness === "true"));
+  });
   document.getElementById("cancelEditDiaryBtn").addEventListener("click", resetForm);
   
   // Modální okno pro rozšířené statistiky
@@ -759,6 +841,8 @@ document.addEventListener("DOMContentLoaded", () => {
   
   applyDiarySettings();
   updateToggleBtnStyle();
+  updateIllnessButtons();
   renderRests();
+  renderSymptomTypes();
   renderAll();
 });

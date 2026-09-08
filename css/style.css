@@ -638,6 +638,21 @@ input, select, textarea, button {
 .diary-rests {
   margin-top: 14px;
 }
+.diary-illness {
+  margin-top: 14px;
+}
+.diary-illness > p {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin: 0 0 6px;
+}
+.diary-illness-options {
+  display: flex;
+  gap: 8px;
+}
+.diary-illness-options .btn {
+  flex: 1;
+}
 .diary-rests > p {
   color: var(--text-dim);
   font-size: 13px;
