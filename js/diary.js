@@ -2,10 +2,11 @@
 
 const DIARY_KEY = "gym_diary";
 const DIARY_SETTINGS_KEY = "gym_diary_settings";
-const DIARY_FIELDS = ["sleep", "stress", "mood", "beer", "smoke", "meditation", "fatigue", "rests", "illness", "symptoms"];
+const DIARY_FIELDS = ["sleep", "stress", "readiness", "mood", "beer", "smoke", "meditation", "fatigue", "rests", "illness", "symptoms"];
 let selectedSleep = 0;
-let selectedStress = 0;
 let selectedFatigue = 0;
+let selectedReadiness = null;
+let selectedStressScore = null;
 let selectedMood = null;
 let hasBeer = false;
 let hasSmoke = false;
@@ -59,6 +60,10 @@ function validStarRating(value) {
   return Number.isInteger(value) && value >= 1 && value <= 5;
 }
 
+function validScore(value) {
+  return Number.isInteger(value) && value >= 0 && value <= 100;
+}
+
 function validMoodRating(value) {
   return value === "+" || value === "0" || value === "-";
 }
@@ -84,9 +89,6 @@ function setStarRating(kind, value) {
   if (kind === "sleep") {
     selectedSleep = value;
     updateStarButtons("sleepRating", value);
-  } else if (kind === "stress") {
-    selectedStress = value;
-    updateStarButtons("stressRating", value);
   } else {
     selectedFatigue = value;
     updateStarButtons("fatigueRating", value);
@@ -125,10 +127,8 @@ function createStarRating(containerId, kind) {
 
 function resetWellbeingRatings() {
   selectedSleep = 0;
-  selectedStress = 0;
   selectedFatigue = 0;
   updateStarButtons("sleepRating", 0);
-  updateStarButtons("stressRating", 0);
   updateStarButtons("fatigueRating", 0);
 }
 
@@ -293,7 +293,7 @@ function applyDiarySettings() {
 }
 
 function renderDiarySettings() {
-  const labels = { sleep: "Spánek", stress: "Stres", mood: "Nálada", beer: "Pivo", smoke: "Kouření", meditation: "Meditace", fatigue: "Únava", rests: "Odpočinek", illness: "Nemoc", symptoms: "Projevy" };
+  const labels = { sleep: "Spánek", stress: "Stres", readiness: "Readiness", mood: "Nálada", beer: "Pivo", smoke: "Kouření", meditation: "Meditace", fatigue: "Únava", rests: "Odpočinek", illness: "Nemoc", symptoms: "Projevy" };
   const container = document.getElementById("diarySettingsList");
   if (!container) return;
   const settings = getDiarySettings();
@@ -328,6 +328,10 @@ function resetForm() {
   selectedRests = [];
   hasIllness = false;
   document.getElementById("diarySymptoms").value = "";
+  selectedReadiness = null;
+  selectedStressScore = null;
+  document.getElementById("readinessScore").value = "";
+  document.getElementById("stressScore").value = "";
   resetWellbeingRatings();
   updateMoodButtons();
   updateToggleBtnStyle();
@@ -353,11 +357,17 @@ function addEntry() {
   }
   const requiredRatings = [
     ["sleep", selectedSleep, "spánek"],
-    ["stress", selectedStress, "stres"],
     ["fatigue", selectedFatigue, "únavu"],
   ];
   if (!isEditing && requiredRatings.some(([field, value]) => isDiaryFieldEnabled(field) && !validStarRating(value))) {
     alert("Ohodnoť prosím všechny zobrazené hvězdičkové sekce pomocí 1–5 hvězdiček.");
+    return;
+  }
+  if (
+    (isDiaryFieldEnabled("readiness") && (!isEditing || changedFields.has("readiness")) && !validScore(selectedReadiness)) ||
+    (isDiaryFieldEnabled("stress") && (!isEditing || changedFields.has("stress")) && !validScore(selectedStressScore))
+  ) {
+    alert("Zadej prosím Readiness a stres jako celé číslo od 0 do 100.");
     return;
   }
 
@@ -369,8 +379,11 @@ function addEntry() {
   if (isDiaryFieldEnabled("sleep") && (!isEditing || hasOwnField(editingEntry, "sleepRating") || changedFields.has("sleep"))) {
     entryData.sleepRating = selectedSleep;
   }
-  if (isDiaryFieldEnabled("stress") && (!isEditing || hasOwnField(editingEntry, "stressRating") || changedFields.has("stress"))) {
-    entryData.stressRating = selectedStress;
+  if (isDiaryFieldEnabled("readiness") && (!isEditing || hasOwnField(editingEntry, "readinessScore") || changedFields.has("readiness"))) {
+    entryData.readinessScore = selectedReadiness;
+  }
+  if (isDiaryFieldEnabled("stress") && (!isEditing || hasOwnField(editingEntry, "stressScore") || changedFields.has("stress"))) {
+    entryData.stressScore = selectedStressScore;
   }
   if (isDiaryFieldEnabled("fatigue") && (!isEditing || hasOwnField(editingEntry, "fatigueRating") || changedFields.has("fatigue"))) {
     entryData.fatigueRating = selectedFatigue;
@@ -433,8 +446,11 @@ function editEntry(id) {
 
   selectedMood = validMoodRating(entry.rating) ? entry.rating : null;
   selectedSleep = validStarRating(entry.sleepRating) ? entry.sleepRating : 0;
-  selectedStress = validStarRating(entry.stressRating) ? entry.stressRating : 0;
   selectedFatigue = validStarRating(entry.fatigueRating) ? entry.fatigueRating : 0;
+  selectedReadiness = validScore(entry.readinessScore) ? entry.readinessScore : null;
+  selectedStressScore = validScore(entry.stressScore) ? entry.stressScore : null;
+  document.getElementById("readinessScore").value = selectedReadiness ?? "";
+  document.getElementById("stressScore").value = selectedStressScore ?? "";
   hasBeer = Boolean(entry.hasBeer);
   hasSmoke = Boolean(entry.hasSmoke);
   hasMeditation = Boolean(entry.hasMeditation);
@@ -444,7 +460,6 @@ function editEntry(id) {
 
   updateMoodButtons();
   updateStarButtons("sleepRating", selectedSleep);
-  updateStarButtons("stressRating", selectedStress);
   updateStarButtons("fatigueRating", selectedFatigue);
   updateToggleBtnStyle();
   updateIllnessButtons();
@@ -483,9 +498,6 @@ function renderStats() {
     sleepPositive: 0,
     sleepNeutral: 0,
     sleepNegative: 0,
-    stressPositive: 0,
-    stressNeutral: 0,
-    stressNegative: 0,
   };
 
   days.forEach((entry) => {
@@ -494,9 +506,7 @@ function renderStats() {
     else counts.moodNeutral += 1;
 
     const sleepClass = classifyRating(entry.sleepRating, true);
-    const stressClass = classifyRating(entry.stressRating, false);
     if (sleepClass) counts[`sleep${sleepClass}`] += 1;
-    if (stressClass) counts[`stress${stressClass}`] += 1;
 
   });
 
@@ -505,6 +515,8 @@ function renderStats() {
     if (element) element.textContent = value;
   });
   const fatigueValues = days.map((entry) => entry.fatigueRating).filter(validStarRating);
+  const readinessValues = days.map((entry) => entry.readinessScore).filter(validScore);
+  const stressValues = days.map((entry) => entry.stressScore).filter(validScore);
   const fatigueAverage = fatigueValues.length
     ? (fatigueValues.reduce((sum, value) => sum + value, 0) / fatigueValues.length).toFixed(1)
     : "–";
@@ -552,6 +564,14 @@ function renderStats() {
   const statValues = {
     fatigueAverage,
     fatigueCount: fatigueValues.length,
+    readinessAverage: readinessValues.length
+      ? (readinessValues.reduce((sum, value) => sum + value, 0) / readinessValues.length).toFixed(1)
+      : "–",
+    readinessCount: readinessValues.length,
+    stressAverage: stressValues.length
+      ? (stressValues.reduce((sum, value) => sum + value, 0) / stressValues.length).toFixed(1)
+      : "–",
+    stressCount: stressValues.length,
     fatigueDistribution: fatigueValues.length ? fatigueDistribution : "Zatím žádné platné hodnocení únavy.",
     meditationDays,
     meditationPercent,
@@ -734,8 +754,13 @@ function renderEntries() {
     if (validStarRating(entry.sleepRating)) {
       wellbeing.push(`Spánek ${starText(entry.sleepRating)}`);
     }
-    if (validStarRating(entry.stressRating)) {
+    if (validScore(entry.stressScore)) {
+      wellbeing.push(`Stres ${entry.stressScore}/100`);
+    } else if (validStarRating(entry.stressRating)) {
       wellbeing.push(`Stres ${starText(entry.stressRating)}`);
+    }
+    if (validScore(entry.readinessScore)) {
+      wellbeing.push(`Readiness ${entry.readinessScore}/100`);
     }
     if (validStarRating(entry.fatigueRating)) {
       wellbeing.push(`Únava ${starText(entry.fatigueRating)}`);
@@ -774,8 +799,15 @@ function renderAll() {
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("diaryDate").value = todayInputValue();
   createStarRating("sleepRating", "sleep");
-  createStarRating("stressRating", "stress");
   createStarRating("fatigueRating", "fatigue");
+  document.getElementById("readinessScore").addEventListener("input", (event) => {
+    selectedReadiness = event.target.value === "" ? null : Number(event.target.value);
+    changedFields.add("readiness");
+  });
+  document.getElementById("stressScore").addEventListener("input", (event) => {
+    selectedStressScore = event.target.value === "" ? null : Number(event.target.value);
+    changedFields.add("stress");
+  });
   document.querySelectorAll(".rate-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       setMoodRating(btn.dataset.rating);

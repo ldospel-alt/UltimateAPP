@@ -42,11 +42,18 @@
         </div>
         </div>
 
+        <div data-diary-stat-field="readiness">
+          <h3 class="diary-stat-title">Readiness</h3>
+          <div class="stat-row diary-stat-row diary-stat-row--two">
+            <div class="stat-box"><div class="value" id="readinessAverage">–</div><div class="label">průměr (0–100)</div></div>
+            <div class="stat-box"><div class="value" id="readinessCount">0</div><div class="label">záznamů</div></div>
+          </div>
+        </div>
+
         <div data-diary-stat-field="stress"><h3 class="diary-stat-title">Stres</h3>
-        <div class="stat-row diary-stat-row">
-          <div class="stat-box"><div class="value positive" id="stressPositive">0</div><div class="label">pozitivní</div></div>
-          <div class="stat-box"><div class="value neutral" id="stressNeutral">0</div><div class="label">neutrální</div></div>
-          <div class="stat-box"><div class="value negative" id="stressNegative">0</div><div class="label">negativní</div></div>
+        <div class="stat-row diary-stat-row diary-stat-row--two">
+          <div class="stat-box"><div class="value" id="stressAverage">–</div><div class="label">průměr (0–100)</div></div>
+          <div class="stat-box"><div class="value" id="stressCount">0</div><div class="label">záznamů</div></div>
         </div>
         </div>
 
@@ -119,9 +126,13 @@
         <p>Jak hodnotíš spánek?</p>
         <div class="star-rating" id="sleepRating" role="group" aria-label="Hodnocení spánku od 1 do 5"></div>
       </div>
-      <div class="diary-rating-group" data-diary-field="stress">
-        <p>Jak hodnotíš stres? <span>(1 = nízký, 5 = vysoký)</span></p>
-        <div class="star-rating" id="stressRating" role="group" aria-label="Hodnocení stresu od 1 do 5"></div>
+      <div class="field" data-diary-field="readiness">
+        <label for="readinessScore">Readiness <span>(0–100)</span></label>
+        <input id="readinessScore" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="0–100" />
+      </div>
+      <div class="field" data-diary-field="stress">
+        <label for="stressScore">Stres <span>(0–100)</span></label>
+        <input id="stressScore" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="0–100" />
       </div>
       <div data-diary-field="mood">
       <p style="color:var(--text-dim); font-size:13px; margin:0 0 4px 0;">Jak hodnotíš tento den?</p>
