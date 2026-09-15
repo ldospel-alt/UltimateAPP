@@ -3,6 +3,38 @@ let militaryBlocks = [];
 let activeWorkout = null;
 let militaryAudioContext = null;
 let militaryNextToneAt = 0;
+let militaryWakeLock = null;
+
+async function requestMilitaryWakeLock() {
+  if (militaryWakeLock || !activeWorkout || activeWorkout.paused || typeof navigator === "undefined" || !navigator.wakeLock) {
+    return false;
+  }
+  try {
+    const wakeLock = await navigator.wakeLock.request("screen");
+    if (!activeWorkout || activeWorkout.paused) {
+      await wakeLock.release().catch(() => {});
+      return false;
+    }
+    militaryWakeLock = wakeLock;
+    wakeLock.addEventListener("release", () => {
+      if (militaryWakeLock === wakeLock) militaryWakeLock = null;
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function releaseMilitaryWakeLock() {
+  const wakeLock = militaryWakeLock;
+  militaryWakeLock = null;
+  if (!wakeLock) return;
+  try {
+    await wakeLock.release();
+  } catch {
+    // Wake locks can be released by the browser when the page is hidden.
+  }
+}
 
 function formatSeconds(seconds) {
   const safeSeconds = Math.max(0, Math.round(Number(seconds) || 0));
@@ -298,6 +330,7 @@ function updateActiveWorkout() {
 
 function finishWorkout(completed = false) {
   clearInterval(activeWorkout?.timer);
+  void releaseMilitaryWakeLock();
   activeWorkout = null;
   document.getElementById("militaryActiveWorkout").hidden = true;
   if (document.fullscreenElement) document.exitFullscreen?.();
@@ -340,6 +373,7 @@ function startWorkout() {
     paused: false,
     timer: null,
   };
+  void requestMilitaryWakeLock();
   document.getElementById("militaryActiveWorkout").hidden = false;
   document.getElementById("militaryActiveWorkout").requestFullscreen?.().catch(() => {});
   updateActiveWorkout();
@@ -354,7 +388,15 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".preset-btn").forEach((button) => button.addEventListener("click", () => { militaryBlocks = presetBlocks(Number(button.dataset.preset)); document.getElementById("militaryTemplateName").value = `${button.dataset.preset} min military`; renderBuilder(); }));
   document.getElementById("saveMilitaryTemplateBtn").addEventListener("click", saveCurrentTemplate);
   document.getElementById("startMilitaryWorkoutBtn").addEventListener("click", startWorkout);
-  document.getElementById("pauseMilitaryWorkoutBtn").addEventListener("click", () => { activeWorkout.paused = !activeWorkout.paused; updateActiveWorkout(); });
+  document.getElementById("pauseMilitaryWorkoutBtn").addEventListener("click", () => {
+    activeWorkout.paused = !activeWorkout.paused;
+    if (activeWorkout.paused) void releaseMilitaryWakeLock();
+    else void requestMilitaryWakeLock();
+    updateActiveWorkout();
+  });
   document.getElementById("skipMilitaryWorkoutBtn").addEventListener("click", advanceWorkout);
   document.getElementById("stopMilitaryWorkoutBtn").addEventListener("click", finishWorkout);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") void requestMilitaryWakeLock();
+  });
 });
