@@ -190,7 +190,7 @@ function renderTemplates() {
     const load = document.createElement("button");
     load.className = "btn secondary small";
     load.type = "button";
-    load.textContent = "Načíst";
+    load.textContent = "Načíst a upravit";
     load.addEventListener("click", () => {
       militaryBlocks = template.blocks.map(normalizeBlock);
       document.getElementById("militaryTemplateName").value = template.name;
@@ -315,6 +315,13 @@ function playCompletionSignal() {
   ]);
 }
 
+function nextExerciseSegment() {
+  if (!activeWorkout) return null;
+  return activeWorkout.segments
+    .slice(activeWorkout.index + 1)
+    .find((item) => item.type === "exercise") || null;
+}
+
 function updateActiveWorkout() {
   if (!activeWorkout) return;
   const segment = activeWorkout.segments[activeWorkout.index];
@@ -326,6 +333,10 @@ function updateActiveWorkout() {
   document.getElementById("militaryProgress").textContent = `Interval ${segment.blockIndex + 1}/${activeWorkout.blockCount} · ${formatSeconds(totalElapsed)}/${formatSeconds(activeWorkout.totalSeconds)}`;
   document.getElementById("militaryProgressBar").style.width = `${Math.min(100, (totalElapsed / activeWorkout.totalSeconds) * 100)}%`;
   document.getElementById("pauseMilitaryWorkoutBtn").textContent = activeWorkout.paused ? "Pokračovat" : "Pauza";
+  const nextExercise = nextExerciseSegment();
+  const nextExerciseElement = document.getElementById("militaryNextExercise");
+  nextExerciseElement.hidden = segment.type !== "rest" || !nextExercise;
+  document.getElementById("militaryNextExerciseName").textContent = nextExercise?.name || "";
 }
 
 function finishWorkout(completed = false) {

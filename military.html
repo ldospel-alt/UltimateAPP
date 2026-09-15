@@ -42,6 +42,7 @@
         <input id="militaryTemplateName" type="text" placeholder="Např. Ranní rutina" maxlength="60" />
       </div>
       <button class="btn secondary block" id="saveMilitaryTemplateBtn" type="button">Uložit aktuální trénink</button>
+      <p class="military-note">Načtený trénink můžeš upravit v intervalovém seznamu a znovu uložit pod stejným názvem.</p>
       <div id="militaryTemplates" class="military-templates"></div>
       <p id="militaryTemplatesEmpty" class="empty-hint">Zatím nemáš uložené žádné tréninky.</p>
     </section>
@@ -53,6 +54,10 @@
       <p id="militaryActiveType" class="military-active-type">CVIK</p>
       <h2 id="militaryActiveName">Připrav se</h2>
       <div id="militaryCountdown" class="military-countdown">0:00</div>
+      <div id="militaryNextExercise" class="military-next-exercise" hidden>
+        <span>DALŠÍ CVIK</span>
+        <strong id="militaryNextExerciseName"></strong>
+      </div>
       <p id="militaryProgress" class="military-progress"></p>
       <div class="military-progress-track"><div id="militaryProgressBar"></div></div>
       <div class="military-active-actions">
