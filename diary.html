@@ -50,7 +50,15 @@
           </div>
         </div>
 
-        <div data-diary-stat-field="stress"><h3 class="diary-stat-title">Stres</h3>
+        <div data-diary-stat-field="subjectiveStress"><h3 class="diary-stat-title">Sub. stress</h3>
+        <div class="stat-row diary-stat-row">
+          <div class="stat-box"><div class="value positive" id="subjectiveStressPositive">0</div><div class="label">nízký</div></div>
+          <div class="stat-box"><div class="value neutral" id="subjectiveStressNeutral">0</div><div class="label">střední</div></div>
+          <div class="stat-box"><div class="value negative" id="subjectiveStressNegative">0</div><div class="label">vysoký</div></div>
+        </div>
+        </div>
+
+        <div data-diary-stat-field="stress"><h3 class="diary-stat-title">Stres (Elonga)</h3>
         <div class="stat-row diary-stat-row diary-stat-row--two">
           <div class="stat-box"><div class="value" id="stressAverage">–</div><div class="label">průměr (0–100)</div></div>
           <div class="stat-box"><div class="value" id="stressCount">0</div><div class="label">záznamů</div></div>
@@ -130,8 +138,12 @@
         <label for="readinessScore">Readiness <span>(0–100)</span></label>
         <input id="readinessScore" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="0–100" />
       </div>
+      <div class="diary-rating-group" data-diary-field="subjectiveStress">
+        <p>Jak hodnotíš subjektivní stres? <span>(1 = nízký, 5 = vysoký)</span></p>
+        <div class="star-rating" id="subjectiveStressRating" role="group" aria-label="Hodnocení subjektivního stresu od 1 do 5"></div>
+      </div>
       <div class="field" data-diary-field="stress">
-        <label for="stressScore">Stres <span>(0–100)</span></label>
+        <label for="stressScore">Stres (Elonga) <span>(0–100)</span></label>
         <input id="stressScore" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="0–100" />
       </div>
       <div data-diary-field="mood">
