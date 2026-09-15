@@ -55,7 +55,11 @@ function validBlocks(blocks) {
 }
 
 function workoutSegments(blocks) {
-  return validBlocks(blocks).flatMap((block, index) => {
+  const valid = validBlocks(blocks);
+  if (!valid.length) return [];
+  return [
+    { type: "preparation", name: "Připrav se", section: "Začátek tréninku", seconds: 15, blockIndex: 0 },
+    ...valid.flatMap((block, index) => {
     const segments = [{ type: "exercise", name: block.name, section: block.section, seconds: block.exerciseSeconds, blockIndex: index }];
     if (block.restSeconds > 0) {
       segments.push({ type: "rest", name: "Odpočinek", section: block.section, seconds: block.restSeconds, blockIndex: index });
@@ -64,7 +68,8 @@ function workoutSegments(blocks) {
       segments.push({ type: "rest", name: "Odpočinek bloku", section: block.section, seconds: block.extraRestSeconds, blockIndex: index });
     }
     return segments;
-  });
+    }),
+  ];
 }
 
 function totalWorkoutSeconds(blocks) {
@@ -327,7 +332,7 @@ function updateActiveWorkout() {
   const segment = activeWorkout.segments[activeWorkout.index];
   const totalElapsed = activeWorkout.segments.slice(0, activeWorkout.index).reduce((sum, item) => sum + item.seconds, 0) + (segment.seconds - activeWorkout.remaining);
   document.getElementById("militaryActiveSection").textContent = segment.section;
-  document.getElementById("militaryActiveType").textContent = segment.type === "exercise" ? "CVIK" : "PAUZA";
+  document.getElementById("militaryActiveType").textContent = segment.type === "exercise" ? "CVIK" : segment.type === "preparation" ? "PŘÍPRAVA" : "PAUZA";
   document.getElementById("militaryActiveName").textContent = segment.name;
   document.getElementById("militaryCountdown").textContent = formatSeconds(activeWorkout.remaining);
   document.getElementById("militaryProgress").textContent = `Interval ${segment.blockIndex + 1}/${activeWorkout.blockCount} · ${formatSeconds(totalElapsed)}/${formatSeconds(activeWorkout.totalSeconds)}`;
@@ -335,7 +340,7 @@ function updateActiveWorkout() {
   document.getElementById("pauseMilitaryWorkoutBtn").textContent = activeWorkout.paused ? "Pokračovat" : "Pauza";
   const nextExercise = nextExerciseSegment();
   const nextExerciseElement = document.getElementById("militaryNextExercise");
-  nextExerciseElement.hidden = segment.type !== "rest" || !nextExercise;
+  nextExerciseElement.hidden = (segment.type !== "rest" && segment.type !== "preparation") || !nextExercise;
   document.getElementById("militaryNextExerciseName").textContent = nextExercise?.name || "";
 }
 
