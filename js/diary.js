@@ -2,11 +2,12 @@
 
 const DIARY_KEY = "gym_diary";
 const DIARY_SETTINGS_KEY = "gym_diary_settings";
-const DIARY_FIELDS = ["sleep", "subjectiveStress", "stress", "readiness", "mood", "beer", "smoke", "meditation", "fatigue", "rests", "illness", "symptoms"];
+const DIARY_FIELDS = ["sleep", "subjectiveStress", "stress", "readiness", "regeneration", "mood", "beer", "smoke", "meditation", "fatigue", "rests", "illness", "symptoms"];
 let selectedSleep = 0;
 let selectedSubjectiveStress = 0;
 let selectedFatigue = 0;
 let selectedReadiness = null;
+let selectedRegeneration = null;
 let selectedStressScore = null;
 let selectedMood = null;
 let hasBeer = false;
@@ -299,7 +300,7 @@ function applyDiarySettings() {
 }
 
 function renderDiarySettings() {
-  const labels = { sleep: "Spánek", subjectiveStress: "Sub. stress", stress: "Stres (Elonga)", readiness: "Readiness", mood: "Nálada", beer: "Pivo", smoke: "Kouření", meditation: "Meditace", fatigue: "Únava", rests: "Odpočinek", illness: "Nemoc", symptoms: "Projevy" };
+  const labels = { sleep: "Spánek", subjectiveStress: "Sub. stress", stress: "Stres (Elonga)", readiness: "Readiness", regeneration: "Regenerace", mood: "Nálada", beer: "Pivo", smoke: "Kouření", meditation: "Meditace", fatigue: "Únava", rests: "Odpočinek", illness: "Nemoc", symptoms: "Projevy" };
   const container = document.getElementById("diarySettingsList");
   if (!container) return;
   const settings = getDiarySettings();
@@ -335,8 +336,10 @@ function resetForm() {
   hasIllness = false;
   document.getElementById("diarySymptoms").value = "";
   selectedReadiness = null;
+  selectedRegeneration = null;
   selectedStressScore = null;
   document.getElementById("readinessScore").value = "";
+  document.getElementById("regenerationScore").value = "";
   document.getElementById("stressScore").value = "";
   resetWellbeingRatings();
   updateMoodButtons();
@@ -372,9 +375,10 @@ function addEntry() {
   }
   if (
     (isDiaryFieldEnabled("readiness") && (!isEditing || changedFields.has("readiness")) && !validScore(selectedReadiness)) ||
+    (isDiaryFieldEnabled("regeneration") && (!isEditing || changedFields.has("regeneration")) && !validScore(selectedRegeneration)) ||
     (isDiaryFieldEnabled("stress") && (!isEditing || changedFields.has("stress")) && !validScore(selectedStressScore))
   ) {
-    alert("Zadej prosím Readiness a stres jako celé číslo od 0 do 100.");
+    alert("Zadej prosím Readiness, regeneraci a stres jako celé číslo od 0 do 100.");
     return;
   }
 
@@ -391,6 +395,9 @@ function addEntry() {
   }
   if (isDiaryFieldEnabled("readiness") && (!isEditing || hasOwnField(editingEntry, "readinessScore") || changedFields.has("readiness"))) {
     entryData.readinessScore = selectedReadiness;
+  }
+  if (isDiaryFieldEnabled("regeneration") && (!isEditing || hasOwnField(editingEntry, "regenerationScore") || changedFields.has("regeneration"))) {
+    entryData.regenerationScore = selectedRegeneration;
   }
   if (isDiaryFieldEnabled("stress") && (!isEditing || hasOwnField(editingEntry, "stressScore") || changedFields.has("stress"))) {
     entryData.stressScore = selectedStressScore;
@@ -459,8 +466,10 @@ function editEntry(id) {
   selectedSubjectiveStress = validStarRating(entry.stressRating) ? entry.stressRating : 0;
   selectedFatigue = validStarRating(entry.fatigueRating) ? entry.fatigueRating : 0;
   selectedReadiness = validScore(entry.readinessScore) ? entry.readinessScore : null;
+  selectedRegeneration = validScore(entry.regenerationScore) ? entry.regenerationScore : null;
   selectedStressScore = validScore(entry.stressScore) ? entry.stressScore : null;
   document.getElementById("readinessScore").value = selectedReadiness ?? "";
+  document.getElementById("regenerationScore").value = selectedRegeneration ?? "";
   document.getElementById("stressScore").value = selectedStressScore ?? "";
   hasBeer = Boolean(entry.hasBeer);
   hasSmoke = Boolean(entry.hasSmoke);
@@ -533,6 +542,7 @@ function renderStats() {
   });
   const fatigueValues = days.map((entry) => entry.fatigueRating).filter(validStarRating);
   const readinessValues = days.map((entry) => entry.readinessScore).filter(validScore);
+  const regenerationValues = days.map((entry) => entry.regenerationScore).filter(validScore);
   const stressValues = days.map((entry) => entry.stressScore).filter(validScore);
   const fatigueAverage = fatigueValues.length
     ? (fatigueValues.reduce((sum, value) => sum + value, 0) / fatigueValues.length).toFixed(1)
@@ -585,6 +595,10 @@ function renderStats() {
       ? (readinessValues.reduce((sum, value) => sum + value, 0) / readinessValues.length).toFixed(1)
       : "–",
     readinessCount: readinessValues.length,
+    regenerationAverage: regenerationValues.length
+      ? (regenerationValues.reduce((sum, value) => sum + value, 0) / regenerationValues.length).toFixed(1)
+      : "–",
+    regenerationCount: regenerationValues.length,
     stressAverage: stressValues.length
       ? (stressValues.reduce((sum, value) => sum + value, 0) / stressValues.length).toFixed(1)
       : "–",
@@ -780,6 +794,9 @@ function renderEntries() {
     if (validScore(entry.readinessScore)) {
       wellbeing.push(`Readiness ${entry.readinessScore}/100`);
     }
+    if (validScore(entry.regenerationScore)) {
+      wellbeing.push(`Regenerace ${entry.regenerationScore}/100`);
+    }
     if (validStarRating(entry.fatigueRating)) {
       wellbeing.push(`Únava ${starText(entry.fatigueRating)}`);
     }
@@ -822,6 +839,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("readinessScore").addEventListener("input", (event) => {
     selectedReadiness = event.target.value === "" ? null : Number(event.target.value);
     changedFields.add("readiness");
+  });
+  document.getElementById("regenerationScore").addEventListener("input", (event) => {
+    selectedRegeneration = event.target.value === "" ? null : Number(event.target.value);
+    changedFields.add("regeneration");
   });
   document.getElementById("stressScore").addEventListener("input", (event) => {
     selectedStressScore = event.target.value === "" ? null : Number(event.target.value);

@@ -50,6 +50,14 @@
           </div>
         </div>
 
+        <div data-diary-stat-field="regeneration">
+          <h3 class="diary-stat-title">Regenerace</h3>
+          <div class="stat-row diary-stat-row diary-stat-row--two">
+            <div class="stat-box"><div class="value" id="regenerationAverage">–</div><div class="label">průměr (0–100)</div></div>
+            <div class="stat-box"><div class="value" id="regenerationCount">0</div><div class="label">záznamů</div></div>
+          </div>
+        </div>
+
         <div data-diary-stat-field="subjectiveStress"><h3 class="diary-stat-title">Sub. stress</h3>
         <div class="stat-row diary-stat-row">
           <div class="stat-box"><div class="value positive" id="subjectiveStressPositive">0</div><div class="label">nízký</div></div>
@@ -137,6 +145,10 @@
       <div class="field" data-diary-field="readiness">
         <label for="readinessScore">Readiness <span>(0–100)</span></label>
         <input id="readinessScore" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="0–100" />
+      </div>
+      <div class="field" data-diary-field="regeneration">
+        <label for="regenerationScore">Regenerace <span>(0–100)</span></label>
+        <input id="regenerationScore" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="0–100" />
       </div>
       <div class="diary-rating-group" data-diary-field="subjectiveStress">
         <p>Jak hodnotíš subjektivní stres? <span>(1 = nízký, 5 = vysoký)</span></p>
