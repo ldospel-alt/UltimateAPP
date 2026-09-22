@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>Sith Training – Gym Deník</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#111318" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a class="back-btn" href="index.html">←</a>
+    <h1>⚡ Sith Training</h1>
+  </div>
+
+  <main class="container">
+    <section class="card">
+      <h2>Vyber trénink</h2>
+      <p class="sith-note">Časované části mají odpočet. U karet s opakováními pokračuješ po dokončení vlastním tempem.</p>
+      <div id="sithPrograms" class="sith-programs"></div>
+    </section>
+  </main>
+
+  <section id="sithActiveWorkout" class="sith-active" hidden aria-live="assertive">
+    <div class="sith-active-content">
+      <p id="sithActiveProgram" class="sith-active-program"></p>
+      <p id="sithActiveSection" class="sith-active-section"></p>
+      <p id="sithActiveType" class="sith-active-type">PŘIPRAV SE</p>
+      <h2 id="sithActiveName"></h2>
+      <p id="sithActiveDescription" class="sith-active-description"></p>
+      <div id="sithCountdown" class="sith-countdown" hidden>0:00</div>
+      <p id="sithStepProgress" class="sith-step-progress"></p>
+      <div class="sith-progress-track"><div id="sithProgressBar"></div></div>
+      <div class="sith-active-actions">
+        <button id="pauseSithWorkoutBtn" class="btn secondary" type="button" hidden>Pauza</button>
+        <button id="completeSithCardBtn" class="btn block" type="button" hidden>Hotovo – pokračovat</button>
+        <button id="skipSithWorkoutBtn" class="btn secondary" type="button">Přeskočit</button>
+        <button id="stopSithWorkoutBtn" class="btn ghost" type="button">Ukončit</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/storage.js"></script>
+  <script src="js/sith.js"></script>
+  <script>registerServiceWorker();</script>
+</body>
+</html>

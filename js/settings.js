@@ -4,6 +4,7 @@ const SUBAPP_LABELS = {
   diary: "📔 Deníček",
   duels: "⚔️ Duely",
   military: "🎖️ Military Training",
+  sith: "⚡ Sith Training",
   habits: "💧 Habbits",
 };
 

@@ -280,6 +280,55 @@ input, select, textarea, button {
 }
 .military-progress-track div { height: 100%; width: 0; background: var(--green); transition: width .2s; }
 
+/* Sith Training */
+.sith-note, .sith-program p, .sith-active-description, .sith-step-progress {
+  color: var(--text-dim);
+}
+.sith-note { font-size: 13px; line-height: 1.45; }
+.sith-program {
+  position: relative;
+  padding: 14px;
+  margin-top: 10px;
+  border: 1px solid #2a2e38;
+  border-radius: 12px;
+  background: #12141a;
+}
+.sith-program h3 { margin: 0 70px 8px 0; font-size: 17px; }
+.sith-program p { margin: 0 0 14px; font-size: 14px; line-height: 1.4; }
+.sith-program-duration {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  color: var(--accent-2);
+  font-weight: 700;
+}
+.sith-active {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--bg);
+}
+.sith-active[hidden] { display: none; }
+.sith-active-content { width: min(100%, 480px); text-align: center; }
+.sith-active-program, .sith-active-section { color: var(--text-dim); margin: 0 0 8px; }
+.sith-active-type { color: var(--accent-2); font-weight: 700; letter-spacing: .12em; }
+.sith-active h2 { font-size: clamp(28px, 9vw, 46px); margin: 18px 0 10px; }
+.sith-active-description { font-size: 17px; line-height: 1.5; min-height: 76px; }
+.sith-countdown { font-size: clamp(72px, 25vw, 132px); font-weight: 700; font-variant-numeric: tabular-nums; }
+.sith-progress-track {
+  height: 10px;
+  overflow: hidden;
+  margin: 16px 0 28px;
+  border-radius: 99px;
+  background: var(--bg-card);
+}
+.sith-progress-track div { height: 100%; width: 0; background: var(--accent-2); transition: width .2s; }
+.sith-active-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.sith-active-actions .btn { flex: 1 1 40%; }
+
 /* Gym statistics */
 #workoutStatsModal {
   overflow-y: auto;

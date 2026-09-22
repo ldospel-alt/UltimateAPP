@@ -24,6 +24,7 @@ const DEFAULT_SUBAPPS = [
   { id: "diary", visible: true },
   { id: "duels", visible: true },
   { id: "military", visible: true },
+  { id: "sith", visible: true },
   { id: "habits", visible: true },
 ];
 
