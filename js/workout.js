@@ -361,6 +361,83 @@ function renderStats() {
   document.getElementById("statExercises").textContent = exerciseNames.size;
 }
 
+function workoutVolume(workout) {
+  return Array.isArray(workout?.exercises)
+    ? workout.exercises.reduce((total, exercise) => total + (Array.isArray(exercise?.sets)
+      ? exercise.sets.reduce((exerciseTotal, set) => {
+        const reps = Number(set?.reps);
+        const weight = Number(set?.weight);
+        return exerciseTotal + (Number.isFinite(reps) && Number.isFinite(weight) ? Math.max(0, reps) * Math.max(0, weight) : 0);
+      }, 0)
+      : 0), 0)
+    : 0;
+}
+
+function localDateValue(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function currentWeekStartValue(date = new Date()) {
+  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  return localDateValue(start);
+}
+
+function summarizeWorkouts(workouts) {
+  const dated = workouts.filter((workout) => isWorkoutDate(workout?.date));
+  const dates = new Set(dated.map((workout) => workout.date));
+  const volume = dated.reduce((total, workout) => total + workoutVolume(workout), 0);
+  return { sessions: dated.length, days: dates.size, volume };
+}
+
+function renderWorkoutStats() {
+  const workouts = getWorkouts();
+  const today = new Date();
+  const weekStart = currentWeekStartValue(today);
+  const monthPrefix = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+  const week = summarizeWorkouts(workouts.filter((workout) => isWorkoutDate(workout?.date) && workout.date >= weekStart));
+  const month = summarizeWorkouts(workouts.filter((workout) => isWorkoutDate(workout?.date) && workout.date.startsWith(monthPrefix)));
+  const total = summarizeWorkouts(workouts);
+  const exerciseCounts = new Map();
+  workouts.forEach((workout) => {
+    if (!Array.isArray(workout?.exercises)) return;
+    workout.exercises.forEach((exercise) => {
+      const name = String(exercise?.name || "").trim();
+      if (!name) return;
+      const key = normalizeExerciseName(name);
+      const current = exerciseCounts.get(key) || { name, count: 0 };
+      current.count += 1;
+      exerciseCounts.set(key, current);
+    });
+  });
+  const favorite = Array.from(exerciseCounts.values())
+    .sort((first, second) => second.count - first.count || first.name.localeCompare(second.name, "cs"))[0];
+  const values = {
+    workoutWeekDays: week.days,
+    workoutWeekSessions: week.sessions,
+    workoutWeekVolume: `${Math.round(week.volume)} kg`,
+    workoutMonthDays: month.days,
+    workoutMonthSessions: month.sessions,
+    workoutMonthVolume: `${Math.round(month.volume)} kg`,
+    workoutTotalDays: total.days,
+    workoutTotalVolume: `${Math.round(total.volume)} kg`,
+    workoutAverageVolume: `${total.sessions ? Math.round(total.volume / total.sessions) : 0} kg`,
+  };
+  Object.entries(values).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+  });
+  const summary = document.getElementById("workoutStatsSummary");
+  if (summary) {
+    summary.textContent = total.sessions
+      ? `Celkem ${total.sessions} tréninků během ${total.days} dnů. Nejčastější cvik: ${favorite ? `${favorite.name} (${favorite.count}×)` : "–"}.`
+      : "Zatím žádné uložené tréninky.";
+  }
+}
+
 // ---- Progres / graf ----
 
 function getAllExerciseNames() {
@@ -541,6 +618,7 @@ function showWorkoutResultMessage(exercises) {
 
 function renderAll() {
   renderStats();
+  renderWorkoutStats();
   renderSessionsList();
   populateExerciseSelect();
   populateExerciseDatalist();
@@ -555,6 +633,17 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("saveSessionBtn").addEventListener("click", saveSession);
   document.getElementById("cancelEditSessionBtn").addEventListener("click", resetForm);
   document.getElementById("progressExercise").addEventListener("change", renderProgress);
+  const workoutStatsModal = document.getElementById("workoutStatsModal");
+  const closeWorkoutStats = () => { workoutStatsModal.style.display = "none"; };
+  document.getElementById("openWorkoutStatsBtn").addEventListener("click", () => {
+    renderWorkoutStats();
+    workoutStatsModal.style.display = "flex";
+  });
+  document.getElementById("closeWorkoutStatsBtn").addEventListener("click", closeWorkoutStats);
+  document.getElementById("closeWorkoutStatsFooterBtn").addEventListener("click", closeWorkoutStats);
+  workoutStatsModal.addEventListener("click", (event) => {
+    if (event.target === workoutStatsModal) closeWorkoutStats();
+  });
   
   // Modální okno pro výsledek tréninku
   const modal = document.getElementById("workoutResultModal");

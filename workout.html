@@ -23,6 +23,7 @@
       <div class="stat-box"><div class="value" id="statWeek">0</div><div class="label">tento týden</div></div>
       <div class="stat-box"><div class="value" id="statExercises">0</div><div class="label">cviků</div></div>
     </div>
+    <button class="btn secondary block" id="openWorkoutStatsBtn" type="button" style="margin:12px 0;">Statistiky</button>
 
     <div class="card">
       <h2 id="workoutFormTitle">Nový trénink</h2>
@@ -72,6 +73,39 @@
       <h2 id="workoutResultMessage">Skvělá práce!</h2>
       <p id="workoutResultVolume" style="font-size: 18px; margin: 16px 0; color: var(--text-dim);">Celkem: 0 kg</p>
       <button class="btn ghost block" id="workoutResultOkBtn">OK</button>
+    </div>
+
+    <div id="workoutStatsModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <button class="modal-close-btn" id="closeWorkoutStatsBtn" type="button" aria-label="Zavřít statistiky">✕</button>
+        <h2>Statistiky Gym</h2>
+        <section class="workout-stats-section">
+          <h3>Tento týden</h3>
+          <div class="stat-row workout-stats-row">
+            <div class="stat-box"><div class="value" id="workoutWeekDays">0</div><div class="label">dní cvičení</div></div>
+            <div class="stat-box"><div class="value" id="workoutWeekSessions">0</div><div class="label">tréninků</div></div>
+            <div class="stat-box"><div class="value" id="workoutWeekVolume">0 kg</div><div class="label">objem</div></div>
+          </div>
+        </section>
+        <section class="workout-stats-section">
+          <h3>Tento měsíc</h3>
+          <div class="stat-row workout-stats-row">
+            <div class="stat-box"><div class="value" id="workoutMonthDays">0</div><div class="label">dní cvičení</div></div>
+            <div class="stat-box"><div class="value" id="workoutMonthSessions">0</div><div class="label">tréninků</div></div>
+            <div class="stat-box"><div class="value" id="workoutMonthVolume">0 kg</div><div class="label">objem</div></div>
+          </div>
+        </section>
+        <section class="workout-stats-section">
+          <h3>Celkem</h3>
+          <div class="stat-row workout-stats-row">
+            <div class="stat-box"><div class="value" id="workoutTotalDays">0</div><div class="label">aktivních dnů</div></div>
+            <div class="stat-box"><div class="value" id="workoutTotalVolume">0 kg</div><div class="label">objem</div></div>
+            <div class="stat-box"><div class="value" id="workoutAverageVolume">0 kg</div><div class="label">průměr / trénink</div></div>
+          </div>
+          <p id="workoutStatsSummary" class="workout-stats-summary">Zatím žádné tréninky.</p>
+        </section>
+        <button class="btn ghost block" id="closeWorkoutStatsFooterBtn" type="button">Zavřít</button>
+      </div>
     </div>
   </div>
 
