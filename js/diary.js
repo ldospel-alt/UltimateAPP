@@ -185,7 +185,7 @@ function toggleMeditation() {
 
 function updateIllnessButtons() {
   document.querySelectorAll(".illness-btn").forEach((button) => {
-    const selected = button.dataset.illness === String(hasIllness);
+    const selected = button.dataset.illness === (hasIllness === null ? "neutral" : String(hasIllness));
     button.classList.toggle("secondary", selected);
     button.classList.toggle("ghost", !selected);
     button.setAttribute("aria-pressed", String(selected));
@@ -195,7 +195,7 @@ function updateIllnessButtons() {
 }
 
 function setIllness(value) {
-  hasIllness = value;
+  hasIllness = value === "neutral" ? null : value === true;
   changedFields.add("illness");
   updateIllnessButtons();
 }
@@ -475,7 +475,7 @@ function editEntry(id) {
   hasSmoke = Boolean(entry.hasSmoke);
   hasMeditation = Boolean(entry.hasMeditation);
   selectedRests = normalizeRests(entry.rests);
-  hasIllness = Boolean(entry.hasIllness);
+  hasIllness = entry.hasIllness === true ? true : entry.hasIllness === false ? false : null;
   document.getElementById("diarySymptoms").value = String(entry.symptoms || "");
 
   updateMoodButtons();
@@ -570,7 +570,7 @@ function renderStats() {
     .sort((first, second) => first.type.localeCompare(second.type, "cs"))
     .map((rest) => `${rest.type}: ${rest.minutes} min`)
     .join(" · ");
-  const illnessLogged = days.filter((entry) => hasOwnField(entry, "hasIllness"));
+  const illnessLogged = days.filter((entry) => entry.hasIllness === true || entry.hasIllness === false);
   const illnessDays = illnessLogged.filter((entry) => entry.hasIllness).length;
   const illnessPercent = illnessLogged.length
     ? `${Math.round((illnessDays / illnessLogged.length) * 100)} %`
@@ -870,7 +870,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("addRestBtn").addEventListener("click", addRest);
   document.querySelectorAll(".illness-btn").forEach((button) => {
-    button.addEventListener("click", () => setIllness(button.dataset.illness === "true"));
+    button.addEventListener("click", () => setIllness(button.dataset.illness));
   });
   document.getElementById("cancelEditDiaryBtn").addEventListener("click", resetForm);
   
