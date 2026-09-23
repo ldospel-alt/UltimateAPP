@@ -58,6 +58,7 @@ const SITH_PROGRAMS = [
 ];
 
 let activeSithWorkout = null;
+let selectedSithProgram = null;
 
 function formatSithSeconds(seconds) {
   const safeSeconds = Math.max(0, Math.round(Number(seconds) || 0));
@@ -77,14 +78,37 @@ function renderSithPrograms() {
     duration.textContent = program.duration;
     const summary = document.createElement("p");
     summary.textContent = program.summary;
-    const start = document.createElement("button");
-    start.type = "button";
-    start.className = "btn block";
-    start.textContent = `Spustit · ${program.duration}`;
-    start.addEventListener("click", () => startSithWorkout(program));
-    card.append(title, duration, summary, start);
+    const select = document.createElement("button");
+    select.type = "button";
+    select.className = "btn block";
+    select.textContent = `Zobrazit plán · ${program.duration}`;
+    select.addEventListener("click", () => selectSithProgram(program));
+    card.append(title, duration, summary, select);
     container.appendChild(card);
   });
+}
+
+function selectSithProgram(program) {
+  selectedSithProgram = program;
+  document.getElementById("sithPlanTitle").textContent = `${program.title} · ${program.duration}`;
+  document.getElementById("sithPlanSummary").textContent = program.summary;
+  const steps = document.getElementById("sithPlanSteps");
+  steps.replaceChildren();
+  program.steps.forEach((step, index) => {
+    const row = document.createElement("article");
+    row.className = "sith-plan-step";
+    const meta = document.createElement("span");
+    meta.textContent = `${index + 1}. ${step.section}${step.seconds ? ` · ${formatSithSeconds(step.seconds)}` : " · vlastní tempo"}`;
+    const name = document.createElement("strong");
+    name.textContent = step.name;
+    const description = document.createElement("p");
+    description.textContent = step.description;
+    row.append(meta, name, description);
+    steps.appendChild(row);
+  });
+  const preview = document.getElementById("sithPlanPreview");
+  preview.hidden = false;
+  preview.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function updateSithWorkout() {
@@ -145,6 +169,9 @@ function startSithWorkout(program) {
 
 document.addEventListener("DOMContentLoaded", () => {
   renderSithPrograms();
+  document.getElementById("startSelectedSithWorkoutBtn").addEventListener("click", () => {
+    if (selectedSithProgram) startSithWorkout(selectedSithProgram);
+  });
   document.getElementById("pauseSithWorkoutBtn").addEventListener("click", () => {
     if (!activeSithWorkout) return;
     activeSithWorkout.paused = !activeSithWorkout.paused;

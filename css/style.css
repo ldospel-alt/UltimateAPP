@@ -302,6 +302,26 @@ input, select, textarea, button {
   color: var(--accent-2);
   font-weight: 700;
 }
+.sith-plan-preview { scroll-margin-top: 16px; }
+.sith-plan-steps { margin: 14px 0; }
+.sith-plan-step {
+  padding: 10px 0;
+  border-bottom: 1px solid #2a2e38;
+}
+.sith-plan-step:last-child { border-bottom: 0; }
+.sith-plan-step span {
+  display: block;
+  color: var(--accent-2);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.sith-plan-step strong { display: block; }
+.sith-plan-step p {
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 4px 0 0;
+}
 .sith-active {
   position: fixed;
   inset: 0;
