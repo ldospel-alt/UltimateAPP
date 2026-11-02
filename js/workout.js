@@ -44,22 +44,34 @@ function saveWorkouts(list) {
 // ---- Formulář na nový trénink ----
 
 function getExerciseMaxWeight(exerciseName) {
-  const workouts = getWorkouts();
-  let maxWeight = 0;
+  return getPersonalBestExercise(exerciseName)?.maxWeight || 0;
+}
 
-  workouts.forEach((workout) => {
-    if (!Array.isArray(workout?.exercises)) return;
-    workout.exercises.forEach((exercise) => {
-      if (normalizeExerciseName(exercise?.name) === normalizeExerciseName(exerciseName)) {
-        (Array.isArray(exercise.sets) ? exercise.sets : []).forEach((set) => {
-          const weight = Number(set?.weight);
-          if (Number.isFinite(weight) && weight > maxWeight) maxWeight = weight;
-        });
-      }
+function getPersonalBestExercise(exerciseName) {
+  const normalizedName = normalizeExerciseName(exerciseName);
+  if (!normalizedName) return null;
+
+  const candidates = [];
+  getWorkouts().forEach((workout, workoutIndex) => {
+    if (!isWorkoutDate(workout?.date) || !Array.isArray(workout?.exercises)) return;
+    workout.exercises.forEach((exercise, exerciseIndex) => {
+      if (normalizeExerciseName(exercise?.name) !== normalizedName || !Array.isArray(exercise?.sets)) return;
+      const maxWeight = exercise.sets.reduce((maximum, set) => {
+        const weight = Number(set?.weight);
+        return Number.isFinite(weight) && weight > maximum ? weight : maximum;
+      }, 0);
+      if (maxWeight > 0) candidates.push({ workout, exercise, workoutIndex, exerciseIndex, maxWeight });
     });
   });
 
-  return maxWeight;
+  candidates.sort((first, second) =>
+    second.maxWeight - first.maxWeight ||
+    second.workout.date.localeCompare(first.workout.date) ||
+    String(second.workout.id || "").localeCompare(String(first.workout.id || "")) ||
+    second.workoutIndex - first.workoutIndex ||
+    second.exerciseIndex - first.exerciseIndex
+  );
+  return candidates[0] || null;
 }
 
 function normalizeExerciseName(name) {
@@ -100,17 +112,19 @@ function getMostRecentExercise(exerciseName, excludedWorkoutId = null) {
   return matches[0] || null;
 }
 
-function formatPreviousSet(set) {
+function formatPreviousSet(set, personalBestWeight = null) {
   const reps = Number(set?.reps);
   const weight = Number(set?.weight);
   const formattedReps = Number.isFinite(reps) ? reps : "—";
   const formattedWeight = Number.isFinite(weight) ? weight : "—";
-  return `${formattedReps} × ${formattedWeight} kg`;
+  const isPersonalBest = Number.isFinite(weight) && weight === personalBestWeight;
+  return `${formattedReps} × ${formattedWeight} kg${isPersonalBest ? " ★ PB" : ""}`;
 }
 
-function updateExerciseHistory(exerciseName, infoDiv, historyDiv) {
+function updateExerciseHistory(exerciseName, infoDiv, historyDiv, personalBestHistoryDiv) {
   const maxWeight = getExerciseMaxWeight(exerciseName);
   const previous = getMostRecentExercise(exerciseName, editingSessionId);
+  const personalBest = getPersonalBestExercise(exerciseName);
 
   infoDiv.style.display = maxWeight > 0 ? "block" : "none";
   infoDiv.textContent = maxWeight > 0 ? `Tvoje maximálka: ${maxWeight} kg` : "";
@@ -118,15 +132,28 @@ function updateExerciseHistory(exerciseName, infoDiv, historyDiv) {
   historyDiv.replaceChildren();
   if (maxWeight <= 0 || !previous) {
     historyDiv.hidden = true;
-    return;
+  } else {
+    const title = document.createElement("strong");
+    title.textContent = `Poslední trénink: ${formatDate(previous.workout.date)}`;
+    const sets = document.createElement("div");
+    sets.textContent = previous.exercise.sets.map(formatPreviousSet).join(" · ");
+    historyDiv.append(title, sets);
+    historyDiv.hidden = false;
   }
 
+  personalBestHistoryDiv.replaceChildren();
+  if (maxWeight <= 0 || !personalBest) {
+    personalBestHistoryDiv.hidden = true;
+    return;
+  }
   const title = document.createElement("strong");
-  title.textContent = `Poslední trénink: ${formatDate(previous.workout.date)}`;
+  title.textContent = `Trénink s maximálkou: ${formatDate(personalBest.workout.date)}`;
   const sets = document.createElement("div");
-  sets.textContent = previous.exercise.sets.map(formatPreviousSet).join(" · ");
-  historyDiv.append(title, sets);
-  historyDiv.hidden = false;
+  sets.textContent = personalBest.exercise.sets
+    .map((set) => formatPreviousSet(set, personalBest.maxWeight))
+    .join(" · ");
+  personalBestHistoryDiv.append(title, sets);
+  personalBestHistoryDiv.hidden = false;
 }
 
 function createExerciseBlock(exercise = null) {
@@ -139,6 +166,7 @@ function createExerciseBlock(exercise = null) {
     </div>
     <div class="ex-info" style="font-size: 12px; color: var(--text-dim); margin-bottom: 8px; display: none;"></div>
     <div class="ex-history" hidden></div>
+    <div class="ex-history ex-personal-best-history" hidden></div>
     <div class="sets-container"></div>
     <button type="button" class="btn ghost small add-set">+ Přidat sérii</button>
   `;
@@ -146,9 +174,10 @@ function createExerciseBlock(exercise = null) {
   const nameInput = wrap.querySelector(".ex-name");
   const infoDiv = wrap.querySelector(".ex-info");
   const historyDiv = wrap.querySelector(".ex-history");
+  const personalBestHistoryDiv = wrap.querySelector(".ex-personal-best-history");
 
   nameInput.addEventListener("input", () => {
-    updateExerciseHistory(nameInput.value, infoDiv, historyDiv);
+    updateExerciseHistory(nameInput.value, infoDiv, historyDiv, personalBestHistoryDiv);
   });
 
   wrap.querySelector(".remove-exercise").addEventListener("click", () => wrap.remove());
@@ -161,7 +190,7 @@ function createExerciseBlock(exercise = null) {
   sets.forEach((set) => setsContainer.appendChild(createSetRow(set)));
   if (exercise) {
     nameInput.value = exercise.name || "";
-    updateExerciseHistory(nameInput.value, infoDiv, historyDiv);
+    updateExerciseHistory(nameInput.value, infoDiv, historyDiv, personalBestHistoryDiv);
   }
   return wrap;
 }

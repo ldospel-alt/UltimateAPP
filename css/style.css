@@ -468,6 +468,9 @@ input, select, textarea, button {
   display: block;
   color: var(--text);
 }
+.ex-personal-best-history {
+  border-left-color: var(--green);
+}
 .exercise-type-row {
   margin-bottom: 8px;
 }
