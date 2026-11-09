@@ -193,7 +193,7 @@ function updateIllnessButtons() {
   const symptomsField = document.getElementById("symptomsField");
   if (symptomsField) symptomsField.hidden = !hasIllness || !isDiaryFieldEnabled("symptoms");
   const illnessNoteField = document.getElementById("illnessNoteField");
-  if (illnessNoteField) illnessNoteField.hidden = hasIllness !== true || !isDiaryFieldEnabled("illness");
+  if (illnessNoteField) illnessNoteField.hidden = hasIllness === false || !isDiaryFieldEnabled("illness");
 }
 
 function setIllness(value) {
@@ -427,7 +427,7 @@ function addEntry() {
     entryData.symptoms = document.getElementById("diarySymptoms").value.trim();
   }
   if (isDiaryFieldEnabled("illness") && (!isEditing || hasOwnField(editingEntry, "hasIllness") || changedFields.has("illness"))) {
-    entryData.illnessNote = hasIllness === true ? document.getElementById("illnessNote").value.trim() : "";
+    entryData.illnessNote = hasIllness === false ? "" : document.getElementById("illnessNote").value.trim();
   }
 
   if (isEditing) {
@@ -819,9 +819,9 @@ function renderEntries() {
     if (entry.hasMeditation) {
       wellbeing.push("🧘 Meditace");
     }
-    if (entry.hasIllness) {
-      const symptoms = String(entry.symptoms || "").trim();
-      const illnessNote = String(entry.illnessNote || "").trim();
+    const illnessNote = String(entry.illnessNote || "").trim();
+    if (entry.hasIllness || illnessNote) {
+      const symptoms = entry.hasIllness ? String(entry.symptoms || "").trim() : "";
       const illnessDetails = [symptoms, illnessNote ? `Poznámka: ${illnessNote}` : ""].filter(Boolean).join(" · ");
       wellbeing.push(illnessDetails ? `🤒 Nemoc: ${illnessDetails}` : "🤒 Nemoc");
     }
