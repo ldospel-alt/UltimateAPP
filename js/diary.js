@@ -192,10 +192,12 @@ function updateIllnessButtons() {
   });
   const symptomsField = document.getElementById("symptomsField");
   if (symptomsField) symptomsField.hidden = !hasIllness || !isDiaryFieldEnabled("symptoms");
+  const illnessNoteField = document.getElementById("illnessNoteField");
+  if (illnessNoteField) illnessNoteField.hidden = hasIllness !== true || !isDiaryFieldEnabled("illness");
 }
 
 function setIllness(value) {
-  hasIllness = value === "neutral" ? null : value === true;
+  hasIllness = value === "true" ? true : value === "false" ? false : null;
   changedFields.add("illness");
   updateIllnessButtons();
 }
@@ -335,6 +337,7 @@ function resetForm() {
   selectedRests = [];
   hasIllness = false;
   document.getElementById("diarySymptoms").value = "";
+  document.getElementById("illnessNote").value = "";
   selectedReadiness = null;
   selectedRegeneration = null;
   selectedStressScore = null;
@@ -423,6 +426,9 @@ function addEntry() {
   if (isDiaryFieldEnabled("symptoms") && hasIllness && (!isEditing || hasOwnField(editingEntry, "symptoms") || changedFields.has("symptoms"))) {
     entryData.symptoms = document.getElementById("diarySymptoms").value.trim();
   }
+  if (isDiaryFieldEnabled("illness") && (!isEditing || hasOwnField(editingEntry, "hasIllness") || changedFields.has("illness"))) {
+    entryData.illnessNote = hasIllness === true ? document.getElementById("illnessNote").value.trim() : "";
+  }
 
   if (isEditing) {
     saveEntries(entries.map((entry) =>
@@ -477,6 +483,7 @@ function editEntry(id) {
   selectedRests = normalizeRests(entry.rests);
   hasIllness = entry.hasIllness === true ? true : entry.hasIllness === false ? false : null;
   document.getElementById("diarySymptoms").value = String(entry.symptoms || "");
+  document.getElementById("illnessNote").value = String(entry.illnessNote || "");
 
   updateMoodButtons();
   updateStarButtons("sleepRating", selectedSleep);
@@ -575,6 +582,8 @@ function renderStats() {
   const illnessPercent = illnessLogged.length
     ? `${Math.round((illnessDays / illnessLogged.length) * 100)} %`
     : "–";
+  const illnessNeutralDays = days.filter((entry) => hasOwnField(entry, "hasIllness") && entry.hasIllness === null).length;
+  const illnessStateBreakdown = `Ano: ${illnessDays} · Ne: ${illnessLogged.length - illnessDays} · Neutrální: ${illnessNeutralDays}`;
   const symptomTotals = new Map();
   illnessLogged.filter((entry) => entry.hasIllness).forEach((entry) => {
     const symptom = String(entry.symptoms || "").trim();
@@ -611,6 +620,7 @@ function renderStats() {
     restBreakdown: restBreakdown || "Zatím žádný zaznamenaný odpočinek.",
     illnessDays,
     illnessPercent,
+    illnessStateBreakdown,
     symptomBreakdown: symptomBreakdown || "Zatím žádné zaznamenané projevy.",
   };
   Object.entries(statValues).forEach(([id, value]) => {
@@ -811,7 +821,9 @@ function renderEntries() {
     }
     if (entry.hasIllness) {
       const symptoms = String(entry.symptoms || "").trim();
-      wellbeing.push(symptoms ? `🤒 Nemoc: ${symptoms}` : "🤒 Nemoc");
+      const illnessNote = String(entry.illnessNote || "").trim();
+      const illnessDetails = [symptoms, illnessNote ? `Poznámka: ${illnessNote}` : ""].filter(Boolean).join(" · ");
+      wellbeing.push(illnessDetails ? `🤒 Nemoc: ${illnessDetails}` : "🤒 Nemoc");
     }
     const rests = normalizeRests(entry.rests);
     if (rests.length) {

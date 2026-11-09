@@ -116,6 +116,7 @@
             <div class="stat-box"><div class="value" id="illnessDays">0</div><div class="label">dní s nemocí</div></div>
             <div class="stat-box"><div class="value" id="illnessPercent">–</div><div class="label">z zaznamenaných dnů</div></div>
           </div>
+          <p id="illnessStateBreakdown" class="diary-stats-detail"></p>
           <p id="symptomBreakdown" class="diary-stats-detail"></p>
         </div>
 
@@ -197,6 +198,10 @@
         <label for="diarySymptoms">Projevy</label>
         <input id="diarySymptoms" type="text" list="symptomsList" autocomplete="off" placeholder="Např. kašel" />
         <datalist id="symptomsList"></datalist>
+      </div>
+      <div class="field" id="illnessNoteField" hidden>
+        <label for="illnessNote">Poznámka k nemoci</label>
+        <input id="illnessNote" type="text" autocomplete="off" placeholder="Např. horečka od rána" />
       </div>
       <button class="btn block" id="saveDiaryBtn" style="margin-top:8px;">Uložit zápis</button>
       <button class="btn ghost block" id="cancelEditDiaryBtn" style="display:none; margin-top:8px;">Zrušit úpravu</button>
