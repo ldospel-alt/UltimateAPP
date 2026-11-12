@@ -81,7 +81,7 @@ function googleCalendarUrl(lesson, season, time = "") {
     nextDay.setDate(nextDay.getDate() + 1);
     dates = `${calendarDateStamp(date)}/${calendarDateStamp(nextDay)}`;
   }
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${encodeURIComponent(dates)}&details=${encodeURIComponent(details)}`;
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${encodeURIComponent(dates)}&details=${encodeURIComponent(details)}&ctz=Europe%2FPrague`;
 }
 
 function escapeIcs(value) {
@@ -98,7 +98,7 @@ function createIcs(lessons, season, day, time = "") {
     const title = `SaberAcademy – hodina ${lesson.number}`;
     const details = [lesson.featureText, lesson.pathText && `Path of the knight: ${lesson.pathText}`].filter(Boolean).join("\\n");
     const dates = times
-      ? [`DTSTART:${stamp}T${String(times[0]).padStart(2, "0")}${String(times[1]).padStart(2, "0")}00`, `DTEND:${stamp}T${String(times[2]).padStart(2, "0")}${String(times[3]).padStart(2, "0")}00`]
+      ? [`DTSTART;TZID=Europe/Prague:${stamp}T${String(times[0]).padStart(2, "0")}${String(times[1]).padStart(2, "0")}00`, `DTEND;TZID=Europe/Prague:${stamp}T${String(times[2]).padStart(2, "0")}${String(times[3]).padStart(2, "0")}00`]
       : (() => {
           const end = new Date(date);
           end.setDate(end.getDate() + 1);
@@ -106,7 +106,10 @@ function createIcs(lessons, season, day, time = "") {
         })();
     return ["BEGIN:VEVENT", `UID:saberacademy-${season}-${day}-${lesson.date}-${index}@local`, `DTSTAMP:${generatedAt}`, `SUMMARY:${escapeIcs(title)}`, `DESCRIPTION:${escapeIcs(details)}`, ...dates, "END:VEVENT"].join("\r\n");
   }).filter(Boolean);
-  return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//SaberAcademy//Calendar//CS", "CALSCALE:GREGORIAN", ...events, "END:VCALENDAR", ""].join("\r\n");
+  const timezone = times
+    ? ["BEGIN:VTIMEZONE", "TZID:Europe/Prague", "X-LIC-LOCATION:Europe/Prague", "BEGIN:DAYLIGHT", "TZOFFSETFROM:+0100", "TZOFFSETTO:+0200", "TZNAME:CEST", "DTSTART:19700329T020000", "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU", "END:DAYLIGHT", "BEGIN:STANDARD", "TZOFFSETFROM:+0200", "TZOFFSETTO:+0100", "TZNAME:CET", "DTSTART:19701025T030000", "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU", "END:STANDARD", "END:VTIMEZONE"]
+    : [];
+  return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//SaberAcademy//Calendar//CS", "CALSCALE:GREGORIAN", ...timezone, ...events, "END:VCALENDAR", ""].join("\r\n");
 }
 
 function getCalendarSettings() {

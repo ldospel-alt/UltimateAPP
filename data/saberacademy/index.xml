@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <saberacademy>
   <season id="2026-2027">
-    <day id="utery" time="" title="SABER ACADEMY PLAN SEPTEMBER 2026 – JANUARY 2027: ÚTERÝ"/>
-    <day id="ctvrtek1" time=""/>
+    <day id="pondeli" time="19:00-21:00"/>
+    <day id="utery" time="19:00-21:00" title="SABER ACADEMY PLAN SEPTEMBER 2026 – JANUARY 2027: ÚTERÝ"/>
+    <day id="streda1" time="19:00-21:00"/>
+    <day id="streda2" time="19:00-21:00"/>
+    <day id="ctvrtek1" time="19:00-21:00"/>
+    <day id="ctvrtek2" time="19:00-21:00"/>
   </season>
   <choreo id="1" title="Palpatin vs Windu" file="01-palpatin-vs-windu.xml"/>
 </saberacademy>
