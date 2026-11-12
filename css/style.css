@@ -360,29 +360,24 @@ input, select, textarea, button {
   gap: 10px;
   margin-top: 16px;
 }
-.saber-table-wrap,
-.saber-choreo-table-wrap {
+.saber-table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
-.saber-calendar-table,
-.saber-choreo-table {
+.saber-calendar-table {
   width: 100%;
   min-width: 620px;
   border-collapse: collapse;
   font-size: 13px;
 }
 .saber-calendar-table th,
-.saber-calendar-table td,
-.saber-choreo-table th,
-.saber-choreo-table td {
+.saber-calendar-table td {
   padding: 10px 8px;
   border-bottom: 1px solid #333849;
   text-align: left;
   vertical-align: top;
 }
-.saber-calendar-table th,
-.saber-choreo-table th {
+.saber-calendar-table th {
   color: var(--text-dim);
   font-weight: 600;
 }
@@ -409,16 +404,57 @@ input, select, textarea, button {
   font-size: 14px;
   margin-bottom: 8px;
 }
-.saber-choreo-table {
-  min-width: 560px;
-  table-layout: fixed;
+.saber-choreo-steps {
+  display: grid;
+  gap: 8px;
 }
-.saber-choreo-table th:first-child {
-  width: 82px;
+.saber-choreo-step {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 12px;
+  border-radius: 10px;
+  background: #12141a;
 }
-.saber-choreo-table td {
-  min-width: 92px;
-  white-space: normal;
+.saber-choreo-step:nth-child(even) {
+  background: #191c24;
+}
+.saber-choreo-step-number {
+  display: grid;
+  place-items: center;
+  min-height: 34px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+}
+.saber-choreo-move {
+  min-width: 0;
+  font-size: 16px;
+  line-height: 1.35;
+}
+.saber-choreo-move span {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.saber-choreo-move strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.saber-choreo-jedi span { color: #78b9ff; }
+.saber-choreo-sith span { color: #ee7373; }
+.saber-choreo-note {
+  grid-column: 2 / -1;
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-style: italic;
+}
+.saber-choreo-step.saber-choreo-single-role {
+  grid-template-columns: 34px minmax(0, 1fr);
 }
 
 /* Gym statistics */
