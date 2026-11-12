@@ -1,4 +1,4 @@
-const CACHE_NAME = "gym-denik-app-shell-v8";
+const CACHE_NAME = "gym-denik-app-shell-v9";
 const APP_SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -30,7 +30,8 @@ const APP_SHELL_ASSETS = [
   "./js/settings.js",
   "./js/backup.js",
   "./data/saberacademy/index.xml",
-  "./data/saberacademy/calendar/2025-2026-utery.xml",
+  "./data/saberacademy/calendar/2026-2027-ctvrtek1.xml",
+  "./data/saberacademy/calendar/2026-2027-utery.xml",
   "./data/saberacademy/choreo/01-palpatin-vs-windu.xml",
   "./manifest.json",
   "./icons/icon.svg",
@@ -114,24 +115,24 @@ async function handleAppShellAsset(request) {
     return cached;
   }
 
-  async function handleSaberAcademyData(request) {
-    const cache = await caches.open(CACHE_NAME);
-    try {
-      const response = await fetch(request, { cache: "no-store" });
-      if (isCacheable(response)) await cache.put(request, response.clone());
-      return response;
-    } catch {
-      const cached = await cache.match(request, { ignoreSearch: true });
-      if (cached) return cached;
-      return new Response("", { status: 404, statusText: "Not Found" });
-    }
-  }
-
   const response = await fetch(request);
   if (isCacheable(response)) {
     await cache.put(request, response.clone());
   }
   return response;
+}
+
+async function handleSaberAcademyData(request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetch(request, { cache: "no-store" });
+    if (isCacheable(response)) await cache.put(request, response.clone());
+    return response;
+  } catch {
+    const cached = await cache.match(request, { ignoreSearch: true });
+    if (cached) return cached;
+    return new Response("", { status: 404, statusText: "Not Found" });
+  }
 }
 
 async function refreshCachedAppShellAsset(request) {

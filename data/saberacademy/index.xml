@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <saberacademy>
-  <season id="2025-2026" days="utery"/>
+  <season id="2026-2027">
+    <day id="utery" time="" title="SABER ACADEMY PLAN SEPTEMBER 2026 – JANUARY 2027: ÚTERÝ"/>
+    <day id="ctvrtek1" time=""/>
+  </season>
   <choreo id="1" title="Palpatin vs Windu" file="01-palpatin-vs-windu.xml"/>
 </saberacademy>

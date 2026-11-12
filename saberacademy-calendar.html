@@ -25,11 +25,13 @@
         <label for="saberDay">Tréninkový den</label>
         <select id="saberDay"></select>
       </div>
+      <button id="saberCalendarExport" class="btn secondary-btn" type="button" hidden>Stáhnout celý rozvrh (.ics)</button>
       <p id="saberCalendarStatus" class="saberacademy-note"></p>
     </section>
     <section class="card saber-table-wrap">
+      <h2 id="saberCalendarTitle" class="saber-calendar-title">SaberAcademy</h2>
       <table class="saber-calendar-table">
-        <thead><tr><th>Hodina</th><th>Datum</th><th>New feature</th><th>Path of the knight</th></tr></thead>
+        <thead><tr><th>Count</th><th>Date</th><th>Program</th><th>Path of the knight</th><th>Kalendář</th></tr></thead>
         <tbody id="saberCalendarRows"></tbody>
       </table>
     </section>

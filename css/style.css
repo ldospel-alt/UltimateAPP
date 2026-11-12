@@ -370,6 +370,12 @@ input, select, textarea, button {
   border-collapse: collapse;
   font-size: 13px;
 }
+.saber-calendar-title {
+  margin: 0 0 12px;
+  color: var(--accent-2);
+  font-size: 15px;
+  line-height: 1.35;
+}
 .saber-calendar-table th,
 .saber-calendar-table td {
   padding: 10px 8px;
@@ -385,6 +391,37 @@ input, select, textarea, button {
 .saber-calendar-table .saber-next {
   background: rgba(134, 119, 224, .2);
   box-shadow: inset 3px 0 var(--accent-2);
+}
+.saber-calendar-table .saber-current-week {
+  background: rgba(245, 197, 66, .16);
+  box-shadow: inset 4px 0 #f5c542;
+}
+.saber-week-badge {
+  display: block;
+  width: fit-content;
+  margin-top: 5px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  color: #14100a;
+  background: #f5c542;
+  font-size: 10px;
+  font-weight: 800;
+}
+.saber-category { font-weight: 800; }
+.saber-category-saber { color: #72dc84; }
+.saber-category-dual { color: #c99cff; }
+.saber-category-ataru { color: #58e0d2; }
+.saber-category-soresu { color: #69aaff; }
+.saber-category-makashi { color: #ff7777; }
+.saber-category-shiicho { color: #c94b4b; }
+.saber-category-choreo { color: #f5bd55; }
+.saber-calendar-add {
+  display: inline-block;
+  min-width: 178px;
+  padding: 8px 10px;
+  font-size: 11px;
+  text-align: center;
+  text-decoration: none;
 }
 .saber-choreo-list {
   display: grid;

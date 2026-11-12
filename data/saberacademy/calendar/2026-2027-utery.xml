@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<season id="2026-2027" day="utery">
+  <lesson n="1" date="09-01"><feature><seg cat="saber">Saber Skill:</seg> underarm blind, <seg cat="dual">Dual wield 10</seg> - Combo 2 R - fan strike combo</feature><path>The way of Hawk-bat</path></lesson>
+  <lesson n="2" date="09-08"><feature><seg cat="saber">Saber Skill:</seg> Underarm blind <seg cat="dual">Dual wield 11</seg> - Combo 2 L - fan strike combo</feature><path>Ataru:</path></lesson>
+  <lesson n="3" date="09-15"><feature><seg cat="dual">Dual wield 10</seg> - Combo 2 Broken strike combo - pravá ruka, <seg cat="choreo">Choreografie IV:</seg> <seg cat="ataru">Ataru</seg> opakování</feature><path>Ataru:</path></lesson>
+  <lesson n="4" date="09-22"><feature><seg cat="dual">Dual wield 11</seg> - Combo 2 Broken strike combo - levá ruka, <seg cat="choreo">Choreografie V:</seg> <seg cat="ataru">Ataru</seg> opakování</feature><path>The way of Hawk-bat zkouška</path></lesson>
+  <lesson n="5" date="09-29"><feature><seg cat="ataru">Ataru 7:</seg> Ataru skill V - hvězda, <seg cat="soresu">Soresu:</seg> opakování</feature><path>Porovnání Ataru a ostatní Formy</path></lesson>
+  <lesson n="6" date="10-06"><feature><seg cat="ataru">Ataru 8:</seg> Ataru skill VI - kotoul letmo / reverzní parakotoul</feature><path>Strečink - úvod</path></lesson>
+  <lesson n="7" date="10-13"><feature><seg cat="ataru">Ataru 9:</seg> Sokan arena → improvizace Ataru (Saber skill + Ataru skill + Fight)</feature><path>Strečink - nohy</path></lesson>
+  <lesson n="8" date="10-20"><feature><seg cat="saber">Saber Skill:</seg> Dědek combo - part 2, <seg cat="makashi">Makashi:</seg> Opakování</feature><path>Strečink - horní část těla</path></lesson>
+  <lesson date="10-27" holiday="true"><feature>– Podzimní prázdniny –</feature><path>–</path></lesson>
+  <lesson n="9" date="11-03"><feature><seg cat="saber">Saber Skill:</seg> Combo: opakování: 1) Cesta kolem světa 2) Cesta kolem galaxie reverz grip 3) Combo 3 4) Dědek kombo 5) 8-infinity loop - reverz grip 6) Dědek kombo part 2 <seg cat="soresu">Soresu:</seg> Saber dojo</feature><path>Strečink - střed těla</path></lesson>
+  <lesson n="10" date="11-10"><feature><seg cat="shiicho">Shii-Cho:</seg> Opakování</feature><path>Ataru příprava</path></lesson>
+  <lesson date="11-17" holiday="true"><feature>– Státní svátek –</feature><path>–</path></lesson>
+  <lesson n="11" date="11-24"><feature><seg cat="dual">Dual wield 12</seg> - otočka dual wield <seg cat="saber">Saber Skill:</seg> Reverzní Infinity Loop + opakování comb</feature><path>Ataru příprava</path></lesson>
+  <lesson n="12" date="12-01"><feature><seg cat="dual">Dual wield 13</seg> - Finisher 1,2,2,1 <seg cat="saber">Saber Skill:</seg> Front throw do soresu stance (kombo 7) + opakování comb</feature><path>Ataru příprava</path></lesson>
+  <lesson n="13" date="12-08"><feature><seg cat="ataru">Ataru 10:</seg> Ataru skill VII - Speed / Stride + Speed step z překážky, <seg cat="shiicho">Shii-Cho:</seg> Sekundární ruka</feature><path>Ataru příprava</path></lesson>
+  <lesson n="14" date="12-15"><feature><seg cat="ataru">Ataru 11:</seg> Ataru skill VI - Two hander v letu, <seg cat="makashi">Makashi:</seg> Opakování</feature><path>Ataru příprava</path></lesson>
+  <lesson date="12-22" holiday="true"><feature>– Vánoce –</feature><path>–</path></lesson>
+  <lesson date="12-29" holiday="true"><feature>– Vánoce –</feature><path>–</path></lesson>
+  <lesson n="15" date="01-05"><feature><seg cat="ataru">Ataru 12:</seg> opakování + Sokan arena</feature><path>Ataru příprava</path></lesson>
+  <lesson n="16" date="01-12"><feature><seg cat="dual">Dual wield 14</seg> - opakování, <seg cat="choreo">Choreografie VI:</seg> <seg cat="ataru">Ataru</seg> opakování</feature><path>Ataru příprava</path></lesson>
+  <lesson n="17" date="01-19"><feature><seg cat="ataru">Ataru 13:</seg> kompetence formy / Sokan arena → improvizace Ataru (Saber skill + Ataru skill + Fight), <seg cat="saber">Saber Skill:</seg> opakování comb</feature><path>Opakování dulon / velocity Forma II a III</path></lesson>
+  <lesson n="18" date="01-26"><feature><seg cat="dual">Dual wield 15</seg> - opakování, <seg cat="ataru">Ataru 14:</seg> kompetence formy, <seg cat="choreo">Choreografie VII:</seg> <seg cat="ataru">Ataru</seg> opakování</feature><path>Kompetence Formy II a III</path></lesson>
+  <lesson n="19" date="02-02"><feature>Zkoušky Hawk-bat</feature><path></path></lesson>
+  <lesson n="20" date="02-09"><feature>Achievementy / náhradní termín zkoušky Hawk-bat</feature><path></path></lesson>
+</season>
