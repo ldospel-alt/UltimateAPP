@@ -8,6 +8,8 @@ const DUEL_ELO_START_KEY_BACKUP = "gym_duel_elo_start";
 const NON_BACKUP_STORAGE_KEYS = new Set([
   "saberacademy_tournaments_local",
   "saberacademy_tournaments_cache",
+  "saberacademy_tournaments_github_token",
+  "saberacademy_tournaments_coach_unlocked",
 ]);
 const GITHUB_OWNER = "ldospel-alt";
 const GITHUB_REPO = "UltimateAPP";

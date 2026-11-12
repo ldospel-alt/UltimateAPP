@@ -17,59 +17,66 @@
   </div>
   <main class="container">
     <section class="card">
-      <div class="field">
-        <label for="tournamentSeason">Ročník</label>
-        <select id="tournamentSeason"></select>
-      </div>
+      <div class="field"><label for="tournamentSeason">Ročník</label><select id="tournamentSeason"></select></div>
       <div class="saber-tournament-types" role="group" aria-label="Typ turnaje">
         <button class="btn secondary" type="button" data-tournament-type="championship">Championship</button>
         <button class="btn secondary" type="button" data-tournament-type="league">League</button>
       </div>
+      <div class="saber-tournament-toolbar">
+        <button id="refreshTournamentBtn" class="btn secondary" type="button">Aktualizovat</button>
+        <button id="unlockTournamentBtn" class="btn ghost" type="button">Zapisovat (trenér)</button>
+      </div>
+      <p id="tournamentUpdatedAt" class="saberacademy-note"></p>
       <p id="tournamentStatus" class="saberacademy-note"></p>
     </section>
 
-    <section id="tournamentSheetCard" class="card" hidden>
-      <h2 id="tournamentSheetTitle">Výsledky</h2>
-      <iframe id="tournamentSheet" class="saber-tournament-sheet" title="Výsledky turnaje"></iframe>
-      <a id="tournamentSheetLink" class="btn secondary block" target="_blank" rel="noopener">Otevřít tabulku v nové záložce</a>
-      <p class="saberacademy-note">Pokud se tabulka nenačte, otevři ji v nové záložce.</p>
+    <section id="tournamentStandingsCard" class="card">
+      <h2>Tabulka výsledků</h2>
+      <div class="saber-table-wrap">
+        <table class="saber-tournament-table">
+          <thead><tr><th>Přezdívka</th><th>Kostým</th><th>Duelů</th><th>Soutěžních</th><th>Dal(a)</th><th>Dostal(a)</th><th>Výhry</th><th>Dal−Dostal</th><th>Výhry 1:0</th><th>Výhry 2. rukou</th><th>Duely v kostýmu</th><th>Poznámka</th></tr></thead>
+          <tbody id="tournamentStandings"></tbody>
+        </table>
+      </div>
+      <p id="tournamentEmptyHint" class="empty-hint" hidden>Turnaj ještě nezačal.</p>
     </section>
 
     <section id="tournamentResultsCard" class="card" hidden>
-      <div class="saber-tournament-heading">
-        <h2>Výsledky</h2>
-        <button id="unlockTournamentBtn" class="btn ghost small" type="button">Zapisovat (trenér)</button>
-      </div>
-      <p id="tournamentBackendNotice" class="saber-tournament-notice" hidden></p>
+      <h2>Odehrané duely</h2>
       <div id="tournamentResults"></div>
-      <p id="tournamentEmptyHint" class="empty-hint" hidden>Zatím nejsou žádné zapsané zápasy.</p>
+    </section>
+
+    <section id="tournamentCoachCard" class="card" hidden>
+      <h2>Trenérský zápis</h2>
+      <div class="field"><label for="tournamentToken">GitHub token</label><input id="tournamentToken" type="password" autocomplete="off" placeholder="Fine-grained PAT s Contents: write" /></div>
+      <div class="saber-tournament-toolbar">
+        <button id="saveTournamentTokenBtn" class="btn secondary" type="button">Nastavit GitHub token</button>
+        <button id="removeTournamentTokenBtn" class="btn ghost" type="button">Odstranit token</button>
+      </div>
+      <p class="saberacademy-note">Token se ukládá jen do tohoto zařízení a nikdy není součástí zálohy.</p>
+
+      <div class="saber-tournament-participants">
+        <h3>Účastníci</h3>
+        <div class="field"><label for="participantName">Přezdívka</label><input id="participantName" type="text" autocomplete="off" /></div>
+        <label class="saber-tournament-check"><input id="participantCostume" type="checkbox" /> Kostým</label>
+        <button id="addParticipantBtn" class="btn secondary block" type="button">Přidat účastníka</button>
+        <div id="tournamentParticipants"></div>
+      </div>
     </section>
 
     <section id="tournamentFormCard" class="card" hidden>
-      <h2 id="tournamentFormTitle">Zapsat zápas</h2>
-      <div class="field">
-        <label for="tournamentDate">Datum</label>
-        <input id="tournamentDate" type="date" />
-      </div>
-      <div class="field">
-        <label for="tournamentA">První bojovník</label>
-        <input id="tournamentA" type="text" list="tournamentNames" autocomplete="off" />
-      </div>
-      <div class="field">
-        <label for="tournamentB">Druhý bojovník</label>
-        <input id="tournamentB" type="text" list="tournamentNames" autocomplete="off" />
-        <datalist id="tournamentNames"></datalist>
-      </div>
-      <div class="field">
-        <label for="tournamentResult">Výsledek</label>
-        <input id="tournamentResult" type="text" placeholder="Např. 3 : 1" />
+      <h2 id="tournamentFormTitle">Zapsat duel</h2>
+      <div class="field"><label for="tournamentDate">Datum</label><input id="tournamentDate" type="date" /></div>
+      <div class="field"><label for="tournamentA">První bojovník</label><select id="tournamentA"></select></div>
+      <div class="field"><label for="tournamentB">Druhý bojovník</label><select id="tournamentB"></select></div>
+      <div class="stat-row">
+        <div class="field" style="flex:1;"><label for="tournamentScoreA">Body prvního</label><input id="tournamentScoreA" type="number" min="0" inputmode="numeric" /></div>
+        <div class="field" style="flex:1;"><label for="tournamentScoreB">Body druhého</label><input id="tournamentScoreB" type="number" min="0" inputmode="numeric" /></div>
       </div>
       <label class="saber-tournament-check"><input id="tournamentCostume" type="checkbox" /> Kostým</label>
-      <div class="field">
-        <label for="tournamentNote">Poznámka</label>
-        <textarea id="tournamentNote" placeholder="Volitelná poznámka k zápasu"></textarea>
-      </div>
-      <button id="saveTournamentBtn" class="btn block" type="button">Uložit zápas</button>
+      <label class="saber-tournament-check"><input id="tournamentSecondHand" type="checkbox" /> Výhra 2. rukou</label>
+      <div class="field"><label for="tournamentNote">Poznámka</label><textarea id="tournamentNote" placeholder="Volitelná poznámka k duelu"></textarea></div>
+      <button id="saveTournamentBtn" class="btn block" type="button">Uložit duel</button>
       <button id="cancelTournamentEditBtn" class="btn ghost block" type="button" hidden>Zrušit úpravu</button>
     </section>
   </main>

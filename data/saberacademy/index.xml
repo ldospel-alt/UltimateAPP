@@ -9,10 +9,10 @@
     <day id="ctvrtek2" time="19:00-21:00"/>
   </season>
   <choreo id="1" title="Palpatin vs Windu" file="01-palpatin-vs-windu.xml"/>
-  <tournaments backend="">
+  <tournaments>
     <season id="2026" readonly="true">
-      <type id="championship" title="Championship" url="https://docs.google.com/spreadsheets/d/1YMW9hFt2UEm8D_3BmVf7ohFEYEjb2XqokIERkPbe8TY/htmlview?usp=embed_facebook#gid=0" gid="0"/>
-      <type id="league" title="League" url="https://docs.google.com/spreadsheets/d/1YMW9hFt2UEm8D_3BmVf7ohFEYEjb2XqokIERkPbe8TY/htmlview?usp=embed_facebook#gid=0" gid="0"/>
+      <type id="championship" title="Championship"/>
+      <type id="league" title="League"/>
     </season>
     <season id="2027">
       <type id="championship" title="Championship"/>

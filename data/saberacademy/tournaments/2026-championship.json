@@ -1,0 +1,27 @@
+{
+  "season": "2026",
+  "type": "championship",
+  "standings": [
+    { "name": "Honzulka", "costume": false, "duels": 12, "competitive": 10, "given": 26, "received": 24, "wins": 3, "difference": 2, "winsOneZero": 0, "winsSecondHand": 0, "costumeDuels": 0, "note": "" },
+    { "name": "Pupu", "costume": true, "duels": 15, "competitive": 10, "given": 40, "received": 35, "wins": 6, "difference": 5, "winsOneZero": 0, "winsSecondHand": 0, "costumeDuels": 10, "note": "" },
+    { "name": "Catopig", "costume": false, "duels": 10, "competitive": 10, "given": 33, "received": 32, "wins": 5, "difference": 1, "winsOneZero": 0, "winsSecondHand": 0, "costumeDuels": 0, "note": "" },
+    { "name": "Vojtěch", "costume": false, "duels": 5, "competitive": 5, "given": 6, "received": 12, "wins": 0, "difference": -6, "winsOneZero": 0, "winsSecondHand": 0, "costumeDuels": 0, "note": "" },
+    { "name": "Drakar", "costume": false, "duels": 13, "competitive": 10, "given": 32, "received": 35, "wins": 3, "difference": -3, "winsOneZero": 0, "winsSecondHand": 0, "costumeDuels": 0, "note": "" },
+    { "name": "Přéma", "costume": true, "duels": 21, "competitive": 10, "given": 21, "received": 36, "wins": 1, "difference": -15, "winsOneZero": 0, "winsSecondHand": 0, "costumeDuels": 10, "note": "" },
+    { "name": "Lisan al Kebab", "costume": true, "duels": 10, "competitive": 10, "given": 36, "received": 24, "wins": 6, "difference": 12, "winsOneZero": 0, "winsSecondHand": 0, "costumeDuels": 10, "note": "" },
+    { "name": "Honzík", "costume": true, "duels": 14, "competitive": 10, "given": 31, "received": 32, "wins": 5, "difference": -1, "winsOneZero": 0, "winsSecondHand": 3, "costumeDuels": 10, "note": "" },
+    { "name": "Besty", "costume": true, "duels": 13, "competitive": 10, "given": 30, "received": 34, "wins": 3, "difference": -4, "winsOneZero": 0, "winsSecondHand": 0, "costumeDuels": 10, "note": "" },
+    { "name": "Darth S'Parkle", "costume": true, "duels": 10, "competitive": 10, "given": 40, "received": 37, "wins": 4, "difference": 3, "winsOneZero": 0, "winsSecondHand": 0, "costumeDuels": 10, "note": "" },
+    { "name": "Miro", "costume": false, "duels": 13, "competitive": 10, "given": 33, "received": 42, "wins": 2, "difference": -9, "winsOneZero": 0, "winsSecondHand": 2, "costumeDuels": 0, "note": "achievement 2uka" },
+    { "name": "Kukša", "costume": false, "duels": 11, "competitive": 10, "given": 39, "received": 32, "wins": 7, "difference": 7, "winsOneZero": 0, "winsSecondHand": 2, "costumeDuels": 0, "note": "achievement se počítá 2. ruka" },
+    { "name": "Luk'an Solvar", "costume": false, "duels": 10, "competitive": 10, "given": 35, "received": 29, "wins": 5, "difference": 6, "winsOneZero": 0, "winsSecondHand": 0, "costumeDuels": 0, "note": "" },
+    { "name": "Kuba", "costume": true, "duels": 10, "competitive": 10, "given": 28, "received": 23, "wins": 6, "difference": 5, "winsOneZero": 2, "winsSecondHand": 0, "costumeDuels": 10, "note": "" },
+    { "name": "Michael", "costume": false, "duels": 5, "competitive": 5, "given": 14, "received": 14, "wins": 1, "difference": 0, "winsOneZero": 0, "winsSecondHand": 0, "costumeDuels": 0, "note": "" },
+    { "name": "Drobek", "costume": false, "duels": 3, "competitive": 3, "given": 12, "received": 8, "wins": 3, "difference": 4, "winsOneZero": 0, "winsSecondHand": 0, "costumeDuels": 0, "note": "" },
+    { "name": "Adam", "costume": false, "duels": 11, "competitive": 10, "given": 19, "received": 18, "wins": 4, "difference": 1, "winsOneZero": 0, "winsSecondHand": 0, "costumeDuels": 0, "note": "" },
+    { "name": "Awramar", "costume": false, "duels": 12, "competitive": 10, "given": 26, "received": 32, "wins": 4, "difference": -6, "winsOneZero": 0, "winsSecondHand": 0, "costumeDuels": 0, "note": "" }
+  ],
+  "participants": [],
+  "duels": [],
+  "updatedAt": "2026-11-12T00:00:00.000Z"
+}
