@@ -5,6 +5,10 @@ const CALISTHENICS_KEY_BACKUP = "gym_calisthenics";
 const DIARY_KEY_BACKUP = "gym_diary";
 const DUEL_KEY_BACKUP = "gym_duels";
 const DUEL_ELO_START_KEY_BACKUP = "gym_duel_elo_start";
+const NON_BACKUP_STORAGE_KEYS = new Set([
+  "saberacademy_tournaments_local",
+  "saberacademy_tournaments_cache",
+]);
 const GITHUB_OWNER = "ldospel-alt";
 const GITHUB_REPO = "UltimateAPP";
 const GITHUB_FOLDER = "obnova";
@@ -13,7 +17,7 @@ function buildBackupObject() {
   const storage = {};
   for (let i = 0; i < localStorage.length; i += 1) {
     const key = localStorage.key(i);
-    if (!key || !key.startsWith("gym_")) continue;
+    if (!key || !key.startsWith("gym_") || NON_BACKUP_STORAGE_KEYS.has(key)) continue;
     storage[key] = Storage.read(key, null);
   }
 

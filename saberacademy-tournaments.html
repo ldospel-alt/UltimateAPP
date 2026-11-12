@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>Turnaje – SaberAcademy</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#111318" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a class="back-btn" href="saberacademy.html">←</a>
+    <h1>🏆 Turnaje</h1>
+  </div>
+  <main class="container">
+    <section class="card">
+      <div class="field">
+        <label for="tournamentSeason">Ročník</label>
+        <select id="tournamentSeason"></select>
+      </div>
+      <div class="saber-tournament-types" role="group" aria-label="Typ turnaje">
+        <button class="btn secondary" type="button" data-tournament-type="championship">Championship</button>
+        <button class="btn secondary" type="button" data-tournament-type="league">League</button>
+      </div>
+      <p id="tournamentStatus" class="saberacademy-note"></p>
+    </section>
+
+    <section id="tournamentSheetCard" class="card" hidden>
+      <h2 id="tournamentSheetTitle">Výsledky</h2>
+      <iframe id="tournamentSheet" class="saber-tournament-sheet" title="Výsledky turnaje"></iframe>
+      <a id="tournamentSheetLink" class="btn secondary block" target="_blank" rel="noopener">Otevřít tabulku v nové záložce</a>
+      <p class="saberacademy-note">Pokud se tabulka nenačte, otevři ji v nové záložce.</p>
+    </section>
+
+    <section id="tournamentResultsCard" class="card" hidden>
+      <div class="saber-tournament-heading">
+        <h2>Výsledky</h2>
+        <button id="unlockTournamentBtn" class="btn ghost small" type="button">Zapisovat (trenér)</button>
+      </div>
+      <p id="tournamentBackendNotice" class="saber-tournament-notice" hidden></p>
+      <div id="tournamentResults"></div>
+      <p id="tournamentEmptyHint" class="empty-hint" hidden>Zatím nejsou žádné zapsané zápasy.</p>
+    </section>
+
+    <section id="tournamentFormCard" class="card" hidden>
+      <h2 id="tournamentFormTitle">Zapsat zápas</h2>
+      <div class="field">
+        <label for="tournamentDate">Datum</label>
+        <input id="tournamentDate" type="date" />
+      </div>
+      <div class="field">
+        <label for="tournamentA">První bojovník</label>
+        <input id="tournamentA" type="text" list="tournamentNames" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="tournamentB">Druhý bojovník</label>
+        <input id="tournamentB" type="text" list="tournamentNames" autocomplete="off" />
+        <datalist id="tournamentNames"></datalist>
+      </div>
+      <div class="field">
+        <label for="tournamentResult">Výsledek</label>
+        <input id="tournamentResult" type="text" placeholder="Např. 3 : 1" />
+      </div>
+      <label class="saber-tournament-check"><input id="tournamentCostume" type="checkbox" /> Kostým</label>
+      <div class="field">
+        <label for="tournamentNote">Poznámka</label>
+        <textarea id="tournamentNote" placeholder="Volitelná poznámka k zápasu"></textarea>
+      </div>
+      <button id="saveTournamentBtn" class="btn block" type="button">Uložit zápas</button>
+      <button id="cancelTournamentEditBtn" class="btn ghost block" type="button" hidden>Zrušit úpravu</button>
+    </section>
+  </main>
+  <script src="js/storage.js"></script>
+  <script src="js/saberacademy-tournaments.js"></script>
+  <script>registerServiceWorker();</script>
+</body>
+</html>

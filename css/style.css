@@ -360,6 +360,61 @@ input, select, textarea, button {
   gap: 10px;
   margin-top: 16px;
 }
+.saber-tournament-types {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.saber-tournament-types .btn { flex: 1; }
+.saber-tournament-types .btn.active {
+  color: #14100a;
+  background: var(--accent-2);
+}
+.saber-tournament-sheet {
+  display: block;
+  width: 100%;
+  min-height: 65vh;
+  margin: 12px 0;
+  border: 1px solid #333849;
+  border-radius: 10px;
+  background: #fff;
+}
+.saber-tournament-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.saber-tournament-heading h2 { margin: 0; }
+.saber-tournament-notice {
+  margin: 12px 0;
+  padding: 10px;
+  border-radius: 8px;
+  color: #ffd98a;
+  background: rgba(245, 197, 66, .12);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.saber-tournament-record {
+  margin-top: 10px;
+  padding: 12px;
+  border-left: 3px solid var(--accent-2);
+  border-radius: 8px;
+  background: #171a22;
+}
+.saber-tournament-record p { margin: 6px 0 0; }
+.saber-tournament-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.saber-tournament-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  color: var(--text);
+}
 .saber-table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;

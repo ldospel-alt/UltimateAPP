@@ -1,4 +1,4 @@
-const CACHE_NAME = "gym-denik-app-shell-v10";
+const CACHE_NAME = "gym-denik-app-shell-v11";
 const APP_SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -9,6 +9,7 @@ const APP_SHELL_ASSETS = [
   "./saberacademy.html",
   "./saberacademy-calendar.html",
   "./saberacademy-choreo.html",
+  "./saberacademy-tournaments.html",
   "./military.html",
   "./sith.html",
   "./habits.html",
@@ -24,6 +25,7 @@ const APP_SHELL_ASSETS = [
   "./js/duels.js",
   "./js/saberacademy-calendar.js",
   "./js/saberacademy-choreo.js",
+  "./js/saberacademy-tournaments.js",
   "./js/military.js",
   "./js/sith.js",
   "./js/habits.js",
