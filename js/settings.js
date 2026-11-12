@@ -2,7 +2,7 @@ const SUBAPP_LABELS = {
   gym: "🏋️ Gym",
   calisthenics: "🤸 Calistenika",
   diary: "📔 Deníček",
-  duels: "⚔️ Duely",
+  duels: "⚔️ SaberAcademy",
   military: "🎖️ Military Training",
   sith: "⚡ Sith Training",
   habits: "💧 Habbits",

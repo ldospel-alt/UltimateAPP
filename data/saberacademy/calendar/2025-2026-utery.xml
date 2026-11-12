@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<season id="2025-2026" day="utery">
+  <lesson n="1" date="09-03"><feature>Opakování + návaznost na strike 1</feature><path>Občanka, cesta Sarlacca</path></lesson>
+  <lesson n="2" date="09-10"><feature>Choreo WP</feature><path>Pekiti</path></lesson>
+  <lesson n="3" date="09-17"><feature>Combo 1 Ranging combo</feature><path>Choreo</path></lesson>
+  <lesson n="4" date="09-24"><feature>Combo 2 Fanstrike combo</feature><path>Velocity + Dulony</path></lesson>
+  <lesson n="5" date="10-01"><feature>Horizontal a vertical strike</feature><path>Meditace IV</path></lesson>
+  <lesson n="6" date="10-08"><feature>Cesta kolem světa tričky</feature><path>Halo efekt</path></lesson>
+  <lesson n="7" date="10-15"><feature>Combo 3 broken strike combo</feature><path>Pygmalion a golem efekt</path></lesson>
+  <lesson n="8" date="10-22"><feature>Navázaní na striky</feature><path>Team development</path></lesson>
+  <lesson n="9" date="10-29"><feature>Strategie centrální linie, choreo</feature><path>Ef. primingu a primárnosti</path></lesson>
+  <lesson n="10" date="11-05"><feature>Revers grip</feature><path>Atribuce a autoatribuce</path></lesson>
+  <lesson n="11" date="11-12"><feature>Cesta kolem světa obi ani</feature><path>Vývoj, zrání a učení</path></lesson>
+  <lesson n="12" date="11-19"><feature>Combo 4 Horizontal strike combo</feature><path>Shii-Cho</path></lesson>
+  <lesson n="13" date="11-26"><feature>Trusty + navázaní na strike 3</feature><path>Kompetence formy I</path></lesson>
+  <lesson n="14" date="12-03"><feature>Combo 5 trust 1 do 2/3</feature><path>Dulon</path></lesson>
+  <lesson n="15" date="12-10"><feature>Opakování tríčků</feature><path>Velocity</path></lesson>
+  <lesson n="16" date="12-17"><feature>Umbrela + trust combo</feature><path>Dovršení cesty Sarlacca</path></lesson>
+  <lesson date="12-24" holiday="true"/>
+  <lesson date="12-31" holiday="true"/>
+  <lesson n="17" date="01-07"><feature>Defens wall</feature><path>No oriented questions</path></lesson>
+  <lesson n="18" date="01-14"><feature>Opakování</feature><path>Meditace V</path></lesson>
+  <lesson n="19" date="01-21"><feature>Zkoušky</feature><path>Zasedne rada Sarlacca</path></lesson>
+  <lesson n="20" date="01-28"><feature>Zkoušky</feature><path>Zasedne rada Sarlacca</path></lesson>
+</season>

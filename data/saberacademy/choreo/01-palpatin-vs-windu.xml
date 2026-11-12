@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<choreo id="1" title="Palpatin vs Windu">
+  <part>
+    <step jedi="stojí v pluhu" sith="Piruleta"/><step jedi="1" sith="1"/><step jedi="2" sith="2"/><step jedi="1" sith="1"/><step jedi="4" sith="4" note="s proběhnutím"/><step jedi="krok dozadu" sith="trust krok dopředu"/>
+  </part>
+  <part>
+    <step jedi="3" sith="3"/><step jedi="4" sith="4"/><step jedi="dřep" sith="1"/><step jedi="2 točí se doprava" sith="2 točí se doleva"/><step jedi="broken 2" sith="broken 2" note="zásek"/><step jedi="3" sith="3"/>
+  </part>
+  <part>
+    <step jedi="4" sith="4"/><step jedi="ústup" sith="3"/><step jedi="ústup" sith="4"/><step jedi="v půlce horizontálu obi ani" sith="horizontal"/><step jedi="" sith="horizontal"/><step jedi="1" sith="1" note="zásek"/>
+  </part>
+  <part>
+    <step jedi="trust" sith="kryt shora"/><step jedi="točí se pod rukou" sith="kryt shora" note="zásek"/><step jedi="broken 1" sith="kryje"/><step jedi="otočka" sith="dřep"/><step jedi="sek na hlavu" sith="trust na bradu"/><step jedi="couvá" sith="tlačí"/>
+  </part>
+  <part>
+    <step jedi="overhand" sith="nechá si vyrazit meč"/><step jedi="otočka" sith="krok dozadu"/><step jedi="1" sith="1" note="zásek"/><step jedi="" sith="oba od sebe"/><step jedi="krouží" sith=""/><step jedi="krouží meče up" sith=""/>
+  </part>
+  <part>
+    <step jedi="1" sith="1" note="nad hlavou"/><step jedi="3" sith="3" note="nad hlavou"/><step jedi="1" sith="1"/><step jedi="4" sith="4"/><step jedi="1" sith="1"/><step jedi="1" sith="1"/>
+  </part>
+  <part>
+    <step jedi="1" sith="1"/><step jedi="3" sith="3"/><step jedi="2" sith="2"/><step jedi="otočka" sith="čeká"/><step jedi="4" sith="4"/><step jedi="přehození meče" sith="otočka" note="rozbití okna"/>
+  </part>
+  <part>
+    <step jedi="" sith="" note="pauzička"/><step jedi="1" sith="1"/><step jedi="broken 2" sith="broken 2"/><step jedi="2" sith="2"/><step jedi="ústup" sith="trust"/><step jedi="3" sith="3"/>
+  </part>
+  <part>
+    <step jedi="2" sith="2"/><step jedi="1" sith="1"/><step jedi="bere meč" sith="ustupuje"/><step jedi="kryje" sith="blesky"/>
+  </part>
+</choreo>

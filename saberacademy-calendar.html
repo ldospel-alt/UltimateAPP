@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>Kalendář – SaberAcademy</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#111318" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a class="back-btn" href="saberacademy.html">←</a>
+    <h1>📅 Kalendář</h1>
+  </div>
+  <main class="container">
+    <section class="card">
+      <div class="field">
+        <label for="saberSeason">Ročník</label>
+        <select id="saberSeason"></select>
+      </div>
+      <div class="field">
+        <label for="saberDay">Tréninkový den</label>
+        <select id="saberDay"></select>
+      </div>
+      <p id="saberCalendarStatus" class="saberacademy-note"></p>
+    </section>
+    <section class="card saber-table-wrap">
+      <table class="saber-calendar-table">
+        <thead><tr><th>Hodina</th><th>Datum</th><th>New feature</th><th>Path of the knight</th></tr></thead>
+        <tbody id="saberCalendarRows"></tbody>
+      </table>
+    </section>
+  </main>
+  <script src="js/storage.js"></script>
+  <script src="js/saberacademy-calendar.js"></script>
+  <script>registerServiceWorker();</script>
+</body>
+</html>

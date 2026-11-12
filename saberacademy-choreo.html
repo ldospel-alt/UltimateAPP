@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>Choreo – SaberAcademy</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#111318" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a class="back-btn" href="saberacademy.html">←</a>
+    <h1>⚔️ Choreo</h1>
+  </div>
+  <main class="container">
+    <section class="card">
+      <h2>Choreografie</h2>
+      <div id="saberChoreoList" class="saber-choreo-list"></div>
+      <p id="saberChoreoStatus" class="saberacademy-note"></p>
+    </section>
+    <section id="saberChoreoViewer" class="card" hidden>
+      <h2 id="saberChoreoTitle"></h2>
+      <div class="saber-filter" role="group" aria-label="Zobrazená role">
+        <button class="btn secondary small saber-role-btn" data-role="both" type="button">Oba</button>
+        <button class="btn ghost small saber-role-btn" data-role="jedi" type="button">Jen Jedi</button>
+        <button class="btn ghost small saber-role-btn" data-role="sith" type="button">Jen Sith</button>
+      </div>
+      <div id="saberChoreoParts"></div>
+    </section>
+  </main>
+  <script src="js/storage.js"></script>
+  <script src="js/saberacademy-choreo.js"></script>
+  <script>registerServiceWorker();</script>
+</body>
+</html>

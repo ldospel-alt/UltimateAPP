@@ -349,6 +349,78 @@ input, select, textarea, button {
 .sith-active-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .sith-active-actions .btn { flex: 1 1 40%; }
 
+/* SaberAcademy */
+.saberacademy-note {
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.saberacademy-menu {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+.saber-table-wrap,
+.saber-choreo-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.saber-calendar-table,
+.saber-choreo-table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.saber-calendar-table th,
+.saber-calendar-table td,
+.saber-choreo-table th,
+.saber-choreo-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #333849;
+  text-align: left;
+  vertical-align: top;
+}
+.saber-calendar-table th,
+.saber-choreo-table th {
+  color: var(--text-dim);
+  font-weight: 600;
+}
+.saber-calendar-table .saber-past { opacity: .48; }
+.saber-calendar-table .saber-next {
+  background: rgba(134, 119, 224, .2);
+  box-shadow: inset 3px 0 var(--accent-2);
+}
+.saber-choreo-list {
+  display: grid;
+  gap: 8px;
+}
+.saber-filter {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+.saber-filter .btn { flex: 1; }
+.saber-choreo-part {
+  margin-top: 20px;
+}
+.saber-choreo-part h3 {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.saber-choreo-table {
+  min-width: 560px;
+  table-layout: fixed;
+}
+.saber-choreo-table th:first-child {
+  width: 82px;
+}
+.saber-choreo-table td {
+  min-width: 92px;
+  white-space: normal;
+}
+
 /* Gym statistics */
 #workoutStatsModal {
   overflow-y: auto;
