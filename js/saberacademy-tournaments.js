@@ -13,6 +13,8 @@ let tournamentSha = null;
 let tournamentReadOnly = false;
 let tournamentUnlocked = false;
 let editingTournamentId = null;
+let standingSort = { key: "difference", direction: "desc" };
+let standingPlayerFilter = "";
 
 function tournamentPath(season = selectedSeason(), type = selectedType()) {
   return `data/saberacademy/tournaments/${season}-${type}.json`;
@@ -228,22 +230,82 @@ function buildStandings(data) {
 }
 
 function sortStandings(rows) {
-  return rows.sort((a, b) => b.wins - a.wins || b.difference - a.difference || b.given - a.given || a.name.localeCompare(b.name, "cs"));
+  return rows.sort(defaultStandingsCompare);
+}
+
+function defaultStandingsCompare(a, b) {
+  return b.difference - a.difference || b.wins - a.wins || b.given - a.given || a.name.localeCompare(b.name, "cs");
+}
+
+function isDefaultStandingSort() {
+  return standingSort.key === "difference" && standingSort.direction === "desc";
+}
+
+function compareStandingRows(a, b) {
+  if (isDefaultStandingSort()) return defaultStandingsCompare(a, b);
+  const { key, direction } = standingSort;
+  const multiplier = direction === "asc" ? 1 : -1;
+  let compared;
+  if (key === "name" || key === "note") {
+    compared = String(a[key] || "").localeCompare(String(b[key] || ""), "cs");
+  } else if (key === "costume") {
+    compared = Number(Boolean(a.costume)) - Number(Boolean(b.costume));
+  } else {
+    compared = Number(a[key] || 0) - Number(b[key] || 0);
+  }
+  return compared * multiplier || defaultStandingsCompare(a, b);
+}
+
+function sortedStandingRows(rows) {
+  return rows.slice().sort(compareStandingRows);
+}
+
+function resetStandingView() {
+  standingSort = { key: "difference", direction: "desc" };
+  standingPlayerFilter = "";
 }
 
 function renderStandings() {
-  const rows = buildStandings(tournamentData);
+  const rows = sortedStandingRows(buildStandings(tournamentData));
   const table = document.getElementById("tournamentStandings");
   table.replaceChildren();
   document.getElementById("tournamentEmptyHint").hidden = rows.length > 0;
+  const filter = document.getElementById("standingPlayerFilter");
+  const previous = standingPlayerFilter;
+  filter.replaceChildren();
+  const everyone = document.createElement("option");
+  everyone.value = "";
+  everyone.textContent = "Všichni";
+  filter.append(everyone);
   rows.forEach((row) => {
+    const option = document.createElement("option");
+    option.value = row.name;
+    option.textContent = row.name;
+    filter.append(option);
+  });
+  standingPlayerFilter = rows.some((row) => row.name === previous) ? previous : "";
+  filter.value = standingPlayerFilter;
+  const visibleRows = standingPlayerFilter ? rows.filter((row) => row.name === standingPlayerFilter) : rows;
+  const selectedRank = standingPlayerFilter ? rows.findIndex((row) => row.name === standingPlayerFilter) + 1 : 0;
+  document.getElementById("standingPlayerRank").textContent = selectedRank ? `Pořadí: ${selectedRank}. z ${rows.length}` : "";
+  visibleRows.forEach((row) => {
     const tr = document.createElement("tr");
-    [row.name, row.costume ? "Ano" : "Ne", row.duels, row.competitive, row.given, row.received, row.wins, row.difference, row.winsOneZero, row.winsSecondHand, row.costumeDuels, row.note || "—"].forEach((value) => {
+    const rank = rows.indexOf(row) + 1;
+    const medal = isDefaultStandingSort() ? ["🥇", "🥈", "🥉"][rank - 1] || "" : "";
+    const values = [rank, `${medal}${medal ? " " : ""}${row.name}`, row.costume ? "Ano" : "Ne", row.duels, row.competitive, row.given, row.received, row.wins, row.difference, row.winsOneZero, row.winsSecondHand, row.costumeDuels, row.note || "—"];
+    values.forEach((value, index) => {
       const cell = document.createElement("td");
       cell.textContent = value;
+      if (index === 0 || (index >= 2 && index <= 11)) cell.className = "saber-tournament-number";
+      if (index === 8) cell.classList.add(Number(value) > 0 ? "saber-tournament-positive" : Number(value) < 0 ? "saber-tournament-negative" : "");
       tr.append(cell);
     });
     table.append(tr);
+  });
+  document.querySelectorAll("[data-standing-sort]").forEach((button) => {
+    const active = button.dataset.standingSort === standingSort.key;
+    button.textContent = `${button.dataset.standingLabel}${active ? (standingSort.direction === "asc" ? " ▲" : " ▼") : ""}`;
+    button.setAttribute("aria-sort", active ? (standingSort.direction === "asc" ? "ascending" : "descending") : "none");
   });
 }
 
@@ -491,10 +553,11 @@ function configureControls() {
   };
   typeButtons.forEach((button) => button.addEventListener("click", async () => {
     typeButtons.forEach((item) => item.classList.toggle("active", item === button));
+    resetStandingView();
     resetDuelForm();
     await loadTournament();
   }));
-  select.addEventListener("change", async () => { updateTypes(); resetDuelForm(); await loadTournament(); });
+  select.addEventListener("change", async () => { updateTypes(); resetStandingView(); resetDuelForm(); await loadTournament(); });
   typeButtons[0].classList.add("active");
   updateTypes();
 }
@@ -518,6 +581,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("addParticipantBtn").addEventListener("click", addParticipant);
   document.getElementById("saveTournamentBtn").addEventListener("click", saveDuel);
   document.getElementById("cancelTournamentEditBtn").addEventListener("click", resetDuelForm);
+  document.getElementById("standingPlayerFilter").addEventListener("change", (event) => {
+    standingPlayerFilter = event.target.value;
+    renderStandings();
+  });
+  document.querySelectorAll("[data-standing-sort]").forEach((button) => button.addEventListener("click", () => {
+    const key = button.dataset.standingSort;
+    const isSameKey = standingSort.key === key;
+    if (isSameKey) {
+      standingSort.direction = standingSort.direction === "asc" ? "desc" : "asc";
+    } else {
+      standingSort = {
+        key,
+        direction: key === "name" || key === "note" ? "asc" : "desc",
+      };
+    }
+    renderStandings();
+  }));
   resetDuelForm();
   await loadTournament();
 });

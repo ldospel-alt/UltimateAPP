@@ -377,7 +377,13 @@ input, select, textarea, button {
   margin-top: 14px;
 }
 .saber-tournament-toolbar .btn { flex: 1 1 180px; }
-.saber-tournament-table { min-width: 1050px; }
+.saber-standings-filter { margin-bottom: 12px; }
+.saber-standings-filter select { margin-top: 5px; }
+.saber-tournament-table {
+  min-width: 1080px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
 .saber-tournament-table th,
 .saber-tournament-table td {
   padding: 9px 8px;
@@ -386,7 +392,42 @@ input, select, textarea, button {
   vertical-align: top;
   font-size: 13px;
 }
-.saber-tournament-table th { color: var(--text-dim); }
+.saber-tournament-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  color: var(--text-dim);
+  background: #171a22;
+}
+.saber-tournament-table th button {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.saber-tournament-table tbody tr:nth-child(even) td { background: rgba(255, 255, 255, .035); }
+.saber-tournament-table th:nth-child(2),
+.saber-tournament-table td:nth-child(2) {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 116px;
+  background: #171a22;
+}
+.saber-tournament-table th:nth-child(2) { z-index: 3; }
+.saber-tournament-table tbody tr:nth-child(even) td:nth-child(2) { background: #1b1e27; }
+.saber-tournament-number { text-align: right !important; white-space: nowrap; }
+.saber-tournament-positive { color: var(--green); font-weight: 800; }
+.saber-tournament-negative { color: var(--red); font-weight: 800; }
+.saber-tournament-table td:last-child {
+  min-width: 150px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 .saber-tournament-record {
   margin-top: 10px;
   padding: 12px;

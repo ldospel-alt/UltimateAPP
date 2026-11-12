@@ -32,9 +32,28 @@
 
     <section id="tournamentStandingsCard" class="card">
       <h2>Tabulka výsledků</h2>
+      <div class="field saber-standings-filter">
+        <label for="standingPlayerFilter">Zápasník</label>
+        <select id="standingPlayerFilter"><option value="">Všichni</option></select>
+        <p id="standingPlayerRank" class="saberacademy-note"></p>
+      </div>
       <div class="saber-table-wrap">
         <table class="saber-tournament-table">
-          <thead><tr><th>Přezdívka</th><th>Kostým</th><th>Duelů</th><th>Soutěžních</th><th>Dal(a)</th><th>Dostal(a)</th><th>Výhry</th><th>Dal−Dostal</th><th>Výhry 1:0</th><th>Výhry 2. rukou</th><th>Duely v kostýmu</th><th>Poznámka</th></tr></thead>
+          <thead><tr>
+            <th>#</th>
+            <th><button type="button" data-standing-sort="name" data-standing-label="Přezdívka">Přezdívka</button></th>
+            <th><button type="button" data-standing-sort="costume" data-standing-label="Kostým ✔">Kostým ✔</button></th>
+            <th><button type="button" data-standing-sort="duels" data-standing-label="Duelů">Duelů</button></th>
+            <th><button type="button" data-standing-sort="competitive" data-standing-label="Soutěž.">Soutěž.</button></th>
+            <th><button type="button" data-standing-sort="given" data-standing-label="Dal">Dal</button></th>
+            <th><button type="button" data-standing-sort="received" data-standing-label="Dostal">Dostal</button></th>
+            <th><button type="button" data-standing-sort="wins" data-standing-label="Výhry">Výhry</button></th>
+            <th><button type="button" data-standing-sort="difference" data-standing-label="+/−">+/−</button></th>
+            <th><button type="button" data-standing-sort="winsOneZero" data-standing-label="1:0">1:0</button></th>
+            <th><button type="button" data-standing-sort="winsSecondHand" data-standing-label="2. ruka">2. ruka</button></th>
+            <th><button type="button" data-standing-sort="costumeDuels" data-standing-label="V kostýmu">V kostýmu</button></th>
+            <th><button type="button" data-standing-sort="note" data-standing-label="Poznámka">Poznámka</button></th>
+          </tr></thead>
           <tbody id="tournamentStandings"></tbody>
         </table>
       </div>
