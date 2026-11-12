@@ -66,24 +66,6 @@ function calendarDateStamp(date) {
   return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`;
 }
 
-function googleCalendarUrl(lesson, season, time = "") {
-  const date = lessonDate(season, lesson.date);
-  if (!date) return "";
-  const title = `SaberAcademy – hodina ${lesson.number}`;
-  const details = [lesson.featureText, lesson.pathText && `Path of the knight: ${lesson.pathText}`].filter(Boolean).join("\n");
-  const times = parseTimeRange(time);
-  let dates;
-  if (times) {
-    const [startHour, startMinute, endHour, endMinute] = times;
-    dates = `${calendarDateStamp(date)}T${String(startHour).padStart(2, "0")}${String(startMinute).padStart(2, "0")}00/${calendarDateStamp(date)}T${String(endHour).padStart(2, "0")}${String(endMinute).padStart(2, "0")}00`;
-  } else {
-    const nextDay = new Date(date);
-    nextDay.setDate(nextDay.getDate() + 1);
-    dates = `${calendarDateStamp(date)}/${calendarDateStamp(nextDay)}`;
-  }
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${encodeURIComponent(dates)}&details=${encodeURIComponent(details)}&ctz=Europe%2FPrague`;
-}
-
 function escapeIcs(value) {
   return String(value || "").replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
 }
@@ -167,7 +149,7 @@ function appendFeatureContent(cell, feature) {
   });
 }
 
-function renderCalendarRows(season, lessons, time = "", today = new Date()) {
+function renderCalendarRows(season, lessons, today = new Date()) {
   const rows = document.getElementById("saberCalendarRows");
   rows.replaceChildren();
   today = new Date(today);
@@ -200,19 +182,7 @@ function renderCalendarRows(season, lessons, time = "", today = new Date()) {
     else appendFeatureContent(featureCell, lesson.feature);
     const pathCell = document.createElement("td");
     pathCell.textContent = lesson.pathText || "—";
-    const actionCell = document.createElement("td");
-    if (lesson.number && date) {
-      const addLink = document.createElement("a");
-      addLink.className = "btn saber-calendar-add";
-      addLink.href = googleCalendarUrl(lesson, season, time);
-      addLink.target = "_blank";
-      addLink.rel = "noopener";
-      addLink.textContent = "Přidat do Google kalendáře";
-      actionCell.append(addLink);
-    } else {
-      actionCell.textContent = "—";
-    }
-    row.append(number, dateCell, featureCell, pathCell, actionCell);
+    row.append(number, dateCell, featureCell, pathCell);
     rows.append(row);
   });
   firstHighlighted?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -240,7 +210,7 @@ async function loadCalendar() {
   activeCalendar = { season, day, time, lessons };
   exportButton.hidden = false;
   status.textContent = "";
-  renderCalendarRows(season, lessons, time);
+  renderCalendarRows(season, lessons);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {

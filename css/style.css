@@ -415,14 +415,7 @@ input, select, textarea, button {
 .saber-category-makashi { color: #ff7777; }
 .saber-category-shiicho { color: #c94b4b; }
 .saber-category-choreo { color: #f5bd55; }
-.saber-calendar-add {
-  display: inline-block;
-  min-width: 178px;
-  padding: 8px 10px;
-  font-size: 11px;
-  text-align: center;
-  text-decoration: none;
-}
+.saber-calendar-import-note { margin: 8px 0 0; }
 .saber-choreo-list {
   display: grid;
   gap: 8px;
