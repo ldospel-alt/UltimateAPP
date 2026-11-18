@@ -57,6 +57,29 @@ function portfolioFormatMoney(value, currency, hide = portfolioGetState().settin
   return Number(value).toLocaleString("cs-CZ", { style: "currency", currency: currency || "CZK", maximumFractionDigits: 2 });
 }
 
+function portfolioCreateDualMoney(value, currency, fxCache) {
+  const container = document.createElement("span");
+  container.className = "portfolio-dual-money";
+  const original = document.createElement("span");
+  original.textContent = portfolioFormatMoney(value, currency);
+  container.append(original);
+  if (String(currency).toUpperCase() !== "CZK") {
+    const rate = portfolioRateToCzk(currency, fxCache);
+    const converted = portfolioConvertToCzk(value, currency, fxCache);
+    const czk = document.createElement("small");
+    czk.textContent = rate === null ? "kurz do Kč není dostupný" : `v Kč: ${portfolioFormatMoney(converted, "CZK")}`;
+    if (rate === null) czk.className = "portfolio-fx-missing";
+    container.append(czk);
+  }
+  return container;
+}
+
+function portfolioFormatFxTime(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString("cs-CZ", { dateStyle: "short", timeStyle: "short" });
+}
+
 function portfolioPopulateAssets() {
   const state = portfolioGetState();
   const select = document.getElementById("portfolioAsset");
@@ -72,12 +95,28 @@ function portfolioPopulateAssets() {
 function portfolioPositionRows() {
   const state = portfolioGetState();
   const positions = portfolioCalculatePositions(state.assets, state.trades, state.priceCache);
-  const totals = positions.reduce((sum, position) => sum + (position.value || 0), 0);
-  return positions.map((position) => ({ ...position, symbol: position.asset.symbol, allocation: totals ? ((position.value || 0) / totals) * 100 : 0 }))
+  const summary = portfolioCzkSummary(positions, state.fxCache);
+  return positions.map((position) => {
+    const currency = position.asset.currency;
+    const converted = {
+      averagePriceCzk: portfolioConvertToCzk(position.averagePrice, currency, state.fxCache),
+      currentPriceCzk: portfolioConvertToCzk(position.currentPrice, currency, state.fxCache),
+      valueCzk: portfolioConvertToCzk(position.value, currency, state.fxCache),
+      unrealizedCzk: portfolioConvertToCzk(position.unrealized, currency, state.fxCache),
+      realizedCzk: portfolioConvertToCzk(position.realized, currency, state.fxCache),
+    };
+    return {
+      ...position,
+      ...converted,
+      symbol: position.asset.symbol,
+      allocation: summary.value && converted.valueCzk !== null ? (converted.valueCzk / summary.value) * 100 : 0,
+    };
+  })
     .filter((position) => !document.getElementById("portfolioTypeFilter").value || position.asset.type === document.getElementById("portfolioTypeFilter").value)
     .sort((a, b) => {
-      const left = a[portfolioSort.key];
-      const right = b[portfolioSort.key];
+      const convertedKey = ["averagePrice", "currentPrice", "value", "unrealized", "realized"].includes(portfolioSort.key) ? `${portfolioSort.key}Czk` : portfolioSort.key;
+      const left = a[convertedKey] ?? a[portfolioSort.key];
+      const right = b[convertedKey] ?? b[portfolioSort.key];
       const compared = typeof left === "string" ? left.localeCompare(right, "cs") : (Number(left) || 0) - (Number(right) || 0);
       return compared * (portfolioSort.direction === "asc" ? 1 : -1);
     });
@@ -92,42 +131,84 @@ function portfolioRender() {
   document.getElementById("portfolioTradingViewConsent").checked = Boolean(state.settings.tradingViewConsent);
   portfolioPopulateAssets();
   const positions = portfolioPositionRows();
-  const totals = portfolioTotalsByCurrency(portfolioCalculatePositions(state.assets, state.trades, state.priceCache));
+  const allPositions = portfolioCalculatePositions(state.assets, state.trades, state.priceCache);
+  const totals = portfolioTotalsByCurrency(allPositions);
+  const czkSummary = portfolioCzkSummary(allPositions, state.fxCache);
   const totalsContainer = document.getElementById("portfolioTotals");
   totalsContainer.replaceChildren();
+  const totalCzk = document.createElement("div");
+  totalCzk.className = "stat-box portfolio-total-czk";
+  totalCzk.innerHTML = `<div class="value">${portfolioFormatMoney(czkSummary.value, "CZK")}</div><div class="label">Celkem v Kč</div>`;
+  totalsContainer.append(totalCzk);
   Object.entries(totals).forEach(([currency, total]) => {
     const item = document.createElement("div");
     item.className = "stat-box";
     item.innerHTML = `<div class="value">${portfolioFormatMoney(total.value, currency)}</div><div class="label">${currency} · dividendy ${portfolioFormatMoney(total.dividends, currency)}</div>`;
     totalsContainer.append(item);
   });
+  const fxMessages = [];
+  if (czkSummary.missingCurrencies.length) fxMessages.push(`Chybí kurz do Kč pro: ${czkSummary.missingCurrencies.join(", ")}.`);
+  if (czkSummary.missingPrices.length) fxMessages.push(`Chybí aktuální cena: ${czkSummary.missingPrices.join(", ")}.`);
+  if (!fxMessages.length && state.fxCache?.updatedAt) {
+    fxMessages.push(`Převod do Kč: kurzovní data ECB/Frankfurter${state.fxCache.sourceDate ? ` k ${state.fxCache.sourceDate}` : ""}, obnoveno ${portfolioFormatFxTime(state.fxCache.updatedAt)}.`);
+  }
+  document.getElementById("portfolioFxStatus").textContent = fxMessages.join(" ");
   const body = document.getElementById("portfolioPositions");
   body.replaceChildren();
   document.getElementById("portfolioEmptyPositions").hidden = positions.length > 0;
   positions.forEach((position) => {
     const row = document.createElement("tr");
-    const values = [
-      position.asset.symbol,
-      position.quantity.toLocaleString("cs-CZ"),
-      portfolioFormatMoney(position.averagePrice, position.asset.currency),
-      portfolioFormatMoney(position.currentPrice, position.asset.currency),
-      portfolioFormatMoney(position.value, position.asset.currency),
-      portfolioFormatMoney(position.unrealized, position.asset.currency),
-      portfolioFormatMoney(position.realized, position.asset.currency),
-      `${position.allocation.toFixed(1)} %`,
-    ];
-    values.forEach((value, index) => {
+    const assetCell = document.createElement("td");
+    assetCell.className = "portfolio-asset-link";
+    assetCell.textContent = position.asset.symbol;
+    assetCell.addEventListener("click", () => portfolioShowAssetDetail(position.asset.id));
+    row.append(assetCell);
+    const quantityCell = document.createElement("td");
+    quantityCell.textContent = position.quantity.toLocaleString("cs-CZ");
+    row.append(quantityCell);
+    [position.averagePrice, position.currentPrice, position.value, position.unrealized, position.realized].forEach((value) => {
       const cell = document.createElement("td");
-      cell.textContent = value;
-      if (index === 0) {
-        cell.className = "portfolio-asset-link";
-        cell.addEventListener("click", () => portfolioShowAssetDetail(position.asset.id));
-      }
+      cell.append(portfolioCreateDualMoney(value, position.asset.currency, state.fxCache));
       row.append(cell);
     });
+    const allocationCell = document.createElement("td");
+    allocationCell.textContent = czkSummary.value === null ? "—" : `${position.allocation.toFixed(1)} %`;
+    row.append(allocationCell);
     body.append(row);
   });
   portfolioRenderTrades();
+  if (!document.getElementById("portfolioDetailCard").hidden && portfolioDetailAssetId) {
+    const asset = state.assets.find((item) => item.id === portfolioDetailAssetId);
+    if (asset) portfolioRenderDetailPosition(asset);
+  }
+}
+
+function portfolioRenderDetailPosition(asset) {
+  const state = portfolioGetState();
+  const position = portfolioCalculatePositions([asset], state.trades, state.priceCache)[0];
+  const container = document.getElementById("portfolioDetailPosition");
+  container.replaceChildren();
+  if (!position) return;
+  [
+    ["Množství", position.quantity.toLocaleString("cs-CZ"), false],
+    ["Průměrná cena", position.averagePrice, true],
+    ["Aktuální cena", position.currentPrice, true],
+    ["Hodnota", position.value, true],
+    ["Nerealizovaný P/L", position.unrealized, true],
+    ["Realizovaný P/L", position.realized, true],
+  ].forEach(([label, value, money]) => {
+    const item = document.createElement("div");
+    item.className = "stat-box";
+    const valueElement = document.createElement("div");
+    valueElement.className = "value";
+    if (money) valueElement.append(portfolioCreateDualMoney(value, asset.currency, state.fxCache));
+    else valueElement.textContent = value;
+    const labelElement = document.createElement("div");
+    labelElement.className = "label";
+    labelElement.textContent = label;
+    item.append(valueElement, labelElement);
+    container.append(item);
+  });
 }
 
 function portfolioRenderTrades() {
@@ -224,10 +305,17 @@ async function portfolioDeleteTrade(id) {
 }
 
 async function portfolioRefreshPrices() {
-  portfolioUiStatus("Aktualizuji ceny...");
+  portfolioUiStatus("Aktualizuji ceny a kurzy...");
   const result = await portfolioUpdatePrices(portfolioGetState(), (asset, index, total) => portfolioUiStatus(`${asset.symbol}: ${index}/${total}`));
-  await portfolioSaveState(result.state);
-  portfolioUiStatus(result.errors.length ? `Ceny částečně aktualizovány: ${result.errors.join(" ")}` : "Ceny aktualizovány.", result.errors.length > 0);
+  let nextState = result.state;
+  const errors = [...result.errors];
+  try {
+    nextState = await portfolioUpdateFxRates(nextState);
+  } catch (error) {
+    errors.push(`Kurzy: ${error.message}`);
+  }
+  await portfolioSaveState(nextState);
+  portfolioUiStatus(errors.length ? `Aktualizace byla částečná: ${errors.join(" ")}` : "Ceny a kurzy byly aktualizovány.", errors.length > 0);
   portfolioRender();
 }
 
@@ -326,6 +414,7 @@ async function portfolioShowAssetDetail(assetId) {
   document.getElementById("portfolioTradingViewLink").href = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(asset.tvSymbol || asset.symbol)}`;
   document.getElementById("portfolioTradingViewWidget").replaceChildren();
   document.getElementById("portfolioTradingViewConsentBtn").hidden = Boolean(state.settings.tradingViewConsent);
+  portfolioRenderDetailPosition(asset);
   try {
     const result = await portfolioLoadHistory(state, asset);
     state.priceCache[asset.id] = { ...(state.priceCache[asset.id] || {}), history: result.history, historyUpdatedAt: new Date().toISOString() };

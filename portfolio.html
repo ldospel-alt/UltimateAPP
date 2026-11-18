@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.coingecko.com https://api.twelvedata.com https://finnhub.io; script-src 'self' https://s3.tradingview.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-src https://www.tradingview.com https://s.tradingview.com;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.coingecko.com https://api.twelvedata.com https://finnhub.io https://api.frankfurter.dev; script-src 'self' https://s3.tradingview.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-src https://www.tradingview.com https://s.tradingview.com;" />
   <title>Portfolio – Gym Deník</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#111318" />
@@ -36,8 +36,9 @@
       </section>
 
       <section class="card">
-        <h2>Souhrn podle měny</h2>
+        <h2>Souhrn portfolia</h2>
         <div id="portfolioTotals" class="portfolio-summary-grid"></div>
+        <p id="portfolioFxStatus" class="portfolio-note"></p>
       </section>
 
       <section class="card">
@@ -164,6 +165,7 @@
 
       <section id="portfolioDetailCard" class="card" hidden>
         <div class="portfolio-section-title"><h2 id="portfolioDetailTitle">Detail aktiva</h2><button id="portfolioCloseDetailBtn" class="btn ghost small">Zavřít</button></div>
+        <div id="portfolioDetailPosition" class="portfolio-summary-grid portfolio-detail-position"></div>
         <div class="field"><label for="portfolioChartType">Typ grafu</label><select id="portfolioChartType"><option value="line">Čárový</option><option value="candles">Svíčkový</option></select></div>
         <div id="portfolioChart" class="portfolio-chart"></div>
         <p id="portfolioOwnRating" class="portfolio-note"></p>

@@ -55,6 +55,43 @@ function portfolioTotalsByCurrency(positions) {
   }, {});
 }
 
+function portfolioRateToCzk(currency, fxCache) {
+  const normalized = String(currency || "").toUpperCase();
+  if (normalized === "CZK") return 1;
+  const rate = Number(fxCache?.rates?.[normalized]);
+  return Number.isFinite(rate) && rate > 0 ? rate : null;
+}
+
+function portfolioConvertToCzk(value, currency, fxCache) {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) return null;
+  const rate = portfolioRateToCzk(currency, fxCache);
+  return rate === null ? null : Number(value) * rate;
+}
+
+function portfolioCzkSummary(positions, fxCache) {
+  let value = 0;
+  const missingCurrencies = new Set();
+  const missingPrices = new Set();
+  positions.filter((position) => position.quantity > 0).forEach((position) => {
+    if (position.value === null) {
+      missingPrices.add(position.asset.symbol);
+      return;
+    }
+    const converted = portfolioConvertToCzk(position.value, position.asset.currency, fxCache);
+    if (converted === null) {
+      missingCurrencies.add(position.asset.currency || "—");
+      return;
+    }
+    value += converted;
+  });
+  const complete = missingCurrencies.size === 0 && missingPrices.size === 0;
+  return {
+    value: complete ? value : null,
+    missingCurrencies: Array.from(missingCurrencies).sort(),
+    missingPrices: Array.from(missingPrices).sort(),
+  };
+}
+
 function portfolioHeldQuantity(assetId, trades) {
   return trades.filter((trade) => trade.assetId === assetId).reduce((quantity, trade) => {
     if (trade.type === "buy") return quantity + Number(trade.qty || 0);

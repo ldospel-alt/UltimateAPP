@@ -77,6 +77,29 @@ async function portfolioUpdatePrices(state, onProgress = () => {}) {
   return { state: next, errors };
 }
 
+async function portfolioUpdateFxRates(state) {
+  const currencies = Array.from(new Set((state.assets || [])
+    .map((asset) => String(asset.currency || "").toUpperCase())
+    .filter((currency) => currency && currency !== "CZK")));
+  const rates = { CZK: 1 };
+  if (currencies.length) {
+    const data = await portfolioFetchJson(`https://api.frankfurter.dev/v2/rates?base=CZK&quotes=${currencies.map(encodeURIComponent).join(",")}`);
+    currencies.forEach((currency) => {
+      const inverseRate = Number(data.find((item) => item.quote === currency)?.rate);
+      if (!Number.isFinite(inverseRate) || inverseRate <= 0) throw new Error(`Kurz ${currency}/CZK není dostupný.`);
+      rates[currency] = 1 / inverseRate;
+    });
+    return {
+      ...state,
+      fxCache: { base: "CZK", rates, updatedAt: new Date().toISOString(), sourceDate: data[0]?.date || "" },
+    };
+  }
+  return {
+    ...state,
+    fxCache: { base: "CZK", rates, updatedAt: new Date().toISOString(), sourceDate: new Date().toISOString().slice(0, 10) },
+  };
+}
+
 async function portfolioLoadHistory(state, asset) {
   const cached = state.priceCache?.[asset.id]?.history;
   try {
