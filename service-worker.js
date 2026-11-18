@@ -1,4 +1,4 @@
-const CACHE_NAME = "gym-denik-app-shell-v17";
+const CACHE_NAME = "gym-denik-app-shell-v18";
 const APP_SHELL_ASSETS = [
   "./",
   "./index.html",

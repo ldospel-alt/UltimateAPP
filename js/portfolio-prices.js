@@ -58,6 +58,14 @@ function portfolioAdapterFor(asset) {
   return PortfolioPriceAdapters[asset.priceSource || (asset.type === "crypto" ? "coingecko" : "twelveData")];
 }
 
+function portfolioPriceSourceLabel(asset) {
+  return {
+    coingecko: "CoinGecko",
+    twelveData: "Twelve Data",
+    finnhub: "Finnhub",
+  }[asset.priceSource || (asset.type === "crypto" ? "coingecko" : "twelveData")] || "neznámý zdroj";
+}
+
 async function portfolioUpdatePrices(state, onProgress = () => {}) {
   const settings = portfolioPriceSettings(state);
   const next = { ...state, priceCache: { ...(state.priceCache || {}) } };
@@ -70,7 +78,7 @@ async function portfolioUpdatePrices(state, onProgress = () => {}) {
       if (!Number.isFinite(price)) throw new Error("API nevrátilo platnou cenu.");
       next.priceCache[asset.id] = { ...(next.priceCache[asset.id] || {}), price, updatedAt: new Date().toISOString() };
     } catch (error) {
-      errors.push(`${asset.symbol}: ${error.message}`);
+      errors.push(`${asset.symbol} (${portfolioPriceSourceLabel(asset)}): ${error.message}`);
     }
     if (index < state.assets.length - 1) await new Promise((resolve) => setTimeout(resolve, 350));
   }

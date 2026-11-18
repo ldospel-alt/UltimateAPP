@@ -18,6 +18,8 @@ Portfolio ukládá investiční data pouze do IndexedDB v tomto zařízení. Cel
 - Bez internetu se používá poslední šifrovaná cache. Když kurz nebo cena chybí, aplikace ponechá rozpis v původních měnách a nevytvoří neúplný součet v Kč.
 - Free API mají nízké limity a mohou vracet zpožděné ceny. Aplikace požadavky řadí do fronty, ale negarantuje burzovní real-time data.
 
+Běžné kryptoměnové symboly (například BTC, ETH, SOL, XRP nebo ADA) se při importu a zakládání aktiva automaticky nastaví na CoinGecko. Zdroj ceny, typ aktiva a CoinGecko ID lze později upravit ve správě transakcí přes tlačítko **Upravit aktivum**.
+
 TradingView se nescrapuje. Odkaz na graf pouze otevře veřejný symbol. Oficiální widget Technical Analysis se načte až po souhlasu; TradingView pak obdrží symbol a technické údaje spojení, nikoli portfolio nebo obchody. Vedle něj aplikace počítá vlastní orientační rating z RSI14, MACD a SMA20/50/200.
 
 ## CSV import

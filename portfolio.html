@@ -31,6 +31,7 @@
       <section class="card portfolio-toolbar">
         <button id="portfolioRefreshPricesBtn" class="btn secondary" type="button">Aktualizovat ceny</button>
         <button id="portfolioAddTradeBtn" class="btn secondary" type="button">Přidat transakci</button>
+        <button id="portfolioManageTradesBtn" class="btn secondary" type="button">Historie transakcí</button>
         <label class="portfolio-hide-toggle"><input id="portfolioHideAmounts" type="checkbox" /> Skrýt částky</label>
         <p id="portfolioStatus" class="portfolio-note"></p>
       </section>
@@ -68,7 +69,10 @@
       <section id="portfolioTradeCard" class="card">
         <h2 id="portfolioTradeTitle">Přidat transakci</h2>
         <div class="field"><label for="portfolioAsset">Aktivum</label><select id="portfolioAsset"></select></div>
-        <button id="portfolioNewAssetBtn" class="btn ghost small" type="button">Založit nové aktivum</button>
+        <div class="portfolio-asset-actions">
+          <button id="portfolioNewAssetBtn" class="btn ghost small" type="button">Založit nové aktivum</button>
+          <button id="portfolioEditAssetBtn" class="btn ghost small" type="button">Upravit aktivum</button>
+        </div>
         <div id="portfolioNewAssetFields" hidden>
           <div class="field"><label for="portfolioAssetSymbol">Symbol</label><input id="portfolioAssetSymbol" type="text" autocomplete="off" /></div>
           <div class="field"><label for="portfolioAssetName">Název</label><input id="portfolioAssetName" type="text" autocomplete="off" /></div>
@@ -77,6 +81,7 @@
           <div class="field"><label for="portfolioAssetTvSymbol">TradingView symbol</label><input id="portfolioAssetTvSymbol" placeholder="NASDAQ:AAPL" /></div>
           <div class="field"><label for="portfolioAssetPriceSource">Zdroj cen</label><select id="portfolioAssetPriceSource"><option value="twelveData">Twelve Data</option><option value="finnhub">Finnhub</option><option value="coingecko">CoinGecko</option></select></div>
           <div class="field"><label for="portfolioAssetPriceSymbol">Symbol/ID pro API</label><input id="portfolioAssetPriceSymbol" placeholder="AAPL nebo bitcoin" /></div>
+          <button id="portfolioSaveAssetBtn" class="btn secondary block" type="button">Uložit aktivum</button>
         </div>
         <div class="field"><label for="portfolioTradeType">Typ operace</label><select id="portfolioTradeType"><option value="buy">Nákup</option><option value="sell">Prodej</option><option value="dividend">Dividenda</option><option value="fee">Poplatek</option></select></div>
         <div class="field"><label for="portfolioTradeDate">Datum</label><input id="portfolioTradeDate" type="date" /></div>
@@ -89,7 +94,7 @@
         <button id="portfolioCancelTradeBtn" class="btn ghost block" type="button">Zrušit</button>
       </section>
 
-      <section class="card">
+      <section id="portfolioTradeHistoryCard" class="card">
         <h2>Historie transakcí</h2>
         <div id="portfolioTrades"></div>
       </section>

@@ -643,6 +643,15 @@ input, select, textarea, button {
   background: #171a22;
 }
 .portfolio-trade p { margin: 5px 0; }
+.portfolio-asset-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.portfolio-asset-actions .btn {
+  flex: 1 1 150px;
+}
 .portfolio-mapping-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));

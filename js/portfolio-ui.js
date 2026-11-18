@@ -3,6 +3,7 @@ let portfolioSort = { key: "value", direction: "desc" };
 let portfolioCsvData = null;
 let portfolioCsvImport = null;
 let portfolioDetailAssetId = null;
+let portfolioEditingAssetId = null;
 
 function portfolioUiStatus(message, error = false) {
   ["portfolioStatus", "portfolioSettingsStatus"].forEach((id) => {
@@ -83,6 +84,7 @@ function portfolioFormatFxTime(value) {
 function portfolioPopulateAssets() {
   const state = portfolioGetState();
   const select = document.getElementById("portfolioAsset");
+  const selectedId = select.value;
   select.replaceChildren();
   state.assets.slice().sort((a, b) => a.symbol.localeCompare(b.symbol, "cs")).forEach((asset) => {
     const option = document.createElement("option");
@@ -90,6 +92,74 @@ function portfolioPopulateAssets() {
     option.textContent = `${asset.symbol} – ${asset.name}`;
     select.append(option);
   });
+  if (state.assets.some((asset) => asset.id === selectedId)) select.value = selectedId;
+}
+
+function portfolioOpenAssetEditor(asset = null) {
+  portfolioEditingAssetId = asset?.id || null;
+  document.getElementById("portfolioAssetSymbol").value = asset?.symbol || "";
+  document.getElementById("portfolioAssetName").value = asset?.name || "";
+  document.getElementById("portfolioAssetType").value = asset?.type || "stock";
+  document.getElementById("portfolioAssetCurrency").value = asset?.currency || "USD";
+  document.getElementById("portfolioAssetTvSymbol").value = asset?.tvSymbol || "";
+  document.getElementById("portfolioAssetPriceSource").value = asset?.priceSource || "twelveData";
+  document.getElementById("portfolioAssetPriceSymbol").value = asset?.priceSymbol || "";
+  document.getElementById("portfolioSaveAssetBtn").textContent = asset ? "Uložit změny aktiva" : "Uložit nové aktivum";
+  document.getElementById("portfolioNewAssetFields").hidden = false;
+}
+
+function portfolioApplyCryptoDetectionToFields() {
+  const crypto = portfolioCryptoMetadata(document.getElementById("portfolioAssetSymbol").value);
+  if (!crypto) return;
+  document.getElementById("portfolioAssetType").value = "crypto";
+  document.getElementById("portfolioAssetPriceSource").value = "coingecko";
+  document.getElementById("portfolioAssetPriceSymbol").value = crypto.priceSymbol;
+}
+
+function portfolioUpsertAssetFromFields(state, assetId = portfolioEditingAssetId) {
+  const symbol = document.getElementById("portfolioAssetSymbol").value.trim().toUpperCase();
+  if (!symbol) throw new Error("Vyplň symbol aktiva.");
+  const asset = {
+    id: assetId || Storage.uid(),
+    symbol,
+    name: document.getElementById("portfolioAssetName").value.trim() || symbol,
+    type: document.getElementById("portfolioAssetType").value,
+    currency: document.getElementById("portfolioAssetCurrency").value.trim().toUpperCase() || "USD",
+    tvSymbol: document.getElementById("portfolioAssetTvSymbol").value.trim(),
+    priceSource: document.getElementById("portfolioAssetPriceSource").value,
+    priceSymbol: document.getElementById("portfolioAssetPriceSymbol").value.trim() || symbol,
+  };
+  const index = state.assets.findIndex((item) => item.id === asset.id);
+  const previous = index >= 0 ? state.assets[index] : null;
+  if (index >= 0) state.assets[index] = asset;
+  else state.assets.push(asset);
+  if (previous && [previous.symbol, previous.currency, previous.priceSource, previous.priceSymbol].some((value, fieldIndex) =>
+    value !== [asset.symbol, asset.currency, asset.priceSource, asset.priceSymbol][fieldIndex])) {
+    delete state.priceCache?.[asset.id];
+  }
+  return asset;
+}
+
+async function portfolioSaveAsset() {
+  const state = portfolioGetState();
+  try {
+    const asset = portfolioUpsertAssetFromFields(state);
+    await portfolioSaveState(state);
+    document.getElementById("portfolioNewAssetFields").hidden = true;
+    portfolioEditingAssetId = null;
+    portfolioRender();
+    document.getElementById("portfolioAsset").value = asset.id;
+    portfolioUiStatus("Aktivum bylo uloženo a pozice přepočítány.");
+  } catch (error) {
+    portfolioUiStatus(error.message, true);
+  }
+}
+
+async function portfolioMigrateCryptoAssetsIfNeeded() {
+  const migration = portfolioMigrateKnownCryptoAssets(portfolioGetState());
+  if (!migration.changed) return false;
+  await portfolioSaveState(migration.state);
+  return true;
 }
 
 function portfolioPositionRows() {
@@ -177,6 +247,7 @@ function portfolioRender() {
     body.append(row);
   });
   portfolioRenderTrades();
+  document.getElementById("portfolioManageTradesBtn").textContent = `Historie transakcí (${state.trades.length})`;
   if (!document.getElementById("portfolioDetailCard").hidden && portfolioDetailAssetId) {
     const asset = state.assets.find((item) => item.id === portfolioDetailAssetId);
     if (asset) portfolioRenderDetailPosition(asset);
@@ -216,6 +287,13 @@ function portfolioRenderTrades() {
   const assets = new Map(state.assets.map((asset) => [asset.id, asset]));
   const container = document.getElementById("portfolioTrades");
   container.replaceChildren();
+  if (!state.trades.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-hint";
+    empty.textContent = "Zatím nejsou zadané žádné transakce.";
+    container.append(empty);
+    return;
+  }
   state.trades.slice().sort((a, b) => String(b.date).localeCompare(String(a.date))).forEach((trade) => {
     const asset = assets.get(trade.assetId);
     const item = document.createElement("article");
@@ -226,6 +304,7 @@ function portfolioRenderTrades() {
     [["Upravit", () => portfolioEditTrade(trade.id)], ["Smazat", () => portfolioDeleteTrade(trade.id)]].forEach(([label, action]) => {
       const button = document.createElement("button");
       button.className = "btn ghost small";
+      button.type = "button";
       button.textContent = label;
       button.addEventListener("click", action);
       actions.append(button);
@@ -244,22 +323,18 @@ function portfolioResetTradeForm() {
   document.getElementById("portfolioTradeFee").value = "0";
   document.getElementById("portfolioTradeNote").value = "";
   document.getElementById("portfolioNewAssetFields").hidden = true;
+  portfolioEditingAssetId = null;
 }
 
 async function portfolioSaveTrade() {
   const state = portfolioGetState();
   let assetId = document.getElementById("portfolioAsset").value;
   if (!document.getElementById("portfolioNewAssetFields").hidden) {
-    const symbol = document.getElementById("portfolioAssetSymbol").value.trim().toUpperCase();
-    if (!symbol) return portfolioUiStatus("Vyplň symbol nového aktiva.", true);
-    const asset = {
-      id: Storage.uid(), symbol, name: document.getElementById("portfolioAssetName").value.trim() || symbol,
-      type: document.getElementById("portfolioAssetType").value, currency: document.getElementById("portfolioAssetCurrency").value.trim().toUpperCase(),
-      tvSymbol: document.getElementById("portfolioAssetTvSymbol").value.trim(), priceSource: document.getElementById("portfolioAssetPriceSource").value,
-      priceSymbol: document.getElementById("portfolioAssetPriceSymbol").value.trim() || symbol,
-    };
-    state.assets.push(asset);
-    assetId = asset.id;
+    try {
+      assetId = portfolioUpsertAssetFromFields(state).id;
+    } catch (error) {
+      return portfolioUiStatus(error.message, true);
+    }
   }
   const trade = {
     id: portfolioEditingTradeId || Storage.uid(), assetId, date: document.getElementById("portfolioTradeDate").value,
@@ -294,6 +369,7 @@ function portfolioEditTrade(id) {
   document.getElementById("portfolioTradeFee").value = trade.fee;
   document.getElementById("portfolioTradeCurrency").value = trade.currency;
   document.getElementById("portfolioTradeNote").value = trade.note || "";
+  document.getElementById("portfolioTradeCard").scrollIntoView({ behavior: "smooth" });
 }
 
 async function portfolioDeleteTrade(id) {
@@ -381,7 +457,17 @@ async function portfolioConfirmCsvImport() {
   portfolioCsvImport.valid.filter((trade) => trade.pendingSymbol).forEach((trade) => {
     const symbol = trade.pendingSymbol.toUpperCase();
     if (!newAssets.has(symbol)) {
-      const asset = { id: Storage.uid(), symbol, name: symbol, type: "stock", currency: trade.currency || "USD", tvSymbol: symbol, priceSource: "twelveData", priceSymbol: symbol };
+      const crypto = portfolioCryptoMetadata(symbol);
+      const asset = {
+        id: Storage.uid(),
+        symbol,
+        name: symbol,
+        type: crypto ? "crypto" : "stock",
+        currency: trade.currency || "USD",
+        tvSymbol: symbol,
+        priceSource: crypto ? "coingecko" : "twelveData",
+        priceSymbol: crypto?.priceSymbol || symbol,
+      };
       newAssets.set(symbol, asset);
       state.assets.push(asset);
     }
@@ -481,6 +567,7 @@ async function portfolioHandleUnlock() {
       if (password !== confirmPassword) throw new Error("Hesla se neshodují.");
       await portfolioSetup(password);
     } else await portfolioUnlock(password);
+    await portfolioMigrateCryptoAssetsIfNeeded();
     document.getElementById("portfolioUnlockCard").hidden = true;
     document.getElementById("portfolioApp").hidden = false;
     document.getElementById("portfolioSettingsBtn").hidden = false;
@@ -511,8 +598,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("portfolioAddTradeBtn").addEventListener("click", () => {
     portfolioResetTradeForm();
     portfolioShowView("transactions");
+    document.getElementById("portfolioTradeCard").scrollIntoView({ behavior: "smooth" });
   });
-  document.getElementById("portfolioNewAssetBtn").addEventListener("click", () => { document.getElementById("portfolioNewAssetFields").hidden = !document.getElementById("portfolioNewAssetFields").hidden; });
+  document.getElementById("portfolioManageTradesBtn").addEventListener("click", () => {
+    portfolioShowView("transactions");
+    document.getElementById("portfolioTradeHistoryCard").scrollIntoView({ behavior: "smooth" });
+  });
+  document.getElementById("portfolioNewAssetBtn").addEventListener("click", () => portfolioOpenAssetEditor());
+  document.getElementById("portfolioEditAssetBtn").addEventListener("click", () => {
+    const asset = portfolioGetState().assets.find((item) => item.id === document.getElementById("portfolioAsset").value);
+    if (!asset) return portfolioUiStatus("Nejdřív vyber aktivum.", true);
+    portfolioOpenAssetEditor(asset);
+  });
+  document.getElementById("portfolioAssetSymbol").addEventListener("input", portfolioApplyCryptoDetectionToFields);
+  document.getElementById("portfolioSaveAssetBtn").addEventListener("click", portfolioSaveAsset);
   document.getElementById("portfolioSaveTradeBtn").addEventListener("click", portfolioSaveTrade);
   document.getElementById("portfolioCancelTradeBtn").addEventListener("click", () => portfolioShowView("overview"));
   document.getElementById("portfolioRefreshPricesBtn").addEventListener("click", portfolioRefreshPrices);
@@ -580,6 +679,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const merge = document.getElementById("portfolioBackupMode").value === "merge";
     try {
       await portfolioImportEncrypted(password, JSON.parse(await file.text()), merge);
+      await portfolioMigrateCryptoAssetsIfNeeded();
       portfolioRender();
       portfolioUiStatus("Záloha byla importována.");
     } catch (error) {

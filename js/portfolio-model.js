@@ -2,6 +2,46 @@ function portfolioTradeHash(trade) {
   return [trade.date, trade.importSymbol || trade.assetId, trade.type, trade.qty, trade.price, trade.fee, trade.currency].join("|").toLocaleLowerCase("cs");
 }
 
+const PORTFOLIO_CRYPTO_SYMBOLS = Object.freeze({
+  BTC: "bitcoin",
+  ETH: "ethereum",
+  SOL: "solana",
+  LTC: "litecoin",
+  XRP: "ripple",
+  ADA: "cardano",
+  DOGE: "dogecoin",
+  USDT: "tether",
+  USDC: "usd-coin",
+  BNB: "binancecoin",
+  DOT: "polkadot",
+  AVAX: "avalanche-2",
+  LINK: "chainlink",
+  BCH: "bitcoin-cash",
+  XLM: "stellar",
+  TRX: "tron",
+  SHIB: "shiba-inu",
+});
+
+function portfolioCryptoMetadata(symbol) {
+  const normalized = String(symbol || "").trim().toUpperCase();
+  const priceSymbol = PORTFOLIO_CRYPTO_SYMBOLS[normalized];
+  return priceSymbol ? { symbol: normalized, priceSymbol } : null;
+}
+
+function portfolioMigrateKnownCryptoAssets(state) {
+  let changed = false;
+  const assets = (state.assets || []).map((asset) => {
+    const crypto = portfolioCryptoMetadata(asset.symbol);
+    if (!crypto) return asset;
+    const genericPriceSymbol = !asset.priceSymbol || String(asset.priceSymbol).toUpperCase() === crypto.symbol;
+    const needsMigration = asset.type !== "crypto" || (asset.priceSource === "twelveData" && genericPriceSymbol);
+    if (!needsMigration) return asset;
+    changed = true;
+    return { ...asset, type: "crypto", priceSource: "coingecko", priceSymbol: crypto.priceSymbol };
+  });
+  return { state: changed ? { ...state, assets } : state, changed };
+}
+
 function portfolioCalculatePositions(assets, trades, prices = {}) {
   const positions = new Map(assets.map((asset) => [asset.id, {
     asset, quantity: 0, cost: 0, averagePrice: 0, realized: 0, dividends: 0, fees: 0,
