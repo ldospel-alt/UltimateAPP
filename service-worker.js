@@ -1,4 +1,4 @@
-const CACHE_NAME = "gym-denik-app-shell-v12";
+const CACHE_NAME = "gym-denik-app-shell-v15";
 const APP_SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -15,6 +15,7 @@ const APP_SHELL_ASSETS = [
   "./habits.html",
   "./settings.html",
   "./backup.html",
+  "./portfolio.html",
   "./css/style.css",
   "./js/chart.umd.min.js",
   "./js/storage.js",
@@ -31,6 +32,16 @@ const APP_SHELL_ASSETS = [
   "./js/habits.js",
   "./js/settings.js",
   "./js/backup.js",
+  "./js/vendor/lightweight-charts.standalone.production.js",
+  "./js/vendor/lightweight-charts/LICENSE",
+  "./js/vendor/lightweight-charts/NOTICE",
+  "./js/portfolio-crypto.js",
+  "./js/portfolio-import.js",
+  "./js/portfolio-store.js",
+  "./js/portfolio-model.js",
+  "./js/portfolio-prices.js",
+  "./js/portfolio-ui.js",
+  "./js/portfolio-init.js",
   "./data/saberacademy/index.xml",
   "./data/saberacademy/calendar/2026-2027-ctvrtek1.xml",
   "./data/saberacademy/calendar/2026-2027-utery.xml",

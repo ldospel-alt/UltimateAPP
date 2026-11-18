@@ -6,6 +6,7 @@ const SUBAPP_LABELS = {
   military: "🎖️ Military Training",
   sith: "⚡ Sith Training",
   habits: "💧 Habbits",
+  portfolio: "📈 Portfolio",
 };
 
 let settingsState = getAppSettings();

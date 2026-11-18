@@ -26,6 +26,7 @@ const DEFAULT_SUBAPPS = [
   { id: "military", visible: true },
   { id: "sith", visible: true },
   { id: "habits", visible: true },
+  { id: "portfolio", visible: true },
 ];
 
 function normalizeAppSettings(value) {
