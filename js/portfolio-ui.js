@@ -64,6 +64,20 @@ function portfolioFormatMoney(value, currency, hide = portfolioGetState().settin
   return Number(value).toLocaleString("cs-CZ", { style: "currency", currency: currency || "CZK", maximumFractionDigits: 2 });
 }
 
+function portfolioFormatPercent(value) {
+  if (portfolioGetState().settings.hideAmounts) return "••••";
+  return value === null || !Number.isFinite(Number(value)) ? "—" : `${Number(value).toLocaleString("cs-CZ", { maximumFractionDigits: 1 })} %`;
+}
+
+function portfolioFormatQuantity(value) {
+  return Number(value || 0).toLocaleString("cs-CZ", { maximumFractionDigits: 8 });
+}
+
+function portfolioPerformanceClass(value) {
+  if (!Number.isFinite(Number(value)) || Number(value) === 0) return "";
+  return Number(value) > 0 ? "portfolio-performance-positive" : "portfolio-performance-negative";
+}
+
 function portfolioCreateDualMoney(value, currency, fxCache, czkValue = null) {
   const container = document.createElement("span");
   container.className = "portfolio-dual-money";
@@ -211,16 +225,26 @@ function portfolioRender() {
   const totals = portfolioTotalsByCurrency(allPositions);
   const czkSummary = portfolioCzkSummary(allPositions, state.fxCache);
   const totalsContainer = document.getElementById("portfolioTotals");
+  const currencyTotalsContainer = document.getElementById("portfolioCurrencyTotals");
   totalsContainer.replaceChildren();
+  currencyTotalsContainer.replaceChildren();
+  const performanceComplete = allPositions.every((position) => position.profitCzk !== null && !position.currencyErrors.length);
+  const totalProfitCzk = performanceComplete ? allPositions.reduce((sum, position) => sum + position.profitCzk, 0) : null;
+  const totalInvestedCzk = allPositions.reduce((sum, position) => sum + position.investedCzk, 0);
+  const totalProfitPercent = totalProfitCzk === null || !totalInvestedCzk ? null : totalProfitCzk / totalInvestedCzk * 100;
   const totalCzk = document.createElement("div");
   totalCzk.className = "stat-box portfolio-total-czk";
-  totalCzk.innerHTML = `<div class="value">${portfolioFormatMoney(czkSummary.value, "CZK")}</div><div class="label">Celkem v Kč</div>`;
+  totalCzk.innerHTML = `<div class="value">${portfolioFormatMoney(czkSummary.value, "CZK")}</div><div class="label">Hodnota portfolia</div>`;
   totalsContainer.append(totalCzk);
+  const totalProfit = document.createElement("div");
+  totalProfit.className = `stat-box portfolio-total-profit ${portfolioPerformanceClass(totalProfitCzk)}`.trim();
+  totalProfit.innerHTML = `<div class="value">${portfolioFormatMoney(totalProfitCzk, "CZK")}</div><div class="label">Celkový zisk / ztráta · ${portfolioFormatPercent(totalProfitPercent)}</div>`;
+  totalsContainer.append(totalProfit);
   Object.entries(totals).forEach(([currency, total]) => {
     const item = document.createElement("div");
     item.className = "stat-box";
     item.innerHTML = `<div class="value">${portfolioFormatMoney(total.value, currency)}</div><div class="label">${currency} · dividendy ${portfolioFormatMoney(total.dividends, currency)}</div>`;
-    totalsContainer.append(item);
+    currencyTotalsContainer.append(item);
   });
   const fxMessages = [];
   if (czkSummary.missingCurrencies.length) fxMessages.push(`Chybí kurz do Kč pro: ${czkSummary.missingCurrencies.join(", ")}.`);
@@ -234,41 +258,47 @@ function portfolioRender() {
   document.getElementById("portfolioEmptyPositions").hidden = positions.length > 0;
   positions.forEach((position) => {
     const row = document.createElement("tr");
+    row.className = "portfolio-position-row";
+    row.tabIndex = 0;
+    row.setAttribute("role", "button");
+    row.setAttribute("aria-label", `Otevřít detail aktiva ${position.asset.symbol}`);
+    const openDetail = () => portfolioShowAssetDetail(position.asset.id);
+    row.addEventListener("click", openDetail);
+    row.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openDetail();
+      }
+    });
     const assetCell = document.createElement("td");
     assetCell.className = "portfolio-asset-link";
     assetCell.dataset.label = "Aktivum";
-    assetCell.textContent = position.asset.symbol;
-    assetCell.addEventListener("click", () => portfolioShowAssetDetail(position.asset.id));
+    const assetSymbol = document.createElement("strong");
+    assetSymbol.textContent = position.asset.symbol;
+    const assetName = document.createElement("small");
+    assetName.textContent = position.asset.name;
+    assetCell.append(assetSymbol, assetName);
     row.append(assetCell);
     const quantityCell = document.createElement("td");
     quantityCell.dataset.label = "Množství";
-    quantityCell.textContent = position.quantity.toLocaleString("cs-CZ");
+    quantityCell.textContent = portfolioFormatQuantity(position.quantity);
     row.append(quantityCell);
-    [
-      ["Průměr", position.averagePrice, position.averagePriceCzk],
-      ["Cena", position.currentPrice, position.currentPriceCzk],
-      ["Hodnota", position.value, position.valueCzk],
-      ["Nereal. P/L", position.unrealized, position.unrealizedCzk],
-      ["Real. P/L", position.realized, position.realizedCzk],
-    ].forEach(([label, value, czkValue]) => {
-      const cell = document.createElement("td");
-      cell.dataset.label = label;
-      cell.append(portfolioCreateDualMoney(value, position.asset.currency, state.fxCache, czkValue));
-      row.append(cell);
-    });
-    const allocationCell = document.createElement("td");
-    allocationCell.dataset.label = "Alokace";
-    allocationCell.textContent = czkSummary.value === null ? "—" : `${position.allocation.toFixed(1)} %`;
-    row.append(allocationCell);
-    const chartCell = document.createElement("td");
-    chartCell.dataset.label = "Graf";
-    const chartButton = document.createElement("button");
-    chartButton.type = "button";
-    chartButton.className = "btn ghost small";
-    chartButton.textContent = "Graf";
-    chartButton.addEventListener("click", () => portfolioShowAssetDetail(position.asset.id));
-    chartCell.append(chartButton);
-    row.append(chartCell);
+    const valueCell = document.createElement("td");
+    valueCell.dataset.label = "Hodnota";
+    const valueCzk = document.createElement("strong");
+    valueCzk.textContent = portfolioFormatMoney(position.valueCzk, "CZK");
+    valueCell.append(valueCzk);
+    if (position.asset.currency !== "CZK" && position.value !== null) {
+      const originalValue = document.createElement("small");
+      originalValue.textContent = portfolioFormatMoney(position.value, position.asset.currency);
+      valueCell.append(originalValue);
+    }
+    row.append(valueCell);
+    const profitCell = document.createElement("td");
+    profitCell.dataset.label = "Zisk / ztráta";
+    profitCell.className = portfolioPerformanceClass(position.profitPercent);
+    profitCell.textContent = portfolioFormatPercent(position.profitPercent);
+    row.append(profitCell);
     body.append(row);
   });
   portfolioRenderTrades();
@@ -353,6 +383,8 @@ function portfolioResetTradeForm() {
 
 async function portfolioSaveTrade() {
   const state = portfolioGetState();
+  const existingTrade = state.trades.find((item) => item.id === portfolioEditingTradeId);
+  const existingAsset = existingTrade ? state.assets.find((asset) => asset.id === existingTrade.assetId) : null;
   let assetId = document.getElementById("portfolioAsset").value;
   if (!document.getElementById("portfolioNewAssetFields").hidden) {
     try {
@@ -365,8 +397,14 @@ async function portfolioSaveTrade() {
     id: portfolioEditingTradeId || Storage.uid(), assetId, date: document.getElementById("portfolioTradeDate").value,
     type: document.getElementById("portfolioTradeType").value, qty: Number(document.getElementById("portfolioTradeQty").value || 0),
     price: Number(document.getElementById("portfolioTradePrice").value || 0), fee: Number(document.getElementById("portfolioTradeFee").value || 0),
-    currency: document.getElementById("portfolioTradeCurrency").value.trim().toUpperCase(), note: document.getElementById("portfolioTradeNote").value.trim(), source: "manual",
+    currency: document.getElementById("portfolioTradeCurrency").value.trim().toUpperCase(), note: document.getElementById("portfolioTradeNote").value.trim(),
+    source: existingTrade?.source || "manual",
   };
+  if (existingTrade?.source?.startsWith("csv:")) {
+    trade.importSymbol = existingTrade.importSymbol || existingAsset?.symbol || "";
+    trade.dedupKey = existingTrade.dedupKey || portfolioTradeDedupKey(existingTrade, trade.importSymbol || existingTrade.assetId);
+    trade.importHash = trade.dedupKey;
+  }
   if (!trade.assetId || !trade.date || !Number.isFinite(trade.price)) return portfolioUiStatus("Vyplň aktivum, datum a cenu.", true);
   if (trade.type === "sell" && trade.qty > portfolioHeldQuantity(assetId, state.trades.filter((item) => item.id !== trade.id))) {
     if (!confirm("Prodej překračuje aktuálně držené množství. Přesto uložit?")) return;
@@ -456,7 +494,7 @@ function portfolioEvaluateCsv() {
   const state = portfolioGetState();
   const operationMap = Object.fromEntries(document.getElementById("portfolioOperationMap").value.split(/\r?\n/).map((line) => line.split("=")).filter(([alias, type]) => alias?.trim() && ["buy", "sell", "dividend", "fee"].includes(type?.trim())).map(([alias, type]) => [alias.trim().toLocaleLowerCase("cs"), type.trim()]));
   portfolioCsvImport = portfolioMapCsvRows(portfolioCsvData, profile, state.assets, state.trades, operationMap);
-  document.getElementById("portfolioCsvSummary").textContent = `Nové: ${portfolioCsvImport.valid.length}, duplicity: ${portfolioCsvImport.duplicates.length}, chybné: ${portfolioCsvImport.invalid.length}`;
+  document.getElementById("portfolioCsvSummary").textContent = `Nové: ${portfolioCsvImport.valid.length}, přeskočené duplicity: ${portfolioCsvImport.duplicates.length}, chybné: ${portfolioCsvImport.invalid.length}`;
   document.getElementById("portfolioConfirmImportBtn").disabled = !portfolioCsvImport.valid.length;
 }
 
@@ -498,7 +536,6 @@ async function portfolioConfirmCsvImport() {
     }
     trade.assetId = newAssets.get(symbol).id;
     trade.pendingSymbol = "";
-    trade.importHash = portfolioTradeHash(trade);
   });
   state.trades.push(...portfolioCsvImport.valid);
   await portfolioSaveState(state);
@@ -647,8 +684,7 @@ function portfolioRenderChart(asset, history) {
     time: marker.time,
     position: marker.type === "buy" ? "belowBar" : "aboveBar",
     color: marker.type === "buy" ? "#47d16c" : "#ff6464",
-    shape: marker.type === "buy" ? "arrowUp" : "arrowDown",
-    text: `${marker.type === "buy" ? "Nákup" : "Prodej"} ${marker.qty.toLocaleString("cs-CZ")} × ${portfolioFormatMoney(portfolioConvertCurrency(marker.price, marker.currency || asset.currency, displayCurrency, state.fxCache), displayCurrency)}`,
+    shape: "circle",
   })));
   const trades = state.trades.filter((trade) => trade.assetId === asset.id && ["buy", "sell"].includes(trade.type));
   const position = portfolioCalculatePositions([asset], trades, state.priceCache, state.fxCache)[0];

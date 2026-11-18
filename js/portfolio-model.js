@@ -1,5 +1,20 @@
 function portfolioTradeHash(trade) {
-  return [trade.date, trade.importSymbol || trade.assetId, trade.type, trade.qty, trade.price, trade.fee, trade.currency].join("|").toLocaleLowerCase("cs");
+  return portfolioTradeDedupKey(trade, trade.importSymbol || trade.assetId);
+}
+
+function portfolioTradeDedupKey(trade, symbol) {
+  const normalizeNumber = (value, precision) => {
+    const number = Number(value || 0);
+    return Number.isFinite(number) ? Number(number.toFixed(precision)).toString() : "";
+  };
+  return [
+    String(trade.date || "").trim(),
+    String(symbol || "").trim().toLocaleLowerCase("cs"),
+    String(trade.type || "").trim().toLocaleLowerCase("cs"),
+    normalizeNumber(trade.qty, 8),
+    normalizeNumber(trade.price, 4),
+    String(trade.currency || "").trim().toUpperCase(),
+  ].join("|");
 }
 
 const PORTFOLIO_CRYPTO_SYMBOLS = Object.freeze({
@@ -60,7 +75,7 @@ function portfolioMigrateKnownCryptoAssets(state) {
 
 function portfolioCalculatePositions(assets, trades, prices = {}, fxCache = {}) {
   const positions = new Map(assets.map((asset) => [asset.id, {
-    asset, quantity: 0, costCzk: 0, averagePriceCzk: 0, realizedCzk: 0, dividendsCzk: 0, feesCzk: 0, currencyErrors: [],
+    asset, quantity: 0, costCzk: 0, investedCzk: 0, averagePriceCzk: 0, realizedCzk: 0, dividendsCzk: 0, feesCzk: 0, currencyErrors: [],
   }]));
   trades.slice().sort((a, b) => String(a.date).localeCompare(String(b.date))).forEach((trade) => {
     const position = positions.get(trade.assetId);
@@ -74,7 +89,9 @@ function portfolioCalculatePositions(assets, trades, prices = {}, fxCache = {}) 
       return;
     }
     if (trade.type === "buy") {
-      position.costCzk += qty * priceCzk + feeCzk;
+      const purchaseCostCzk = qty * priceCzk + feeCzk;
+      position.costCzk += purchaseCostCzk;
+      position.investedCzk += purchaseCostCzk;
       position.quantity += qty;
       position.averagePriceCzk = position.quantity ? position.costCzk / position.quantity : 0;
     } else if (trade.type === "sell") {
@@ -105,10 +122,13 @@ function portfolioCalculatePositions(assets, trades, prices = {}, fxCache = {}) 
     const realized = portfolioConvertCurrency(position.realizedCzk, "CZK", assetCurrency, fxCache);
     const dividends = portfolioConvertCurrency(position.dividendsCzk, "CZK", assetCurrency, fxCache);
     const fees = portfolioConvertCurrency(position.feesCzk, "CZK", assetCurrency, fxCache);
-    const valueCzk = currentPriceCzk === null ? null : position.quantity * currentPriceCzk;
-    const value = currentPrice === null ? null : position.quantity * currentPrice;
+    const valueCzk = position.quantity === 0 ? 0 : currentPriceCzk === null ? null : position.quantity * currentPriceCzk;
+    const value = position.quantity === 0 ? 0 : currentPrice === null ? null : position.quantity * currentPrice;
     const unrealizedCzk = valueCzk === null ? null : valueCzk - position.costCzk;
     const unrealized = portfolioConvertCurrency(unrealizedCzk, "CZK", assetCurrency, fxCache);
+    const profitCzk = unrealizedCzk === null ? null : unrealizedCzk + position.realizedCzk + position.dividendsCzk;
+    const profit = portfolioConvertCurrency(profitCzk, "CZK", assetCurrency, fxCache);
+    const profitPercent = profitCzk === null || !position.investedCzk ? null : profitCzk / position.investedCzk * 100;
     return {
       ...position,
       cost,
@@ -122,6 +142,9 @@ function portfolioCalculatePositions(assets, trades, prices = {}, fxCache = {}) 
       valueCzk,
       unrealized,
       unrealizedCzk,
+      profit,
+      profitCzk,
+      profitPercent,
     };
   });
 }

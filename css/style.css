@@ -593,15 +593,24 @@ input, select, textarea, button {
 .portfolio-section-title h2 { margin: 0; }
 .portfolio-table {
   width: 100%;
-  min-width: 820px;
+  min-width: 0;
+  table-layout: fixed;
   border-collapse: collapse;
 }
+.portfolio-table th:nth-child(1),
+.portfolio-table td:nth-child(1) { width: 34%; }
+.portfolio-table th:nth-child(2),
+.portfolio-table td:nth-child(2) { width: 20%; }
+.portfolio-table th:nth-child(3),
+.portfolio-table td:nth-child(3) { width: 28%; }
+.portfolio-table th:nth-child(4),
+.portfolio-table td:nth-child(4) { width: 18%; }
 .portfolio-table th,
 .portfolio-table td {
   padding: 9px 8px;
   border-bottom: 1px solid #333849;
   text-align: right;
-  white-space: nowrap;
+  white-space: normal;
   font-size: 13px;
 }
 .portfolio-table th {
@@ -628,6 +637,26 @@ input, select, textarea, button {
 .portfolio-total-czk {
   border: 1px solid rgba(143, 124, 255, 0.55);
 }
+.portfolio-total-profit .value,
+.portfolio-performance-positive {
+  color: var(--green);
+}
+.portfolio-total-profit.portfolio-performance-negative .value,
+.portfolio-performance-negative {
+  color: var(--red);
+}
+.portfolio-currency-details {
+  margin-top: 12px;
+}
+.portfolio-currency-details summary {
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 700;
+}
+.portfolio-currency-details .portfolio-summary-grid {
+  margin-top: 10px;
+}
 .portfolio-detail-position {
   margin-bottom: 14px;
 }
@@ -635,6 +664,29 @@ input, select, textarea, button {
   color: var(--accent-2);
   font-weight: 700;
   cursor: pointer;
+}
+.portfolio-asset-link strong,
+.portfolio-asset-link small,
+.portfolio-table td:nth-child(3) strong,
+.portfolio-table td:nth-child(3) small {
+  display: block;
+}
+.portfolio-asset-link small,
+.portfolio-table td:nth-child(3) small {
+  margin-top: 2px;
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.portfolio-position-row {
+  cursor: pointer;
+}
+.portfolio-position-row:hover,
+.portfolio-position-row:focus-visible {
+  background: rgba(143, 124, 255, 0.1);
+  outline: none;
 }
 .portfolio-trade {
   margin-top: 9px;
@@ -728,62 +780,37 @@ input, select, textarea, button {
     overflow: visible;
   }
   .portfolio-table {
-    display: block;
     min-width: 0;
+    table-layout: fixed;
   }
-  .portfolio-table thead {
-    display: none;
-  }
-  .portfolio-table tbody {
-    display: grid;
-    gap: 10px;
-  }
-  .portfolio-table tr {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 0;
-    padding: 10px;
-    border: 1px solid #333849;
-    border-radius: 12px;
-    background: #171a22;
-  }
+  .portfolio-table th,
   .portfolio-table td,
   .portfolio-table td:first-child {
-    display: flex;
     min-width: 0;
-    padding: 8px 6px;
-    border-bottom: 1px solid #292e3a;
-    text-align: right;
+    padding: 8px 4px;
     white-space: normal;
     overflow-wrap: anywhere;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 8px;
-  }
-  .portfolio-table td::before {
-    content: attr(data-label);
-    flex: 0 0 auto;
-    color: var(--text-dim);
     font-size: 11px;
-    font-weight: 600;
-    text-align: left;
   }
-  .portfolio-table td:first-child,
-  .portfolio-table td:last-child {
-    grid-column: 1 / -1;
+  .portfolio-table th {
+    font-size: 9px;
   }
-  .portfolio-table td:last-child {
-    border-bottom: 0;
+  .portfolio-table th:nth-child(1),
+  .portfolio-table td:nth-child(1) { width: 27%; }
+  .portfolio-table th:nth-child(2),
+  .portfolio-table td:nth-child(2) {
+    width: 22%;
+    white-space: nowrap;
+    font-size: 10px;
   }
-  .portfolio-table .portfolio-dual-money {
-    min-width: 0;
-    align-items: flex-end;
-  }
-  .portfolio-table .portfolio-dual-money > span,
-  .portfolio-table .portfolio-dual-money small {
-    max-width: 100%;
-    white-space: normal;
-    overflow-wrap: anywhere;
+  .portfolio-table th:nth-child(3),
+  .portfolio-table td:nth-child(3) { width: 31%; }
+  .portfolio-table th:nth-child(4),
+  .portfolio-table td:nth-child(4) { width: 20%; }
+  .portfolio-asset-link small,
+  .portfolio-table td:nth-child(3) small {
+    font-size: 8px;
+    white-space: nowrap;
   }
   .portfolio-chart {
     min-height: 270px;

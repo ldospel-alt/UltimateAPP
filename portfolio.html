@@ -39,6 +39,10 @@
       <section class="card">
         <h2>Souhrn portfolia</h2>
         <div id="portfolioTotals" class="portfolio-summary-grid"></div>
+        <details class="portfolio-currency-details">
+          <summary>Rozpis podle měn</summary>
+          <div id="portfolioCurrencyTotals" class="portfolio-summary-grid"></div>
+        </details>
         <p id="portfolioFxStatus" class="portfolio-note"></p>
       </section>
 
@@ -51,7 +55,7 @@
         </div>
         <div class="saber-table-wrap portfolio-table-wrap">
           <table class="portfolio-table">
-            <thead><tr><th data-portfolio-sort="symbol">Aktivum</th><th data-portfolio-sort="quantity">Množství</th><th data-portfolio-sort="averagePrice">Průměr</th><th data-portfolio-sort="currentPrice">Cena</th><th data-portfolio-sort="value">Hodnota</th><th data-portfolio-sort="unrealized">Nereal. P/L</th><th data-portfolio-sort="realized">Real. P/L</th><th data-portfolio-sort="allocation">Alokace</th><th>Graf</th></tr></thead>
+            <thead><tr><th data-portfolio-sort="symbol">Aktivum</th><th data-portfolio-sort="quantity">Množství</th><th data-portfolio-sort="value">Hodnota</th><th data-portfolio-sort="profitPercent">Zisk / ztráta</th></tr></thead>
             <tbody id="portfolioPositions"></tbody>
           </table>
         </div>

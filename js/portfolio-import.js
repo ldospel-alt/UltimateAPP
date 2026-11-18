@@ -116,7 +116,13 @@ function portfolioNormalizeOperation(value, customMap = {}) {
 
 function portfolioMapCsvRows(parsed, profile, assets, existingTrades, operationMap = {}) {
   const assetBySymbol = new Map(assets.map((asset) => [asset.symbol.toLocaleLowerCase("cs"), asset]));
-  const existingHashes = new Set(existingTrades.map((trade) => trade.importHash || portfolioTradeHash(trade)));
+  const symbolByAssetId = new Map(assets.map((asset) => [asset.id, asset.symbol]));
+  const existingCounts = new Map();
+  existingTrades.forEach((trade) => {
+    const key = trade.dedupKey || portfolioTradeDedupKey(trade, trade.importSymbol || symbolByAssetId.get(trade.assetId) || trade.assetId);
+    existingCounts.set(key, (existingCounts.get(key) || 0) + 1);
+  });
+  const incomingCounts = new Map();
   const summary = { valid: [], duplicates: [], invalid: [] };
   parsed.rows.forEach((row, index) => {
     const symbol = String(row[profile.mapping.symbol] || "").trim();
@@ -144,12 +150,12 @@ function portfolioMapCsvRows(parsed, profile, assets, existingTrades, operationM
       note: "",
       source: `csv:${profile.name}`,
     };
-    trade.importHash = portfolioTradeHash(trade);
-    if (existingHashes.has(trade.importHash)) summary.duplicates.push(trade);
-    else {
-      existingHashes.add(trade.importHash);
-      summary.valid.push(trade);
-    }
+    trade.dedupKey = portfolioTradeDedupKey(trade, symbol);
+    trade.importHash = trade.dedupKey;
+    const incomingIndex = incomingCounts.get(trade.dedupKey) || 0;
+    incomingCounts.set(trade.dedupKey, incomingIndex + 1);
+    if (incomingIndex < (existingCounts.get(trade.dedupKey) || 0)) summary.duplicates.push(trade);
+    else summary.valid.push(trade);
   });
   return summary;
 }
