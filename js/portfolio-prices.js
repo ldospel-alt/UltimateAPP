@@ -11,21 +11,32 @@ async function portfolioFetchJson(url, options = {}) {
   return response.json();
 }
 
+function portfolioNormalizeHistory(history) {
+  const byDate = new Map();
+  (history || []).forEach((item) => {
+    if (!item?.time || !Number.isFinite(Number(item.close))) return;
+    byDate.set(item.time, item);
+  });
+  return Array.from(byDate.values()).sort((left, right) => left.time.localeCompare(right.time));
+}
+
 const PortfolioPriceAdapters = {
   coingecko: {
     async getQuote(asset, settings) {
       const id = asset.priceSymbol || asset.symbol.toLocaleLowerCase();
       const currency = (asset.currency || "usd").toLocaleLowerCase();
+      const currencies = Array.from(new Set([currency, "czk", "usd"]));
       const options = settings.coingecko ? { headers: { "x-cg-demo-api-key": settings.coingecko } } : {};
-      const data = await portfolioFetchJson(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(id)}&vs_currencies=${encodeURIComponent(currency)}`, options);
-      return Number(data[id]?.[currency]);
+      const data = await portfolioFetchJson(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(id)}&vs_currencies=${currencies.map(encodeURIComponent).join(",")}`, options);
+      const prices = Object.fromEntries(currencies.map((code) => [code.toUpperCase(), Number(data[id]?.[code])]).filter(([, value]) => Number.isFinite(value)));
+      return { price: prices[currency.toUpperCase()], prices };
     },
     async getHistory(asset, settings, days = 365) {
       const id = asset.priceSymbol || asset.symbol.toLocaleLowerCase();
       const currency = (asset.currency || "usd").toLocaleLowerCase();
       const options = settings.coingecko ? { headers: { "x-cg-demo-api-key": settings.coingecko } } : {};
       const data = await portfolioFetchJson(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(id)}/market_chart?vs_currency=${encodeURIComponent(currency)}&days=${days}&interval=daily`, options);
-      return (data.prices || []).map(([time, close]) => ({ time: new Date(time).toISOString().slice(0, 10), close }));
+      return portfolioNormalizeHistory((data.prices || []).map(([time, close]) => ({ time: new Date(time).toISOString().slice(0, 10), close })));
     },
   },
   twelveData: {
@@ -39,7 +50,7 @@ const PortfolioPriceAdapters = {
       if (!settings.twelveData) throw new Error("Chybí API klíč Twelve Data.");
       const data = await portfolioFetchJson(`https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(asset.priceSymbol || asset.symbol)}&interval=1day&outputsize=5000&apikey=${encodeURIComponent(settings.twelveData)}`);
       if (data.status === "error") throw new Error(data.message);
-      return (data.values || []).reverse().map((item) => ({ time: item.datetime, open: Number(item.open), high: Number(item.high), low: Number(item.low), close: Number(item.close) }));
+      return portfolioNormalizeHistory((data.values || []).map((item) => ({ time: item.datetime, open: Number(item.open), high: Number(item.high), low: Number(item.low), close: Number(item.close) })));
     },
   },
   finnhub: {
@@ -74,9 +85,15 @@ async function portfolioUpdatePrices(state, onProgress = () => {}) {
     const asset = state.assets[index];
     onProgress(asset, index + 1, state.assets.length);
     try {
-      const price = await portfolioAdapterFor(asset).getQuote(asset, settings);
+      const quote = await portfolioAdapterFor(asset).getQuote(asset, settings);
+      const price = typeof quote === "object" && quote !== null ? Number(quote.price) : Number(quote);
       if (!Number.isFinite(price)) throw new Error("API nevrátilo platnou cenu.");
-      next.priceCache[asset.id] = { ...(next.priceCache[asset.id] || {}), price, updatedAt: new Date().toISOString() };
+      next.priceCache[asset.id] = {
+        ...(next.priceCache[asset.id] || {}),
+        price,
+        prices: typeof quote === "object" && quote !== null ? quote.prices : { [String(asset.currency || "").toUpperCase()]: price },
+        updatedAt: new Date().toISOString(),
+      };
     } catch (error) {
       errors.push(`${asset.symbol} (${portfolioPriceSourceLabel(asset)}): ${error.message}`);
     }
@@ -86,8 +103,10 @@ async function portfolioUpdatePrices(state, onProgress = () => {}) {
 }
 
 async function portfolioUpdateFxRates(state) {
-  const currencies = Array.from(new Set((state.assets || [])
-    .map((asset) => String(asset.currency || "").toUpperCase())
+  const currencies = Array.from(new Set([
+    ...(state.assets || []).map((asset) => String(asset.currency || "").toUpperCase()),
+    ...(state.trades || []).map((trade) => String(trade.currency || "").toUpperCase()),
+  ]
     .filter((currency) => currency && currency !== "CZK")));
   const rates = { CZK: 1 };
   if (currencies.length) {
@@ -108,13 +127,34 @@ async function portfolioUpdateFxRates(state) {
   };
 }
 
-async function portfolioLoadHistory(state, asset) {
-  const cached = state.priceCache?.[asset.id]?.history;
+function portfolioHistoryRequest(state, asset, range, now = new Date()) {
+  const fixedDays = { "30": 30, "90": 90, "365": 365 };
+  let requestedDays = fixedDays[range] || 365;
+  if (range === "all") {
+    const firstTrade = (state.trades || []).filter((trade) => trade.assetId === asset.id && trade.date)
+      .map((trade) => trade.date).sort()[0];
+    requestedDays = firstTrade
+      ? Math.max(1, Math.ceil((now - new Date(`${firstTrade}T00:00:00Z`)) / 86400000) + 1)
+      : 365;
+  }
+  const source = asset.priceSource || (asset.type === "crypto" ? "coingecko" : "twelveData");
+  const limited = source === "coingecko" && !portfolioPriceSettings(state).coingecko && requestedDays > 365;
+  return { days: limited ? 365 : requestedDays, limited };
+}
+
+async function portfolioLoadHistory(state, asset, days = 365) {
+  const currency = String(asset.currency || "CZK").toUpperCase();
+  const cached = state.priceCache?.[asset.id]?.historyByCurrency?.[currency] ||
+    (currency === String(state.assets?.find((item) => item.id === asset.id)?.currency || "").toUpperCase()
+      ? state.priceCache?.[asset.id]?.history
+      : null);
   try {
-    const history = await portfolioAdapterFor(asset).getHistory(asset, portfolioPriceSettings(state));
+    const history = await portfolioAdapterFor(asset).getHistory(asset, portfolioPriceSettings(state), days);
     return { history, cached: false };
   } catch (error) {
     if (Array.isArray(cached) && cached.length) return { history: cached, cached: true, error: error.message };
+    const fallback = portfolioBuildTransactionHistory(state.trades || [], asset.id, currency, state.fxCache);
+    if (fallback.length) return { history: fallback, cached: false, fallback: true, error: error.message };
     throw error;
   }
 }

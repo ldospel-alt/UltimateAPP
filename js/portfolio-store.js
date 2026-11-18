@@ -12,6 +12,7 @@ let portfolioLockHandler = null;
 function portfolioDefaultState() {
   return {
     version: 1,
+    migrations: { cryptoQuoteCurrency: 1 },
     assets: [],
     trades: [],
     brokerProfiles: portfolioDefaultBrokerProfiles(),

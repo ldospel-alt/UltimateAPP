@@ -22,6 +22,10 @@ Běžné kryptoměnové symboly (například BTC, ETH, SOL, XRP nebo ADA) se př
 
 TradingView se nescrapuje. Odkaz na graf pouze otevře veřejný symbol. Oficiální widget Technical Analysis se načte až po souhlasu; TradingView pak obdrží symbol a technické údaje spojení, nikoli portfolio nebo obchody. Vedle něj aplikace počítá vlastní orientační rating z RSI14, MACD a SMA20/50/200.
 
+Graf vybraného aktiva je dostupný tlačítkem **Graf** přímo v tabulce pozic. Zobrazuje tržní historii, nákupní a prodejní markery, průměrnou nákupní cenu a volitelný přepočet do Kč. Pokud tržní historie není dostupná, použije aplikace alespoň vlastní ceny z transakcí. CoinGecko bez Demo API klíče omezuje rozsah „Vše“ na dostupných posledních 365 dní.
+
+Měna každé transakce se ukládá samostatně od měny kotace aktiva. Například BTC může být kotovaný v USD, zatímco nákupy z brokera zůstanou v CZK. Pozice a P/L se počítají konzistentně přes šifrovanou FX cache; CoinGecko ukládá aktuální cenu kryptoměny přímo v USD i CZK a graf lze mezi těmito měnami přepnout.
+
 ## CSV import
 
 1. Vyber CSV report brokera.

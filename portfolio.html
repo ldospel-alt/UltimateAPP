@@ -49,9 +49,9 @@
             <option value="">Všechny typy</option><option value="stock">Akcie</option><option value="etf">ETF</option><option value="crypto">Krypto</option>
           </select>
         </div>
-        <div class="saber-table-wrap">
+        <div class="saber-table-wrap portfolio-table-wrap">
           <table class="portfolio-table">
-            <thead><tr><th data-portfolio-sort="symbol">Aktivum</th><th data-portfolio-sort="quantity">Množství</th><th data-portfolio-sort="averagePrice">Průměr</th><th data-portfolio-sort="currentPrice">Cena</th><th data-portfolio-sort="value">Hodnota</th><th data-portfolio-sort="unrealized">Nereal. P/L</th><th data-portfolio-sort="realized">Real. P/L</th><th data-portfolio-sort="allocation">Alokace</th></tr></thead>
+            <thead><tr><th data-portfolio-sort="symbol">Aktivum</th><th data-portfolio-sort="quantity">Množství</th><th data-portfolio-sort="averagePrice">Průměr</th><th data-portfolio-sort="currentPrice">Cena</th><th data-portfolio-sort="value">Hodnota</th><th data-portfolio-sort="unrealized">Nereal. P/L</th><th data-portfolio-sort="realized">Real. P/L</th><th data-portfolio-sort="allocation">Alokace</th><th>Graf</th></tr></thead>
             <tbody id="portfolioPositions"></tbody>
           </table>
         </div>
@@ -170,9 +170,15 @@
 
       <section id="portfolioDetailCard" class="card" hidden>
         <div class="portfolio-section-title"><h2 id="portfolioDetailTitle">Detail aktiva</h2><button id="portfolioCloseDetailBtn" class="btn ghost small">Zavřít</button></div>
-        <div id="portfolioDetailPosition" class="portfolio-summary-grid portfolio-detail-position"></div>
-        <div class="field"><label for="portfolioChartType">Typ grafu</label><select id="portfolioChartType"><option value="line">Čárový</option><option value="candles">Svíčkový</option></select></div>
+        <div class="portfolio-chart-controls">
+          <div class="field"><label for="portfolioChartRange">Rozsah</label><select id="portfolioChartRange"><option value="30">1 měsíc</option><option value="90">3 měsíce</option><option value="365" selected>1 rok</option><option value="all">Vše od první transakce</option></select></div>
+          <div class="field"><label for="portfolioChartType">Typ grafu</label><select id="portfolioChartType"><option value="line">Čárový</option><option value="candles">Svíčkový</option></select></div>
+          <div class="field"><label for="portfolioChartCurrency">Měna grafu</label><select id="portfolioChartCurrency"><option value="asset">Měna aktiva</option><option value="czk">Kč (aktuální kurz)</option></select></div>
+        </div>
+        <p id="portfolioChartStatus" class="portfolio-note"></p>
         <div id="portfolioChart" class="portfolio-chart"></div>
+        <div id="portfolioChartLegend" class="portfolio-chart-legend"></div>
+        <div id="portfolioDetailPosition" class="portfolio-summary-grid portfolio-detail-position"></div>
         <p id="portfolioOwnRating" class="portfolio-note"></p>
         <a id="portfolioTradingViewLink" class="btn secondary block" target="_blank" rel="noopener">Otevřít na TradingView</a>
         <button id="portfolioTradingViewConsentBtn" class="btn ghost block" type="button">Zobrazit hodnocení TradingView</button>

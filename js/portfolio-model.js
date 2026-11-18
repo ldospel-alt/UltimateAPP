@@ -30,54 +30,98 @@ function portfolioCryptoMetadata(symbol) {
 
 function portfolioMigrateKnownCryptoAssets(state) {
   let changed = false;
+  const resetPriceCacheIds = [];
+  const migrateQuoteCurrency = Number(state.migrations?.cryptoQuoteCurrency || 0) < 1;
   const assets = (state.assets || []).map((asset) => {
     const crypto = portfolioCryptoMetadata(asset.symbol);
     if (!crypto) return asset;
     const genericPriceSymbol = !asset.priceSymbol || String(asset.priceSymbol).toUpperCase() === crypto.symbol;
     const needsMigration = asset.type !== "crypto" || (asset.priceSource === "twelveData" && genericPriceSymbol);
-    if (!needsMigration) return asset;
+    const needsQuoteCurrency = migrateQuoteCurrency && String(asset.currency).toUpperCase() === "CZK";
+    if (!needsMigration && !needsQuoteCurrency) return asset;
     changed = true;
-    return { ...asset, type: "crypto", priceSource: "coingecko", priceSymbol: crypto.priceSymbol };
+    resetPriceCacheIds.push(asset.id);
+    return {
+      ...asset,
+      type: "crypto",
+      currency: needsQuoteCurrency ? "USD" : asset.currency,
+      priceSource: "coingecko",
+      priceSymbol: crypto.priceSymbol,
+    };
   });
-  return { state: changed ? { ...state, assets } : state, changed };
+  if (migrateQuoteCurrency) changed = true;
+  const priceCache = { ...(state.priceCache || {}) };
+  resetPriceCacheIds.forEach((id) => delete priceCache[id]);
+  return {
+    state: changed ? { ...state, assets, priceCache, migrations: { ...(state.migrations || {}), cryptoQuoteCurrency: 1 } } : state,
+    changed,
+  };
 }
 
-function portfolioCalculatePositions(assets, trades, prices = {}) {
+function portfolioCalculatePositions(assets, trades, prices = {}, fxCache = {}) {
   const positions = new Map(assets.map((asset) => [asset.id, {
-    asset, quantity: 0, cost: 0, averagePrice: 0, realized: 0, dividends: 0, fees: 0,
+    asset, quantity: 0, costCzk: 0, averagePriceCzk: 0, realizedCzk: 0, dividendsCzk: 0, feesCzk: 0, currencyErrors: [],
   }]));
   trades.slice().sort((a, b) => String(a.date).localeCompare(String(b.date))).forEach((trade) => {
     const position = positions.get(trade.assetId);
     if (!position) return;
     const qty = Number(trade.qty || 0);
-    const price = Number(trade.price || 0);
-    const fee = Number(trade.fee || 0);
+    const tradeCurrency = trade.currency || position.asset.currency || "CZK";
+    const priceCzk = portfolioConvertCurrency(Number(trade.price || 0), tradeCurrency, "CZK", fxCache);
+    const feeCzk = portfolioConvertCurrency(Number(trade.fee || 0), tradeCurrency, "CZK", fxCache);
+    if (priceCzk === null || feeCzk === null) {
+      if (!position.currencyErrors.includes(tradeCurrency)) position.currencyErrors.push(tradeCurrency);
+      return;
+    }
     if (trade.type === "buy") {
-      position.cost += qty * price + fee;
+      position.costCzk += qty * priceCzk + feeCzk;
       position.quantity += qty;
-      position.averagePrice = position.quantity ? position.cost / position.quantity : 0;
+      position.averagePriceCzk = position.quantity ? position.costCzk / position.quantity : 0;
     } else if (trade.type === "sell") {
       const sold = Math.min(qty, position.quantity);
-      position.realized += sold * price - sold * position.averagePrice - fee;
+      position.realizedCzk += sold * priceCzk - sold * position.averagePriceCzk - feeCzk;
       position.quantity -= sold;
-      position.cost = position.quantity * position.averagePrice;
-      if (!position.quantity) position.averagePrice = 0;
+      position.costCzk = position.quantity * position.averagePriceCzk;
+      if (!position.quantity) position.averagePriceCzk = 0;
     } else if (trade.type === "dividend") {
-      position.dividends += Number(trade.price || 0);
+      position.dividendsCzk += priceCzk;
     } else if (trade.type === "fee") {
-      position.fees += fee || price;
-      position.realized -= fee || price;
+      const amountCzk = feeCzk || priceCzk;
+      position.feesCzk += amountCzk;
+      position.realizedCzk -= amountCzk;
     }
   });
   return Array.from(positions.values()).map((position) => {
-    const quote = prices[position.asset.id]?.price;
-    const currentPrice = Number.isFinite(Number(quote)) ? Number(quote) : null;
+    const quote = prices[position.asset.id] || {};
+    const assetCurrency = String(position.asset.currency || "CZK").toUpperCase();
+    const quotedAssetPrice = quote.prices?.[assetCurrency] ?? quote.price;
+    const quotedCzkPrice = quote.prices?.CZK;
+    let currentPrice = Number.isFinite(Number(quotedAssetPrice)) ? Number(quotedAssetPrice) : null;
+    let currentPriceCzk = Number.isFinite(Number(quotedCzkPrice)) ? Number(quotedCzkPrice) : null;
+    if (currentPriceCzk === null && currentPrice !== null) currentPriceCzk = portfolioConvertCurrency(currentPrice, assetCurrency, "CZK", fxCache);
+    if (currentPrice === null && currentPriceCzk !== null) currentPrice = portfolioConvertCurrency(currentPriceCzk, "CZK", assetCurrency, fxCache);
+    const averagePrice = portfolioConvertCurrency(position.averagePriceCzk, "CZK", assetCurrency, fxCache);
+    const cost = portfolioConvertCurrency(position.costCzk, "CZK", assetCurrency, fxCache);
+    const realized = portfolioConvertCurrency(position.realizedCzk, "CZK", assetCurrency, fxCache);
+    const dividends = portfolioConvertCurrency(position.dividendsCzk, "CZK", assetCurrency, fxCache);
+    const fees = portfolioConvertCurrency(position.feesCzk, "CZK", assetCurrency, fxCache);
+    const valueCzk = currentPriceCzk === null ? null : position.quantity * currentPriceCzk;
     const value = currentPrice === null ? null : position.quantity * currentPrice;
+    const unrealizedCzk = valueCzk === null ? null : valueCzk - position.costCzk;
+    const unrealized = portfolioConvertCurrency(unrealizedCzk, "CZK", assetCurrency, fxCache);
     return {
       ...position,
+      cost,
+      averagePrice,
+      realized,
+      dividends,
+      fees,
       currentPrice,
+      currentPriceCzk,
       value,
-      unrealized: value === null ? null : value - position.cost,
+      valueCzk,
+      unrealized,
+      unrealizedCzk,
     };
   });
 }
@@ -102,17 +146,32 @@ function portfolioRateToCzk(currency, fxCache) {
   return Number.isFinite(rate) && rate > 0 ? rate : null;
 }
 
-function portfolioConvertToCzk(value, currency, fxCache) {
+function portfolioConvertCurrency(value, fromCurrency, toCurrency, fxCache) {
   if (value === null || value === undefined || !Number.isFinite(Number(value))) return null;
-  const rate = portfolioRateToCzk(currency, fxCache);
-  return rate === null ? null : Number(value) * rate;
+  const from = String(fromCurrency || "").toUpperCase();
+  const to = String(toCurrency || "").toUpperCase();
+  if (!from || !to) return null;
+  if (from === to) return Number(value);
+  const fromRate = portfolioRateToCzk(from, fxCache);
+  const toRate = portfolioRateToCzk(to, fxCache);
+  return fromRate === null || toRate === null ? null : Number(value) * fromRate / toRate;
+}
+
+function portfolioConvertToCzk(value, currency, fxCache) {
+  return portfolioConvertCurrency(value, currency, "CZK", fxCache);
 }
 
 function portfolioCzkSummary(positions, fxCache) {
   let value = 0;
   const missingCurrencies = new Set();
   const missingPrices = new Set();
-  positions.filter((position) => position.quantity > 0).forEach((position) => {
+  positions.forEach((position) => {
+    position.currencyErrors.forEach((currency) => missingCurrencies.add(currency));
+    if (position.quantity <= 0) return;
+    if (position.valueCzk !== null && Number.isFinite(Number(position.valueCzk))) {
+      value += Number(position.valueCzk);
+      return;
+    }
     if (position.value === null) {
       missingPrices.add(position.asset.symbol);
       return;
@@ -130,6 +189,66 @@ function portfolioCzkSummary(positions, fxCache) {
     missingCurrencies: Array.from(missingCurrencies).sort(),
     missingPrices: Array.from(missingPrices).sort(),
   };
+}
+
+function portfolioBuildTransactionHistory(trades, assetId, currency = null, fxCache = {}) {
+  const grouped = new Map();
+  trades.filter((trade) => trade.assetId === assetId && ["buy", "sell"].includes(trade.type) && trade.date)
+    .forEach((trade) => {
+      const originalPrice = Number(trade.price);
+      const price = currency
+        ? portfolioConvertCurrency(originalPrice, trade.currency || currency, currency, fxCache)
+        : originalPrice;
+      const qty = Math.abs(Number(trade.qty || 0));
+      if (!Number.isFinite(price)) return;
+      const current = grouped.get(trade.date) || { weightedPrice: 0, quantity: 0, lastPrice: price };
+      current.weightedPrice += price * (qty || 1);
+      current.quantity += qty || 1;
+      current.lastPrice = price;
+      grouped.set(trade.date, current);
+    });
+  return Array.from(grouped.entries()).sort(([left], [right]) => left.localeCompare(right)).map(([time, item]) => {
+    const close = item.quantity ? item.weightedPrice / item.quantity : item.lastPrice;
+    return { time, open: close, high: close, low: close, close };
+  });
+}
+
+function portfolioBuildTradeMarkers(trades, assetId, availableDates) {
+  const dates = Array.from(new Set(availableDates)).sort();
+  if (!dates.length) return [];
+  return trades.filter((trade) =>
+    trade.assetId === assetId &&
+    ["buy", "sell"].includes(trade.type) &&
+    trade.date >= dates[0] &&
+    trade.date <= dates.at(-1))
+    .map((trade) => ({
+      time: dates.find((date) => date >= trade.date) || dates.at(-1),
+      originalDate: trade.date,
+      type: trade.type,
+      qty: Number(trade.qty || 0),
+      price: Number(trade.price || 0),
+      currency: trade.currency || "",
+    }))
+    .filter((marker) => marker.time)
+    .sort((left, right) => left.time.localeCompare(right.time) || left.originalDate.localeCompare(right.originalDate));
+}
+
+function portfolioFilterHistoryRange(history, range, trades, assetId, now = new Date()) {
+  if (!Array.isArray(history) || !history.length) return [];
+  const latestHistoryDate = new Date(`${history.at(-1).time}T00:00:00Z`);
+  const anchor = latestHistoryDate > now ? now : latestHistoryDate;
+  let cutoff = null;
+  if (range === "30" || range === "90" || range === "365") {
+    cutoff = new Date(anchor);
+    cutoff.setUTCDate(cutoff.getUTCDate() - Number(range));
+  } else if (range === "all") {
+    const firstTrade = trades.filter((trade) => trade.assetId === assetId && trade.date)
+      .map((trade) => trade.date).sort()[0];
+    if (firstTrade) cutoff = new Date(`${firstTrade}T00:00:00Z`);
+  }
+  if (!cutoff) return history.slice();
+  const cutoffValue = cutoff.toISOString().slice(0, 10);
+  return history.filter((item) => item.time >= cutoffValue);
 }
 
 function portfolioHeldQuantity(assetId, trades) {

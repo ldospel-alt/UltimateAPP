@@ -678,6 +678,121 @@ input, select, textarea, button {
   min-height: 320px;
   margin: 12px 0;
 }
+.portfolio-chart-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 10px;
+}
+.portfolio-chart-controls .field {
+  margin-bottom: 0;
+}
+.portfolio-chart-legend {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 14px;
+}
+.portfolio-chart-trade {
+  padding: 8px 10px;
+  border-left: 3px solid var(--gray);
+  border-radius: 7px;
+  background: #171a22;
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.portfolio-chart-trade-buy {
+  border-left-color: var(--green);
+}
+.portfolio-chart-trade-sell {
+  border-left-color: var(--red);
+}
+@media (max-width: 480px) {
+  .portfolio-summary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .portfolio-summary-grid .stat-box {
+    min-width: 0;
+    padding: 11px 10px;
+  }
+  .portfolio-summary-grid .stat-box .value {
+    max-width: 100%;
+    font-size: 18px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+  .portfolio-summary-grid .portfolio-dual-money {
+    width: 100%;
+    align-items: center;
+  }
+  .portfolio-table-wrap {
+    overflow: visible;
+  }
+  .portfolio-table {
+    display: block;
+    min-width: 0;
+  }
+  .portfolio-table thead {
+    display: none;
+  }
+  .portfolio-table tbody {
+    display: grid;
+    gap: 10px;
+  }
+  .portfolio-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0;
+    padding: 10px;
+    border: 1px solid #333849;
+    border-radius: 12px;
+    background: #171a22;
+  }
+  .portfolio-table td,
+  .portfolio-table td:first-child {
+    display: flex;
+    min-width: 0;
+    padding: 8px 6px;
+    border-bottom: 1px solid #292e3a;
+    text-align: right;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .portfolio-table td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    color: var(--text-dim);
+    font-size: 11px;
+    font-weight: 600;
+    text-align: left;
+  }
+  .portfolio-table td:first-child,
+  .portfolio-table td:last-child {
+    grid-column: 1 / -1;
+  }
+  .portfolio-table td:last-child {
+    border-bottom: 0;
+  }
+  .portfolio-table .portfolio-dual-money {
+    min-width: 0;
+    align-items: flex-end;
+  }
+  .portfolio-table .portfolio-dual-money > span,
+  .portfolio-table .portfolio-dual-money small {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .portfolio-chart {
+    min-height: 270px;
+    margin-top: 8px;
+  }
+  .portfolio-chart-controls {
+    grid-template-columns: 1fr;
+  }
+}
 .saber-choreo-list {
   display: grid;
   gap: 8px;
