@@ -15,7 +15,7 @@ function portfolioDefaultState() {
     assets: [],
     trades: [],
     brokerProfiles: portfolioDefaultBrokerProfiles(),
-    settings: { baseCurrency: "CZK", hideAmounts: false, apiKeys: { twelveData: "", finnhub: "" } },
+    settings: { baseCurrency: "CZK", hideAmounts: false, tradingViewConsent: false, apiKeys: { twelveData: "", finnhub: "", coingecko: "" } },
     priceCache: {},
   };
 }

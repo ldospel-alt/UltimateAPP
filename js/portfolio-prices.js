@@ -13,16 +13,18 @@ async function portfolioFetchJson(url, options = {}) {
 
 const PortfolioPriceAdapters = {
   coingecko: {
-    async getQuote(asset) {
+    async getQuote(asset, settings) {
       const id = asset.priceSymbol || asset.symbol.toLocaleLowerCase();
       const currency = (asset.currency || "usd").toLocaleLowerCase();
-      const data = await portfolioFetchJson(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(id)}&vs_currencies=${encodeURIComponent(currency)}`);
+      const options = settings.coingecko ? { headers: { "x-cg-demo-api-key": settings.coingecko } } : {};
+      const data = await portfolioFetchJson(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(id)}&vs_currencies=${encodeURIComponent(currency)}`, options);
       return Number(data[id]?.[currency]);
     },
     async getHistory(asset, settings, days = 365) {
       const id = asset.priceSymbol || asset.symbol.toLocaleLowerCase();
       const currency = (asset.currency || "usd").toLocaleLowerCase();
-      const data = await portfolioFetchJson(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(id)}/market_chart?vs_currency=${encodeURIComponent(currency)}&days=${days}&interval=daily`);
+      const options = settings.coingecko ? { headers: { "x-cg-demo-api-key": settings.coingecko } } : {};
+      const data = await portfolioFetchJson(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(id)}/market_chart?vs_currency=${encodeURIComponent(currency)}&days=${days}&interval=daily`, options);
       return (data.prices || []).map(([time, close]) => ({ time: new Date(time).toISOString().slice(0, 10), close }));
     },
   },

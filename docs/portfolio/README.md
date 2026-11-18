@@ -12,7 +12,7 @@ Portfolio ukládá investiční data pouze do IndexedDB v tomto zařízení. Cel
 
 ## Ceny
 
-- Krypto: CoinGecko veřejné API (obvykle bez klíče).
+- Krypto: CoinGecko veřejné API. Volitelný Demo API klíč lze vložit v nastavení kvůli stabilnějším limitům.
 - Akcie/ETF: Twelve Data nebo Finnhub. Klíč získáš na webu poskytovatele a vložíš v nastavení Portfolia; ukládá se uvnitř šifrovaného trezoru.
 - Bez internetu se používá poslední šifrovaná cache. Bez kurzu měn se součty zobrazují odděleně podle měny.
 - Free API mají nízké limity a mohou vracet zpožděné ceny. Aplikace požadavky řadí do fronty, ale negarantuje burzovní real-time data.

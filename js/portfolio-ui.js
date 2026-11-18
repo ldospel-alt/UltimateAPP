@@ -5,16 +5,49 @@ let portfolioCsvImport = null;
 let portfolioDetailAssetId = null;
 
 function portfolioUiStatus(message, error = false) {
-  const element = document.getElementById("portfolioStatus");
-  element.textContent = message;
-  element.style.color = error ? "var(--red)" : "";
+  ["portfolioStatus", "portfolioSettingsStatus"].forEach((id) => {
+    const element = document.getElementById(id);
+    element.textContent = message;
+    element.style.color = error ? "var(--red)" : "";
+  });
 }
 
 function portfolioShowLocked(message = "") {
   document.getElementById("portfolioApp").hidden = true;
   document.getElementById("portfolioUnlockCard").hidden = false;
-  document.getElementById("portfolioLockBtn").hidden = true;
+  document.getElementById("portfolioSettingsBtn").hidden = true;
   document.getElementById("portfolioUnlockStatus").textContent = message;
+}
+
+function portfolioShowView(view) {
+  document.getElementById("portfolioOverviewView").hidden = view !== "overview";
+  document.getElementById("portfolioTransactionsView").hidden = view !== "transactions";
+  document.getElementById("portfolioSettingsView").hidden = view !== "settings";
+  document.getElementById("portfolioDetailCard").hidden = true;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function portfolioPopulateImportProfiles() {
+  const state = portfolioGetState();
+  const select = document.getElementById("portfolioImportProfile");
+  const selectedId = select.value || state.brokerProfiles[0]?.id || "";
+  const newProfile = document.createElement("option");
+  newProfile.value = "";
+  newProfile.textContent = "Nový profil…";
+  select.replaceChildren(newProfile, ...state.brokerProfiles.map((profile) => {
+    const option = document.createElement("option");
+    option.value = profile.id;
+    option.textContent = profile.name;
+    return option;
+  }));
+  select.value = state.brokerProfiles.some((profile) => profile.id === selectedId) ? selectedId : "";
+  const profile = state.brokerProfiles.find((item) => item.id === select.value);
+  document.getElementById("portfolioImportProfileName").value = profile?.name || "";
+  document.getElementById("portfolioOperationMap").value = Object.entries(profile?.operationMap || {}).map(([alias, type]) => `${alias}=${type}`).join("\n");
+  if (portfolioCsvData && profile) {
+    portfolioBuildCsvMapping(portfolioCsvData.headers, profile);
+    portfolioEvaluateCsv();
+  }
 }
 
 function portfolioFormatMoney(value, currency, hide = portfolioGetState().settings.hideAmounts) {
@@ -55,6 +88,8 @@ function portfolioRender() {
   document.getElementById("portfolioHideAmounts").checked = state.settings.hideAmounts;
   document.getElementById("portfolioTwelveDataKey").value = state.settings.apiKeys?.twelveData || "";
   document.getElementById("portfolioFinnhubKey").value = state.settings.apiKeys?.finnhub || "";
+  document.getElementById("portfolioCoinGeckoKey").value = state.settings.apiKeys?.coingecko || "";
+  document.getElementById("portfolioTradingViewConsent").checked = Boolean(state.settings.tradingViewConsent);
   portfolioPopulateAssets();
   const positions = portfolioPositionRows();
   const totals = portfolioTotalsByCurrency(portfolioCalculatePositions(state.assets, state.trades, state.priceCache));
@@ -121,7 +156,7 @@ function portfolioRenderTrades() {
 
 function portfolioResetTradeForm() {
   portfolioEditingTradeId = null;
-  document.getElementById("portfolioTradeTitle").textContent = "Přidat obchod";
+  document.getElementById("portfolioTradeTitle").textContent = "Přidat transakci";
   document.getElementById("portfolioTradeDate").value = todayInputValue();
   document.getElementById("portfolioTradeType").value = "buy";
   ["portfolioTradeQty", "portfolioTradePrice"].forEach((id) => { document.getElementById(id).value = ""; });
@@ -159,17 +194,17 @@ async function portfolioSaveTrade() {
   if (index >= 0) state.trades[index] = trade;
   else state.trades.push(trade);
   await portfolioSaveState(state);
-  document.getElementById("portfolioTradeCard").hidden = true;
   portfolioResetTradeForm();
   portfolioRender();
+  portfolioShowView("overview");
 }
 
 function portfolioEditTrade(id) {
   const trade = portfolioGetState().trades.find((item) => item.id === id);
   if (!trade) return;
   portfolioEditingTradeId = id;
-  document.getElementById("portfolioTradeCard").hidden = false;
-  document.getElementById("portfolioTradeTitle").textContent = "Upravit obchod";
+  portfolioShowView("transactions");
+  document.getElementById("portfolioTradeTitle").textContent = "Upravit transakci";
   document.getElementById("portfolioAsset").value = trade.assetId;
   document.getElementById("portfolioTradeType").value = trade.type;
   document.getElementById("portfolioTradeDate").value = trade.date;
@@ -181,7 +216,7 @@ function portfolioEditTrade(id) {
 }
 
 async function portfolioDeleteTrade(id) {
-  if (!confirm("Opravdu smazat obchod?")) return;
+  if (!confirm("Opravdu smazat transakci?")) return;
   const state = portfolioGetState();
   state.trades = state.trades.filter((trade) => trade.id !== id);
   await portfolioSaveState(state);
@@ -249,6 +284,7 @@ async function portfolioSaveImportProfile() {
   else state.brokerProfiles.push(profile);
   await portfolioSaveState(state);
   portfolioUiStatus("Profil mapování byl uložen šifrovaně.");
+  portfolioPopulateImportProfiles();
 }
 
 async function portfolioConfirmCsvImport() {
@@ -267,8 +303,15 @@ async function portfolioConfirmCsvImport() {
   });
   state.trades.push(...portfolioCsvImport.valid);
   await portfolioSaveState(state);
-  document.getElementById("portfolioImportCard").hidden = true;
+  portfolioCsvData = null;
+  portfolioCsvImport = null;
+  document.getElementById("portfolioCsvFile").value = "";
+  document.getElementById("portfolioCsvMapping").replaceChildren();
+  document.getElementById("portfolioCsvPreview").textContent = "";
+  document.getElementById("portfolioCsvSummary").textContent = "";
+  document.getElementById("portfolioConfirmImportBtn").disabled = true;
   portfolioRender();
+  portfolioUiStatus("CSV bylo importováno do šifrovaného portfolia.");
 }
 
 async function portfolioShowAssetDetail(assetId) {
@@ -276,10 +319,13 @@ async function portfolioShowAssetDetail(assetId) {
   const asset = state.assets.find((item) => item.id === assetId);
   if (!asset) return;
   portfolioDetailAssetId = assetId;
+  portfolioShowView("overview");
   const card = document.getElementById("portfolioDetailCard");
   card.hidden = false;
   document.getElementById("portfolioDetailTitle").textContent = `${asset.symbol} – ${asset.name}`;
   document.getElementById("portfolioTradingViewLink").href = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(asset.tvSymbol || asset.symbol)}`;
+  document.getElementById("portfolioTradingViewWidget").replaceChildren();
+  document.getElementById("portfolioTradingViewConsentBtn").hidden = Boolean(state.settings.tradingViewConsent);
   try {
     const result = await portfolioLoadHistory(state, asset);
     state.priceCache[asset.id] = { ...(state.priceCache[asset.id] || {}), history: result.history, historyUpdatedAt: new Date().toISOString() };
@@ -290,6 +336,7 @@ async function portfolioShowAssetDetail(assetId) {
   } catch (error) {
     document.getElementById("portfolioOwnRating").textContent = error.message;
   }
+  if (state.settings.tradingViewConsent) portfolioLoadTradingViewWidget();
   card.scrollIntoView({ behavior: "smooth" });
 }
 
@@ -347,9 +394,10 @@ async function portfolioHandleUnlock() {
     } else await portfolioUnlock(password);
     document.getElementById("portfolioUnlockCard").hidden = true;
     document.getElementById("portfolioApp").hidden = false;
-    document.getElementById("portfolioLockBtn").hidden = false;
+    document.getElementById("portfolioSettingsBtn").hidden = false;
     portfolioResetTradeForm();
     portfolioRender();
+    portfolioShowView("overview");
   } catch (error) {
     document.getElementById("portfolioUnlockStatus").textContent = error.message;
   }
@@ -365,22 +413,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   ["pointerdown", "keydown", "touchstart"].forEach((event) => document.addEventListener(event, portfolioTouch, { passive: true }));
   document.getElementById("portfolioUnlockBtn").addEventListener("click", portfolioHandleUnlock);
   document.getElementById("portfolioLockBtn").addEventListener("click", () => portfolioLock("Portfolio bylo zamčeno."));
-  document.getElementById("portfolioAddTradeBtn").addEventListener("click", () => { portfolioResetTradeForm(); document.getElementById("portfolioTradeCard").hidden = false; });
-  document.getElementById("portfolioImportCsvBtn").addEventListener("click", () => {
-    const state = portfolioGetState();
-    const select = document.getElementById("portfolioImportProfile");
-    const newProfile = document.createElement("option");
-    newProfile.value = "";
-    newProfile.textContent = "Nový profil…";
-    select.replaceChildren(newProfile, ...state.brokerProfiles.map((profile) => { const option = document.createElement("option"); option.value = profile.id; option.textContent = profile.name; return option; }));
-    select.value = state.brokerProfiles[0]?.id || "";
-    document.getElementById("portfolioImportProfileName").value = state.brokerProfiles[0]?.name || "";
-    document.getElementById("portfolioOperationMap").value = Object.entries(state.brokerProfiles[0]?.operationMap || {}).map(([alias, type]) => `${alias}=${type}`).join("\n");
-    document.getElementById("portfolioImportCard").hidden = false;
+  document.getElementById("portfolioSettingsBtn").addEventListener("click", () => {
+    portfolioPopulateImportProfiles();
+    portfolioShowView("settings");
+  });
+  document.getElementById("portfolioCloseSettingsBtn").addEventListener("click", () => portfolioShowView("overview"));
+  document.getElementById("portfolioCloseTransactionsBtn").addEventListener("click", () => portfolioShowView("overview"));
+  document.getElementById("portfolioAddTradeBtn").addEventListener("click", () => {
+    portfolioResetTradeForm();
+    portfolioShowView("transactions");
   });
   document.getElementById("portfolioNewAssetBtn").addEventListener("click", () => { document.getElementById("portfolioNewAssetFields").hidden = !document.getElementById("portfolioNewAssetFields").hidden; });
   document.getElementById("portfolioSaveTradeBtn").addEventListener("click", portfolioSaveTrade);
-  document.getElementById("portfolioCancelTradeBtn").addEventListener("click", () => { document.getElementById("portfolioTradeCard").hidden = true; });
+  document.getElementById("portfolioCancelTradeBtn").addEventListener("click", () => portfolioShowView("overview"));
   document.getElementById("portfolioRefreshPricesBtn").addEventListener("click", portfolioRefreshPrices);
   document.getElementById("portfolioTypeFilter").addEventListener("change", portfolioRender);
   document.getElementById("portfolioHideAmounts").addEventListener("change", async (event) => { const state = portfolioGetState(); state.settings.hideAmounts = event.target.checked; await portfolioSaveState(state); portfolioRender(); });
@@ -410,7 +455,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("portfolioOperationMap").addEventListener("input", portfolioEvaluateCsv);
   document.getElementById("portfolioSaveImportProfileBtn").addEventListener("click", portfolioSaveImportProfile);
   document.getElementById("portfolioConfirmImportBtn").addEventListener("click", portfolioConfirmCsvImport);
-  document.getElementById("portfolioSaveSettingsBtn").addEventListener("click", async () => { const state = portfolioGetState(); state.settings.apiKeys = { twelveData: document.getElementById("portfolioTwelveDataKey").value.trim(), finnhub: document.getElementById("portfolioFinnhubKey").value.trim() }; await portfolioSaveState(state); portfolioUiStatus("API klíče byly uloženy šifrovaně."); });
+  document.getElementById("portfolioSaveSettingsBtn").addEventListener("click", async () => {
+    const state = portfolioGetState();
+    state.settings.apiKeys = {
+      twelveData: document.getElementById("portfolioTwelveDataKey").value.trim(),
+      finnhub: document.getElementById("portfolioFinnhubKey").value.trim(),
+      coingecko: document.getElementById("portfolioCoinGeckoKey").value.trim(),
+    };
+    state.settings.tradingViewConsent = document.getElementById("portfolioTradingViewConsent").checked;
+    await portfolioSaveState(state);
+    if (!state.settings.tradingViewConsent) document.getElementById("portfolioTradingViewWidget").replaceChildren();
+    portfolioUiStatus("API klíče a souhlas TradingView byly uloženy šifrovaně.");
+  });
   document.getElementById("portfolioChangePasswordBtn").addEventListener("click", async () => { try { await portfolioChangePassword(document.getElementById("portfolioOldPassword").value, document.getElementById("portfolioNewPassword").value); portfolioUiStatus("Heslo bylo změněno."); } catch (error) { portfolioUiStatus(error.message, true); } });
   document.getElementById("portfolioExportBtn").addEventListener("click", async () => {
     const password = prompt("Heslo pro zašifrovanou zálohu:");
@@ -432,7 +488,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!file) return;
     const password = prompt("Heslo zálohy:");
     if (!password) return;
-    const merge = confirm("OK = sloučit se současnými daty. Zrušit = přepsat současná data.");
+    const merge = document.getElementById("portfolioBackupMode").value === "merge";
     try {
       await portfolioImportEncrypted(password, JSON.parse(await file.text()), merge);
       portfolioRender();

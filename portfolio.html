@@ -13,7 +13,7 @@
   <div class="topbar">
     <a class="back-btn" href="index.html">←</a>
     <h1>📈 Portfolio</h1>
-    <button id="portfolioLockBtn" class="btn ghost small" type="button" hidden>Zamknout</button>
+    <button id="portfolioSettingsBtn" class="portfolio-settings-button" type="button" aria-label="Otevřít nastavení portfolia" title="Nastavení" hidden>⚙</button>
   </div>
 
   <main class="container">
@@ -27,10 +27,10 @@
     </section>
 
     <div id="portfolioApp" hidden>
+      <div id="portfolioOverviewView">
       <section class="card portfolio-toolbar">
         <button id="portfolioRefreshPricesBtn" class="btn secondary" type="button">Aktualizovat ceny</button>
-        <button id="portfolioAddTradeBtn" class="btn secondary" type="button">Přidat obchod</button>
-        <button id="portfolioImportCsvBtn" class="btn secondary" type="button">Import CSV</button>
+        <button id="portfolioAddTradeBtn" class="btn secondary" type="button">Přidat transakci</button>
         <label class="portfolio-hide-toggle"><input id="portfolioHideAmounts" type="checkbox" /> Skrýt částky</label>
         <p id="portfolioStatus" class="portfolio-note"></p>
       </section>
@@ -55,9 +55,17 @@
         </div>
         <p id="portfolioEmptyPositions" class="empty-hint">Zatím nejsou žádné pozice.</p>
       </section>
+      </div>
 
-      <section id="portfolioTradeCard" class="card" hidden>
-        <h2 id="portfolioTradeTitle">Přidat obchod</h2>
+      <div id="portfolioTransactionsView" hidden>
+      <section class="card">
+        <div class="portfolio-section-title">
+          <h2>Transakce</h2>
+          <button id="portfolioCloseTransactionsBtn" class="btn ghost small" type="button">Zpět na přehled</button>
+        </div>
+      </section>
+      <section id="portfolioTradeCard" class="card">
+        <h2 id="portfolioTradeTitle">Přidat transakci</h2>
         <div class="field"><label for="portfolioAsset">Aktivum</label><select id="portfolioAsset"></select></div>
         <button id="portfolioNewAssetBtn" class="btn ghost small" type="button">Založit nové aktivum</button>
         <div id="portfolioNewAssetFields" hidden>
@@ -76,17 +84,28 @@
         <div class="field"><label for="portfolioTradeFee">Poplatek</label><input id="portfolioTradeFee" type="number" step="any" value="0" /></div>
         <div class="field"><label for="portfolioTradeCurrency">Měna</label><input id="portfolioTradeCurrency" value="USD" /></div>
         <div class="field"><label for="portfolioTradeNote">Poznámka</label><textarea id="portfolioTradeNote"></textarea></div>
-        <button id="portfolioSaveTradeBtn" class="btn block" type="button">Uložit obchod</button>
+        <button id="portfolioSaveTradeBtn" class="btn block" type="button">Uložit transakci</button>
         <button id="portfolioCancelTradeBtn" class="btn ghost block" type="button">Zrušit</button>
       </section>
 
       <section class="card">
-        <h2>Historie obchodů</h2>
+        <h2>Historie transakcí</h2>
         <div id="portfolioTrades"></div>
       </section>
+      </div>
 
-      <section id="portfolioImportCard" class="card" hidden>
+      <div id="portfolioSettingsView" hidden>
+      <section class="card">
+        <div class="portfolio-section-title">
+          <h2>⚙ Nastavení</h2>
+          <button id="portfolioCloseSettingsBtn" class="btn ghost small" type="button">Zpět na přehled</button>
+        </div>
+        <p id="portfolioSettingsStatus" class="portfolio-note"></p>
+      </section>
+
+      <section id="portfolioImportCard" class="card">
         <h2>Import CSV</h2>
+        <p class="portfolio-note">Importuj historii od brokera. Před potvrzením zkontroluj náhled, mapování sloupců a počet nových či duplicitních řádků.</p>
         <input id="portfolioCsvFile" type="file" accept=".csv,text/csv" />
         <div class="field"><label for="portfolioImportProfile">Profil mapování</label><select id="portfolioImportProfile"></select></div>
         <div class="field"><label for="portfolioImportProfileName">Název profilu</label><input id="portfolioImportProfileName" /></div>
@@ -99,19 +118,49 @@
       </section>
 
       <section class="card">
-        <h2>Nastavení a bezpečnost</h2>
-        <div class="field"><label for="portfolioTwelveDataKey">Twelve Data API klíč</label><input id="portfolioTwelveDataKey" type="password" /></div>
-        <div class="field"><label for="portfolioFinnhubKey">Finnhub API klíč</label><input id="portfolioFinnhubKey" type="password" /></div>
-        <button id="portfolioSaveSettingsBtn" class="btn secondary block" type="button">Uložit šifrovaná nastavení</button>
-        <hr />
+        <h2>Cenová API</h2>
+        <p class="portfolio-note">Klíče jsou volitelné a ukládají se pouze uvnitř šifrovaného trezoru portfolia.</p>
+        <div class="field">
+          <label for="portfolioTwelveDataKey">Twelve Data API klíč</label>
+          <input id="portfolioTwelveDataKey" type="password" autocomplete="off" />
+          <p class="portfolio-setting-help">Pro ceny a denní historii akcií a ETF. Klíč získáš v <a href="https://twelvedata.com/account/api-keys" target="_blank" rel="noopener">účtu Twelve Data</a>.</p>
+        </div>
+        <div class="field">
+          <label for="portfolioFinnhubKey">Finnhub API klíč</label>
+          <input id="portfolioFinnhubKey" type="password" autocomplete="off" />
+          <p class="portfolio-setting-help">Pro aktuální ceny akcií a ETF. Klíč získáš na <a href="https://finnhub.io/dashboard" target="_blank" rel="noopener">Finnhub dashboardu</a>; historie zde není podporovaná.</p>
+        </div>
+        <div class="field">
+          <label for="portfolioCoinGeckoKey">CoinGecko Demo API klíč</label>
+          <input id="portfolioCoinGeckoKey" type="password" autocomplete="off" />
+          <p class="portfolio-setting-help">Pro ceny a historii kryptoměn. Bez klíče funguje veřejné API; volitelný Demo klíč získáš na <a href="https://www.coingecko.com/en/developers/dashboard" target="_blank" rel="noopener">CoinGecko Developer Dashboard</a>.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>TradingView</h2>
+        <label class="portfolio-consent-toggle"><input id="portfolioTradingViewConsent" type="checkbox" /> Povolit automatické načtení hodnocení TradingView v detailu aktiva</label>
+        <p class="portfolio-setting-help">Widget se načítá z externí služby. TradingView obdrží pouze zvolený symbol, nikoli pozice, transakce ani částky. Souhlas je uložen šifrovaně a můžeš jej kdykoli odvolat.</p>
+        <button id="portfolioSaveSettingsBtn" class="btn secondary block" type="button">Uložit API klíče a souhlas</button>
+      </section>
+
+      <section class="card">
+        <h2>Zašifrovaná záloha</h2>
+        <p class="portfolio-setting-help">Záloha používá samostatné heslo. Ulož ji mimo toto zařízení; bez hesla ji nelze obnovit.</p>
+        <button id="portfolioExportBtn" class="btn secondary block" type="button">Exportovat zašifrovanou zálohu</button>
+        <div class="field"><label for="portfolioBackupFile">Soubor zálohy</label><input id="portfolioBackupFile" type="file" accept=".json,application/json" /></div>
+        <div class="field"><label for="portfolioBackupMode">Způsob importu</label><select id="portfolioBackupMode"><option value="merge">Sloučit se současnými daty</option><option value="replace">Přepsat současná data</option></select></div>
+        <button id="portfolioImportBackupBtn" class="btn ghost block" type="button">Importovat zálohu</button>
+      </section>
+
+      <section class="card">
+        <h2>Heslo a relace</h2>
         <div class="field"><label for="portfolioOldPassword">Současné heslo</label><input id="portfolioOldPassword" type="password" /></div>
         <div class="field"><label for="portfolioNewPassword">Nové heslo</label><input id="portfolioNewPassword" type="password" /></div>
         <button id="portfolioChangePasswordBtn" class="btn ghost block" type="button">Změnit heslo</button>
-        <hr />
-        <button id="portfolioExportBtn" class="btn secondary block" type="button">Exportovat zašifrovanou zálohu</button>
-        <input id="portfolioBackupFile" type="file" accept=".json,application/json" />
-        <button id="portfolioImportBackupBtn" class="btn ghost block" type="button">Importovat zálohu</button>
+        <button id="portfolioLockBtn" class="btn danger block portfolio-lock-action" type="button">Zamknout portfolio</button>
       </section>
+      </div>
 
       <section id="portfolioDetailCard" class="card" hidden>
         <div class="portfolio-section-title"><h2 id="portfolioDetailTitle">Detail aktiva</h2><button id="portfolioCloseDetailBtn" class="btn ghost small">Zavřít</button></div>
